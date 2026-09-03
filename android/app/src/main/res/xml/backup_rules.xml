@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Klucz API nie trafia do kopii zapasowej. -->
+    <exclude
+        domain="sharedpref"
+        path="aura_settings.xml" />
+    <exclude
+        domain="file"
+        path="datastore/aura_settings.preferences_pb" />
+</full-backup-content>

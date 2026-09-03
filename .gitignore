@@ -1,0 +1,18 @@
+# Android / Gradle
+android/local.properties
+android/.gradle/
+android/build/
+android/app/build/
+android/captures/
+android/.idea/
+android/*.iml
+android/.kotlin/
+
+# Klucze podpisywania - nigdy nie trafiaja do repozytorium
+*.jks
+*.keystore
+keystore.properties
+
+# Systemowe
+.DS_Store
+*.log
