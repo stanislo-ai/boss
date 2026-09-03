@@ -36,12 +36,15 @@ data class Part(
 data class FunctionCall(
     val name: String = "",
     val args: JsonObject = JsonObject(emptyMap()),
+    /** Modele Gemini 3 nadaja wywolaniom identyfikator; odpowiedz musi go zwrocic. */
+    val id: String? = null,
 )
 
 @Serializable
 data class FunctionResponse(
     val name: String,
     val response: JsonObject,
+    val id: String? = null,
 )
 
 @Serializable
@@ -74,8 +77,15 @@ data class GenerationConfig(
     val thinkingConfig: ThinkingConfig? = null,
 )
 
+/**
+ * Modele 2.5 przyjmuja liczbowy `thinkingBudget`, a rodzina Gemini 3
+ * tekstowy `thinkingLevel` (minimal / low / medium / high).
+ */
 @Serializable
-data class ThinkingConfig(val thinkingBudget: Int)
+data class ThinkingConfig(
+    val thinkingBudget: Int? = null,
+    val thinkingLevel: String? = null,
+)
 
 @Serializable
 data class SafetySetting(val category: String, val threshold: String)
@@ -104,6 +114,27 @@ data class UsageMetadata(
     val candidatesTokenCount: Int = 0,
     val totalTokenCount: Int = 0,
 )
+
+// ---------- Lista modeli (GET /v1beta/models) ----------
+
+@Serializable
+data class ModelListResponse(
+    val models: List<RemoteModel> = emptyList(),
+    val nextPageToken: String? = null,
+)
+
+@Serializable
+data class RemoteModel(
+    /** Pelna nazwa zasobu, np. "models/gemini-3.6-flash". */
+    val name: String = "",
+    val displayName: String = "",
+    val description: String = "",
+    val supportedGenerationMethods: List<String> = emptyList(),
+    val inputTokenLimit: Int = 0,
+) {
+    val id: String get() = name.removePrefix("models/")
+    val supportsGenerateContent: Boolean get() = "generateContent" in supportedGenerationMethods
+}
 
 @Serializable
 data class ApiErrorEnvelope(val error: ApiErrorBody? = null)

@@ -5,7 +5,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,8 +20,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -41,13 +38,16 @@ import com.stanislo.aura.data.MemoryItem
 import com.stanislo.aura.data.Note
 import com.stanislo.aura.data.Reminder
 import com.stanislo.aura.tools.TimeParsing
+import com.stanislo.aura.ui.components.pressable
+import com.stanislo.aura.ui.theme.AuraIcons
 import com.stanislo.aura.ui.theme.AuraInk
+import com.stanislo.aura.ui.theme.AuraInkFaint
 import com.stanislo.aura.ui.theme.AuraInkSoft
 import com.stanislo.aura.ui.theme.AuraSurface
 
 private enum class LibraryTab(val label: String) {
     NOTES("Notatki"),
-    MEMORY("Pamiec"),
+    MEMORY("Pamięć"),
     REMINDERS("Przypomnienia"),
 }
 
@@ -86,7 +86,7 @@ fun LibraryScreen(
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))
                         .background(if (selected) AuraInk else AuraSurface)
-                        .clickable { tab = entry }
+                        .pressable(scaleDown = 0.94f) { tab = entry }
                         .padding(horizontal = 16.dp, vertical = 9.dp),
                 )
             }
@@ -101,7 +101,7 @@ fun LibraryScreen(
             when (current) {
                 LibraryTab.NOTES -> ItemList(
                     empty = notes.isEmpty(),
-                    emptyText = "Powiedz \"zapisz notatke...\", a pojawi sie tutaj.",
+                    emptyText = "Powiedz \"zapisz notatkę...\", a pojawi się tutaj.",
                 ) {
                     items(notes, key = { it.id }) { note ->
                         DataCard(
@@ -115,7 +115,7 @@ fun LibraryScreen(
 
                 LibraryTab.MEMORY -> ItemList(
                     empty = memories.isEmpty(),
-                    emptyText = "Powiedz \"zapamietaj, ze...\", a Aura bedzie o tym pamietac.",
+                    emptyText = "Powiedz \"zapamiętaj, że...\", a Aura będzie o tym pamiętać.",
                 ) {
                     items(memories, key = { it.id }) { memory ->
                         DataCard(
@@ -131,7 +131,7 @@ fun LibraryScreen(
                     val active = reminders.filter { !it.done }.sortedBy { it.triggerAt }
                     ItemList(
                         empty = active.isEmpty(),
-                        emptyText = "Brak zaplanowanych przypomnien.",
+                        emptyText = "Brak zaplanowanych przypomnień.",
                     ) {
                         items(active, key = { it.id }) { reminder ->
                             DataCard(
@@ -209,10 +209,15 @@ private fun DataCard(title: String, body: String?, meta: String, onDelete: (() -
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(50))
-                    .clickable(onClick = onDelete),
+                    .pressable(scaleDown = 0.86f, onClick = onDelete),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Rounded.Close, contentDescription = "Usun", tint = AuraInkSoft)
+                Icon(
+                    imageVector = AuraIcons.Close,
+                    contentDescription = "Usuń",
+                    tint = AuraInkFaint,
+                    modifier = Modifier.size(17.dp),
+                )
             }
         }
     }

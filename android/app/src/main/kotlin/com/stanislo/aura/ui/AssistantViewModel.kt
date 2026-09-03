@@ -10,6 +10,8 @@ import com.stanislo.aura.ai.GeminiClient
 import com.stanislo.aura.ai.GeminiException
 import com.stanislo.aura.ai.GenerateContentRequest
 import com.stanislo.aura.ai.GenerationConfig
+import com.stanislo.aura.ai.ModelCatalog
+import com.stanislo.aura.ai.ModelOption
 import com.stanislo.aura.ai.Part
 import com.stanislo.aura.ai.SystemPrompt
 import com.stanislo.aura.ai.ThinkingConfig
@@ -29,6 +31,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
@@ -71,6 +75,12 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
     )
     val permissionRequests = _permissionRequests.asSharedFlow()
 
+    private val _models = MutableStateFlow(ModelCatalog.FALLBACK)
+    val models: StateFlow<List<ModelOption>> = _models.asStateFlow()
+
+    private val _modelsLoading = MutableStateFlow(false)
+    val modelsLoading: StateFlow<Boolean> = _modelsLoading.asStateFlow()
+
     /** Pelna historia w formacie API - z wywolaniami narzedzi, ktorych nie pokazujemy w UI. */
     private val conversation = mutableListOf<Content>()
     private var turnJob: Job? = null
@@ -81,6 +91,12 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
             store.history.awaitReady()
             store.memories.awaitReady()
             restoreConversation()
+        }
+        // Lista modeli odswieza sie sama po kazdej zmianie klucza API.
+        viewModelScope.launch {
+            settings.map { it.apiKey }.distinctUntilChanged().collect { key ->
+                if (key.isNotBlank()) loadModels(key)
+            }
         }
         viewModelScope.launch {
             speech.results.collect { text -> onSpeechResult(text) }
@@ -196,64 +212,32 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
             conversation += Content(role = "user", parts = listOf(Part(text = userText)))
 
             val usedTools = linkedSetOf<String>()
-            var replyText = ""
-            var failed = false
-
-            try {
-                var step = 0
-                while (step++ < MAX_TOOL_STEPS) {
-                    val response = client.generateContent(
-                        apiKey = current.apiKey,
-                        model = current.model,
-                        request = buildRequest(current),
-                    )
-
-                    val candidate = response.candidates.firstOrNull()
-                    val content = candidate?.content
-                    if (content == null || content.parts.isEmpty()) {
-                        replyText = response.promptFeedback?.blockReason
-                            ?.let { "Model odmowil odpowiedzi (powod: $it)." }
-                            ?: "Model nie zwrocil odpowiedzi. Sprobuj przeformulowac pytanie."
-                        failed = true
-                        break
-                    }
-
-                    conversation += content.copy(role = "model")
-
-                    val visibleText = content.parts
-                        .filter { it.thought != true }
-                        .mapNotNull { it.text }
-                        .filter { it.isNotBlank() }
-                        .joinToString("\n")
-                        .trim()
-                    if (visibleText.isNotEmpty()) replyText = visibleText
-
-                    val calls = content.parts.mapNotNull { it.functionCall }
-                    if (calls.isEmpty()) break
-
-                    val responseParts = calls.map { call ->
-                        usedTools += router.displayName(call.name)
-                        _uiState.value = _uiState.value.copy(activeTool = router.displayName(call.name))
-                        val result = router.execute(call.name, call.args)
-                        requestPermissionIfNeeded(result)
-                        Part(functionResponse = FunctionResponse(name = call.name, response = result))
-                    }
-                    _uiState.value = _uiState.value.copy(activeTool = null)
-                    conversation += Content(role = "user", parts = responseParts)
-                }
-
-                if (replyText.isBlank()) {
-                    replyText = "Zadanie wykonane."
-                }
-            } catch (e: GeminiException) {
-                replyText = e.message ?: "Nieznany blad polaczenia z Gemini."
-                failed = true
+            var outcome = try {
+                agentLoop(current, usedTools)
             } catch (e: kotlinx.coroutines.CancellationException) {
                 _uiState.value = _uiState.value.copy(phase = AssistantPhase.IDLE, activeTool = null)
                 throw e
-            } catch (e: Exception) {
-                replyText = "Cos poszlo nie tak: ${e.message ?: e::class.simpleName}"
-                failed = true
+            }
+
+            // Google wycofal zapisany model - znajdz nastepcę i powtorz ture raz.
+            if (outcome.modelMissing) {
+                val replacement = switchToWorkingModel(current)
+                outcome = if (replacement != null) {
+                    _uiState.value = _uiState.value.copy(
+                        banner = "Poprzedni model zostal wycofany przez Google. Przelaczam na $replacement.",
+                    )
+                    try {
+                        agentLoop(current.copy(model = replacement), usedTools)
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        _uiState.value = _uiState.value.copy(phase = AssistantPhase.IDLE, activeTool = null)
+                        throw e
+                    }
+                } else {
+                    outcome.copy(
+                        text = outcome.text + "\n\nNie udalo sie tez pobrac listy dostepnych modeli. " +
+                            "Sprawdz klucz API i polaczenie z internetem.",
+                    )
+                }
             }
 
             trimConversation()
@@ -262,17 +246,17 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
                 ChatMessage(
                     id = UUID.randomUUID().toString(),
                     role = "assistant",
-                    text = replyText,
+                    text = outcome.text,
                     timestamp = System.currentTimeMillis(),
                     tools = usedTools.toList(),
-                    isError = failed,
+                    isError = outcome.failed,
                 ),
             )
             _uiState.value = _uiState.value.copy(activeTool = null)
 
-            if (current.speakReplies && !failed) {
+            if (current.speakReplies && !outcome.failed) {
                 _uiState.value = _uiState.value.copy(phase = AssistantPhase.SPEAKING)
-                tts.speak(replyText, current.language) {
+                tts.speak(outcome.text, current.language) {
                     viewModelScope.launch {
                         if (_uiState.value.phase == AssistantPhase.SPEAKING) {
                             _uiState.value = _uiState.value.copy(phase = AssistantPhase.IDLE)
@@ -286,6 +270,110 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    private data class TurnOutcome(
+        val text: String,
+        val failed: Boolean = false,
+        /** true, gdy API odrzucilo sam model (404) - warto sprobowac z innym. */
+        val modelMissing: Boolean = false,
+    )
+
+    /** Rozmowa z modelem przeplatana wykonywaniem narzedzi, do [MAX_TOOL_STEPS] rund. */
+    private suspend fun agentLoop(
+        current: AuraSettings,
+        usedTools: MutableSet<String>,
+    ): TurnOutcome {
+        var replyText = ""
+        try {
+            var step = 0
+            while (step++ < MAX_TOOL_STEPS) {
+                val response = client.generateContent(
+                    apiKey = current.apiKey,
+                    model = current.model,
+                    request = buildRequest(current),
+                )
+
+                val content = response.candidates.firstOrNull()?.content
+                if (content == null || content.parts.isEmpty()) {
+                    return TurnOutcome(
+                        text = response.promptFeedback?.blockReason
+                            ?.let { "Model odmowil odpowiedzi (powod: $it)." }
+                            ?: "Model nie zwrocil odpowiedzi. Sprobuj przeformulowac pytanie.",
+                        failed = true,
+                    )
+                }
+
+                conversation += content.copy(role = "model")
+
+                val visibleText = content.parts
+                    .filter { it.thought != true }
+                    .mapNotNull { it.text }
+                    .filter { it.isNotBlank() }
+                    .joinToString("\n")
+                    .trim()
+                if (visibleText.isNotEmpty()) replyText = visibleText
+
+                val calls = content.parts.mapNotNull { it.functionCall }
+                if (calls.isEmpty()) break
+
+                val responseParts = calls.map { call ->
+                    val label = router.displayName(call.name)
+                    usedTools += label
+                    _uiState.value = _uiState.value.copy(activeTool = label)
+                    val result = router.execute(call.name, call.args)
+                    requestPermissionIfNeeded(result)
+                    Part(
+                        functionResponse = FunctionResponse(
+                            name = call.name,
+                            response = result,
+                            // Gemini 3 laczy odpowiedz z wywolaniem po identyfikatorze.
+                            id = call.id,
+                        ),
+                    )
+                }
+                _uiState.value = _uiState.value.copy(activeTool = null)
+                conversation += Content(role = "user", parts = responseParts)
+            }
+            return TurnOutcome(replyText.ifBlank { "Zadanie wykonane." })
+        } catch (e: GeminiException) {
+            return TurnOutcome(
+                text = e.message ?: "Nieznany blad polaczenia z Gemini.",
+                failed = true,
+                modelMissing = e.httpCode == 404,
+            )
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return TurnOutcome("Cos poszlo nie tak: ${e.message ?: e::class.simpleName}", failed = true)
+        }
+    }
+
+    /** Pobiera aktualna liste modeli i zapisuje najlepszy dostepny. Zwraca jego nazwe. */
+    private suspend fun switchToWorkingModel(current: AuraSettings): String? {
+        val options = loadModels(current.apiKey) ?: return null
+        val replacement = ModelCatalog.bestAvailable(options.filter { it.id != current.model })
+            ?: return null
+        settingsRepository.setModel(replacement)
+        return replacement
+    }
+
+    fun refreshModels() {
+        viewModelScope.launch { loadModels(settings.value.apiKey) }
+    }
+
+    private suspend fun loadModels(apiKey: String): List<ModelOption>? {
+        if (apiKey.isBlank()) return null
+        _modelsLoading.value = true
+        return try {
+            val options = ModelCatalog.fromRemote(client.listModels(apiKey))
+            if (options.isNotEmpty()) _models.value = options
+            options.ifEmpty { null }
+        } catch (e: Exception) {
+            null
+        } finally {
+            _modelsLoading.value = false
+        }
+    }
+
     private fun buildRequest(current: AuraSettings) = GenerateContentRequest(
         contents = conversation.toList(),
         tools = listOf(AuraTools.asTool),
@@ -293,14 +381,23 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         generationConfig = GenerationConfig(
             temperature = current.temperature,
             maxOutputTokens = 2048,
-            thinkingConfig = if (current.model.startsWith("gemini-2.5")) {
-                // 0 = brak "myslenia" (najszybsze odpowiedzi), -1 = model decyduje sam.
-                ThinkingConfig(if (current.deepThinking) -1 else 0)
-            } else {
-                null
-            },
+            thinkingConfig = thinkingFor(current),
         ),
     )
+
+    /**
+     * Rodzina Gemini 3 steruje rozumowaniem tekstowym `thinkingLevel`,
+     * a modele 2.5 liczbowym `thinkingBudget`. Asystent glosowy domyslnie wybiera szybkosc.
+     */
+    private fun thinkingFor(current: AuraSettings): ThinkingConfig? = when {
+        current.model.startsWith("gemini-2.5") ->
+            ThinkingConfig(thinkingBudget = if (current.deepThinking) -1 else 0)
+
+        current.model.startsWith("gemini-3") ->
+            ThinkingConfig(thinkingLevel = if (current.deepThinking) "high" else "minimal")
+
+        else -> null
+    }
 
     private suspend fun requestPermissionIfNeeded(result: JsonObject) {
         val permission = (result["missing_permission"] as? JsonPrimitive)?.content ?: return

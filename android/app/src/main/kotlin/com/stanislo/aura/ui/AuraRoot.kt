@@ -48,6 +48,8 @@ fun AuraRoot(
     val notes by viewModel.notes.collectAsStateWithLifecycle()
     val memories by viewModel.memories.collectAsStateWithLifecycle()
     val reminders by viewModel.reminders.collectAsStateWithLifecycle()
+    val models by viewModel.models.collectAsStateWithLifecycle()
+    val modelsLoading by viewModel.modelsLoading.collectAsStateWithLifecycle()
 
     var screen by rememberSaveable { mutableStateOf(Screen.ASSISTANT) }
     var input by rememberSaveable { mutableStateOf(prefilledText.orEmpty()) }
@@ -124,8 +126,11 @@ fun AuraRoot(
 
             Screen.SETTINGS -> SettingsScreen(
                 settings = settings,
+                models = models,
+                modelsLoading = modelsLoading,
                 speechAvailable = remember { viewModel.speech.isAvailable },
                 onBack = { screen = Screen.ASSISTANT },
+                onRefreshModels = viewModel::refreshModels,
                 onApiKeyChange = viewModel::updateApiKey,
                 onModelChange = viewModel::updateModel,
                 onLanguageChange = viewModel::updateLanguage,

@@ -30,14 +30,8 @@ data class AuraSettings(
     val isConfigured: Boolean get() = apiKey.isNotBlank()
 
     companion object {
-        const val DEFAULT_MODEL = "gemini-2.5-flash"
-
-        /** Modele dostepne w bezplatnym planie Gemini API. */
-        val AVAILABLE_MODELS = listOf(
-            "gemini-2.5-flash" to "Domyslny - najlepszy balans jakosci i limitow",
-            "gemini-2.5-flash-lite" to "Najszybszy, najwyzsze limity zapytan",
-            "gemini-2.0-flash" to "Starszy, bardzo stabilny",
-        )
+        /** Lista modeli jest pobierana na zywo z API - tu tylko punkt startowy. */
+        const val DEFAULT_MODEL = "gemini-3.6-flash"
 
         val LANGUAGES = listOf(
             "pl-PL" to "Polski",

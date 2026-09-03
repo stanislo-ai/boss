@@ -75,8 +75,12 @@ Dodatkowo:
 Klucz wpiszesz później w aplikacji. Nie musisz go nigdzie umieszczać w kodzie
 i **nie trafia on do repozytorium ani do kopii zapasowej Google**.
 
-> Plan bezpłatny działa od ręki. Domyślnie aplikacja używa modelu `gemini-2.5-flash`;
-> jeśli będziesz odbijać się od limitów, w Ustawieniach przełącz się na `gemini-2.5-flash-lite`.
+> Plan bezpłatny działa od ręki. Domyślnie aplikacja używa modelu `gemini-3.6-flash`.
+>
+> **Lista modeli pobierana jest na żywo z API**, więc Aura nie zdezaktualizuje się, gdy Google
+> wycofa albo doda model. Gdyby zapisany model przestał istnieć, aplikacja sama znajdzie następcę
+> i powtórzy pytanie — bez potrzeby aktualizowania aplikacji. W Ustawieniach możesz odświeżyć
+> listę ręcznie i wybrać np. `gemini-3.5-flash-lite`, jeśli odbijasz się od limitów.
 
 ---
 
@@ -180,7 +184,7 @@ android/app/build/outputs/apk/debug/app-debug.apk
 ./gradlew assembleRelease
 ```
 
-Plik: `android/app/build/outputs/apk/release/app-release.apk` (~2,7 MB zamiast ~61 MB).
+Plik: `android/app/build/outputs/apk/release/app-release.apk` (~3,2 MB zamiast ~62 MB).
 Jest podpisany kluczem debugowym, więc instaluje się dokładnie tak samo — projekt jest przeznaczony
 do prywatnego użytku, a nie do publikacji w Google Play.
 
@@ -299,6 +303,7 @@ notatki, zapamiętane fakty i zaplanowane przypomnienia. Każdy wpis możesz usu
 | `adb devices` pokazuje pustą listę | Sprawdź, czy kabel przesyła dane (nie tylko ładuje), oraz czy wykonałeś krok z udev i **przelogowałeś się**. |
 | `INSTALL_FAILED_UPDATE_INCOMPATIBLE` | Masz zainstalowaną wersję podpisaną innym kluczem: `adb uninstall com.stanislo.aura`, potem zainstaluj ponownie. |
 | „Zapytanie odrzucone (400)” / „Brak dostępu (403)” | Zły albo nieaktywny klucz API. Wygeneruj nowy w Google AI Studio i wklej ponownie. |
+| „Wybrany model nie jest już dostępny (404)” | Aura sama przełączy się na aktualny model i powtórzy pytanie. Gdyby tego nie zrobiła, wejdź w *Ustawienia → Model*, odśwież listę ikoną strzałki i wybierz pozycję oznaczoną jako „zalecany”. |
 | „Przekroczono bezpłatny limit zapytań (429)” | Limit planu darmowego. Odczekaj minutę albo przełącz model na `gemini-2.5-flash-lite`. |
 | Asystent nie słyszy / „Rozpoznawanie mowy wymaga internetu” | Włącz internet albo pobierz pakiet języka offline (patrz punkt 7). Sprawdź też zgodę na mikrofon. |
 | Odpowiedzi nie są czytane na głos | *Ustawienia → Głos → Czytaj odpowiedzi na głos*. Jeśli nadal cicho, sprawdź *Ustawienia Androida → Ułatwienia dostępu → Zamiana tekstu na mowę* i pobierz polski głos. |
@@ -330,6 +335,12 @@ notatki, zapamiętane fakty i zaplanowane przypomnienia. Każdy wpis możesz usu
 
 **Stos:** Kotlin 2.2 · Jetpack Compose (Material 3) · Coroutines · kotlinx.serialization · OkHttp · DataStore
 **Bez** bazy danych i generatorów kodu — dane trzymane są w plikach JSON, co maksymalnie upraszcza budowanie.
+
+**Warstwa wizualna:** krój [Inter](https://rsms.me/inter/) (licencja OFL, dołączony w wersji okrojonej
+do znaków łacińskich i polskich — 8 odmian, łącznie ok. 700 kB) jako najbliższy legalnie dostępny
+odpowiednik systemowego San Francisco; własny komplet 14 ikon rysowanych wektorowo w kodzie;
+system cząsteczek na klatkach animacji (`withInfiniteAnimationFrameMillis`) napędzający zarówno
+kulę głosową, jak i delikatny pył w tle.
 
 ```
 android/

@@ -1,22 +1,64 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
+    <!-- Zewnetrzna orbita -->
     <path
-        android:pathData="M54,30m-11,0a11,11 0,1 1,22 0a11,11 0,1 1,-22 0"
-        android:fillColor="#FF101114" />
+        android:pathData="M54,54m-32,0a32,32 0,1 1,64 0a32,32 0,1 1,-64 0"
+        android:strokeWidth="1.6"
+        android:strokeAlpha="0.35">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="22"
+                android:startY="22"
+                android:endX="86"
+                android:endY="86">
+                <item android:offset="0" android:color="#FF4B5BD6" />
+                <item android:offset="1" android:color="#FF6FD9C6" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Miekka poswiata wokol kuli -->
+    <path android:pathData="M54,54m-30,0a30,30 0,1 1,60 0a30,30 0,1 1,-60 0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="54"
+                android:centerY="54"
+                android:gradientRadius="30">
+                <item android:offset="0.55" android:color="#00A8B2F5" />
+                <item android:offset="0.85" android:color="#33A8B2F5" />
+                <item android:offset="1" android:color="#00A8B2F5" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Rdzen: biel przechodzaca w chlodny akcent -->
+    <path android:pathData="M54,54m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="47"
+                android:centerY="46"
+                android:gradientRadius="26">
+                <item android:offset="0" android:color="#FFFFFFFF" />
+                <item android:offset="0.45" android:color="#FFE9ECFD" />
+                <item android:offset="0.78" android:color="#FFA8B2F5" />
+                <item android:offset="1" android:color="#FF4B5BD6" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Drobina na orbicie -->
     <path
-        android:pathData="M54,78m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0"
-        android:fillColor="#FF101114" />
+        android:pathData="M80,39m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0"
+        android:fillColor="#FF6FD9C6" />
     <path
-        android:pathData="M34,54a20,20 0,0 1,40 0"
-        android:strokeWidth="6"
-        android:strokeColor="#FF101114"
-        android:strokeLineCap="round" />
-    <path
-        android:pathData="M26,60a28,28 0,0 1,56 0"
-        android:strokeWidth="4"
-        android:strokeColor="#66101114"
-        android:strokeLineCap="round" />
+        android:pathData="M30,68m-2.4,0a2.4,2.4 0,1 1,4.8 0a2.4,2.4 0,1 1,-4.8 0"
+        android:fillColor="#FFF5B5C8" />
 </vector>
