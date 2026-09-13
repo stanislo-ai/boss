@@ -1,0 +1,7 @@
+{
+  "parent": "scootermc:scooter/dash_base",
+  "textures": {
+    "body": "scootermc:scooter/dash",
+    "particle": "scootermc:scooter/dash"
+  }
+}

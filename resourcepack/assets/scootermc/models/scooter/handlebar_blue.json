@@ -1,0 +1,7 @@
+{
+  "parent": "scootermc:scooter/handlebar_base",
+  "textures": {
+    "body": "scootermc:scooter/handlebar_blue",
+    "particle": "scootermc:scooter/handlebar_blue"
+  }
+}

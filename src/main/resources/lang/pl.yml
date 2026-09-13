@@ -1,0 +1,117 @@
+# ScooterMC - polski.
+# Formatowanie MiniMessage: https://docs.advntr.dev/minimessage/format.html
+# Symbole <w_nawiasach> sa podstawiane jako zwykly tekst.
+
+prefix: "<gradient:#FF6A00:#FFB066><bold>ScooterMC</bold></gradient> <dark_gray>»</dark_gray> "
+
+item:
+  name: "<#FF9A4D>KuKirin G2 Pro</#FF9A4D> <dark_gray>(<gray><color></gray>)</dark_gray>"
+  lore: |-
+    <dark_gray>Hulajnoga elektryczna · 600 W · 45 km/h</dark_gray>
+    <gray>Bateria</gray> <white><battery>%</white>  <dark_gray>·</dark_gray>  <gray>Zasięg</gray> <white>~<range> km</white>
+    <gray>Przebieg</gray> <white><odometer> km</white>
+    <gray>Blokada</gray> <white><locked></white>
+    <dark_gray>Kliknij PPM na bloku, aby postawić.</dark_gray>
+
+hud:
+  action-bar: "<#FF9A4D><speed></#FF9A4D> <gray><unit></gray>  <dark_gray>|</dark_gray>  <bar> <gray><battery>%</gray>  <dark_gray>|</dark_gray>  <white><mode></white>  <dark_gray>|</dark_gray>  <light>"
+  boss-bar: "<white><mode></white> <dark_gray>·</dark_gray> <#FF9A4D><speed> <unit></#FF9A4D> <dark_gray>·</dark_gray> <gray><battery>%</gray>"
+
+unit:
+  kmh: "km/h"
+  mph: "mph"
+
+mode:
+  eco: "EKO"
+  drive: "JAZDA"
+  sport: "SPORT"
+
+state:
+  locked: "zablokowana"
+  unlocked: "odblokowana"
+  light-on: "<yellow>ŚWIATŁO</yellow>"
+  light-off: "<dark_gray>światło</dark_gray>"
+
+color:
+  orange: "Pomarańczowa"
+  red: "Czerwona"
+  blue: "Niebieska"
+  cyan: "Turkusowa"
+  green: "Zielona"
+  purple: "Fioletowa"
+  yellow: "Żółta"
+  white: "Biała"
+  pink: "Różowa"
+
+ride:
+  started: "<green>Włączono zasilanie.</green> <gray>Bateria <white><battery>%</white>, tryb <white><mode></white>.</gray>"
+  controls: "<dark_gray>W</dark_gray> <gray>gaz</gray>  <dark_gray>S</dark_gray> <gray>hamulec</gray>  <dark_gray>A/D</dark_gray> <gray>skręt</gray>  <dark_gray>Spacja</dark_gray> <gray>odbicie / podskok</gray>  <dark_gray>rolka</dark_gray> <gray>tryb</gray>  <dark_gray>F</dark_gray> <gray>światło</gray>  <dark_gray>PPM</dark_gray> <gray>klakson</gray>  <dark_gray>Shift</dark_gray> <gray>zsiadanie</gray>"
+  mode-changed: "<gray>Tryb jazdy</gray> <white><mode></white> <dark_gray>(<speed> km/h)</dark_gray>"
+  light-on: "<yellow>Światło włączone.</yellow>"
+  light-off: "<gray>Światło wyłączone.</gray>"
+  low-battery: "<red>Niski poziom baterii</red> <gray>(<battery>%). Poszukaj ładowarki.</gray>"
+  battery-empty: "<red>Bateria się rozładowała.</red> <gray>Hulajnoga zwalnia.</gray>"
+  crash: "<red>Uderzyłeś w przeszkodę.</red>"
+  water: "<aqua>Woda dostaje się do silnika.</aqua> <gray>Hulajnoga gaśnie.</gray>"
+
+scooter:
+  placed: "<green>Hulajnoga postawiona.</green> <dark_gray>(<id>)</dark_gray>"
+  picked-up: "<green>Hulajnoga złożona.</green> <dark_gray>(<id>)</dark_gray>"
+
+command:
+  given: "<green>Przekazano hulajnogę <count> graczom.</green>"
+  received: "<green>Otrzymujesz hulajnogę w kolorze <color>.</green>"
+  list-header: "<gray><player> ma</gray> <white><count></white> <gray>hulajnóg:</gray>"
+  list-entry: "<dark_gray> · </dark_gray><white><id></white> <gray><color></gray> <dark_gray>·</dark_gray> <gray><battery>%</gray> <dark_gray>·</dark_gray> <gray><world> <x>, <y>, <z></gray>"
+  info: |-
+    <gray>Hulajnoga</gray> <white><id></white> <dark_gray>·</dark_gray> <gray>właściciel</gray> <white><owner></white>
+    <gray>Kolor</gray> <white><color></white> <dark_gray>·</dark_gray> <gray>tryb</gray> <white><mode></white> <dark_gray>·</dark_gray> <gray><locked></gray>
+    <gray>Bateria</gray> <white><battery>% (<wh> Wh)</white> <dark_gray>·</dark_gray> <gray>zasięg</gray> <white>~<range> km</white>
+    <gray>Przebieg</gray> <white><odometer> km</white>
+  teleported: "<green>Przeniesiono do hulajnogi <id>.</green>"
+  charged: "<green>Naładowano hulajnogę <id> do <battery>%.</green>"
+  painted: "<green>Przemalowano na <color>.</green>"
+  locked: "<green>Hulajnoga <id> zablokowana.</green>"
+  unlocked: "<green>Hulajnoga <id> odblokowana.</green>"
+  removed: "<green>Usunięto hulajnogę <id>.</green>"
+  cleared: "<green>Usunięto <count> hulajnóg gracza <player>.</green>"
+  pack-sent: "<green>Wysłano paczkę zasobów do <count> graczy.</green>"
+  language-set: "<green>Twój język to teraz <language>.</green>"
+  language-reset: "<green>Wracasz do języka serwera.</green>"
+  reloaded: "<green>Konfiguracja przeładowana.</green>"
+
+help:
+  header: "<gradient:#FF6A00:#FFB066><bold>ScooterMC</bold></gradient> <dark_gray>v<version></dark_gray>"
+  body: |-
+    <dark_gray> · </dark_gray><white>/scooter give <gracze> [kolor]</white> <gray>- daj hulajnogę</gray>
+    <dark_gray> · </dark_gray><white>/scooter spawn [kolor]</white> <gray>- postaw ją tutaj</gray>
+    <dark_gray> · </dark_gray><white>/scooter list [gracz]</white> <gray>- gdzie stoją twoje hulajnogi</gray>
+    <dark_gray> · </dark_gray><white>/scooter info</white> <gray>- dane najbliższej hulajnogi</gray>
+    <dark_gray> · </dark_gray><white>/scooter tp <id></white> <gray>- przenieś się do swojej</gray>
+    <dark_gray> · </dark_gray><white>/scooter charge [procent]</white> <gray>- naładuj baterię</gray>
+    <dark_gray> · </dark_gray><white>/scooter paint <kolor></white> <gray>- przemaluj</gray>
+    <dark_gray> · </dark_gray><white>/scooter lock | unlock</white> <gray>- zablokuj przed innymi</gray>
+    <dark_gray> · </dark_gray><white>/scooter remove <id></white> <dark_gray>·</dark_gray> <white>/scooter clear [gracz]</white>
+    <dark_gray> · </dark_gray><white>/scooter pack [gracze]</white> <gray>- wyślij paczkę zasobów</gray>
+    <dark_gray> · </dark_gray><white>/scooter lang <en|pl|reset></white> <gray>- twój język</gray>
+    <dark_gray> · </dark_gray><white>/scooter reload</white>
+
+pack:
+  prompt: "<gray>ScooterMC potrzebuje tej paczki, aby pokazać modele i dźwięki hulajnogi.</gray>"
+
+error:
+  no-permission: "<red>Nie masz do tego uprawnień.</red>"
+  players-only: "<red>To polecenie może wykonać tylko gracz.</red>"
+  in-use: "<red>Ktoś już jedzie na tej hulajnodze.</red>"
+  locked: "<red>Ta hulajnoga jest zablokowana.</red> <gray>Należy do gracza <owner>.</gray>"
+  not-yours: "<red>To nie jest twoja hulajnoga.</red>"
+  flat-battery: "<red>Bateria jest rozładowana.</red> <gray>Naładuj ją najpierw.</gray>"
+  not-grounded: "<red>Najpierw stań na ziemi.</red>"
+  no-room: "<red>Nie ma tu miejsca na hulajnogę.</red>"
+  player-limit: "<red>Masz już wystawione <limit> hulajnóg.</red>"
+  server-limit: "<red>Serwer osiągnął limit hulajnóg.</red>"
+  unknown-scooter: "<red>Nie ma hulajnogi o id <id>.</red>"
+  no-scooter-nearby: "<red>Brak hulajnogi w pobliżu.</red> <gray>Stań obok niej albo na niej jedź.</gray>"
+  bad-color: "<red><value> nie jest kolorem lakieru.</red>"
+  bad-language: "<red><value> nie jest dostępny.</red> <gray>Spróbuj: <available></gray>"
+  no-pack: "<red>Paczka zasobów nie jest skonfigurowana.</red>"

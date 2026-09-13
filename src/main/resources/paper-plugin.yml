@@ -1,0 +1,86 @@
+name: ScooterMC
+version: '${project.version}'
+main: dev.scootermc.ScooterMC
+api-version: '1.21.9'
+description: Rideable electric scooters modelled on a KuKirin G2 Pro
+authors:
+  - ScooterMC
+website: https://github.com/stanislo-ai/boss
+
+permissions:
+  scootermc.ride:
+    description: Ride a scooter
+    default: true
+  scootermc.place:
+    description: Place a scooter item in the world
+    default: true
+  scootermc.command:
+    description: Use /scooter at all
+    default: true
+  scootermc.command.info:
+    description: Inspect a nearby scooter
+    default: true
+  scootermc.command.list:
+    description: List your own scooters
+    default: true
+  scootermc.command.tp:
+    description: Teleport to your own scooter
+    default: true
+  scootermc.command.lock:
+    description: Lock and unlock your own scooters
+    default: true
+  scootermc.command.paint:
+    description: Repaint your own scooter
+    default: true
+  scootermc.command.lang:
+    description: Choose your own message language
+    default: true
+  scootermc.command.clear:
+    description: Remove all of your own scooters
+    default: true
+  scootermc.command.remove:
+    description: Remove a scooter by id
+    default: true
+  scootermc.command.pack:
+    description: Request the resource pack
+    default: true
+  scootermc.command.give:
+    description: Give scooter items to players
+    default: op
+  scootermc.command.spawn:
+    description: Place a scooter without consuming an item
+    default: op
+  scootermc.command.charge:
+    description: Charge a scooter's battery
+    default: op
+  scootermc.command.reload:
+    description: Reload the configuration
+    default: op
+  scootermc.command.list.others:
+    description: List another player's scooters
+    default: op
+  scootermc.limit.bypass:
+    description: Ignore the per-player scooter limit
+    default: op
+  scootermc.admin:
+    description: Full administrative access, including other players' scooters
+    default: op
+    children:
+      scootermc.ride: true
+      scootermc.place: true
+      scootermc.command: true
+      scootermc.command.info: true
+      scootermc.command.list: true
+      scootermc.command.list.others: true
+      scootermc.command.tp: true
+      scootermc.command.lock: true
+      scootermc.command.paint: true
+      scootermc.command.lang: true
+      scootermc.command.clear: true
+      scootermc.command.remove: true
+      scootermc.command.pack: true
+      scootermc.command.give: true
+      scootermc.command.spawn: true
+      scootermc.command.charge: true
+      scootermc.command.reload: true
+      scootermc.limit.bypass: true

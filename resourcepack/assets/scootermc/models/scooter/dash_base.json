@@ -1,0 +1,72 @@
+{
+  "texture_size": [
+    256,
+    256
+  ],
+  "textures": {
+    "body": "scootermc:scooter/dash",
+    "particle": "scootermc:scooter/dash"
+  },
+  "elements": [
+    {
+      "name": "screen",
+      "from": [
+        -15.0,
+        -6.2288,
+        -1.3559
+      ],
+      "to": [
+        31.0,
+        22.2288,
+        -0.1864
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            0.0,
+            8.625,
+            13.8125,
+            9.0
+          ],
+          "texture": "#body"
+        },
+        "up": {
+          "uv": [
+            0.0,
+            9.0625,
+            13.8125,
+            9.4375
+          ],
+          "texture": "#body"
+        },
+        "north": {
+          "uv": [
+            0.0,
+            0.0,
+            13.8125,
+            8.5625
+          ],
+          "texture": "#body"
+        },
+        "west": {
+          "uv": [
+            13.875,
+            0.0,
+            14.25,
+            8.5625
+          ],
+          "texture": "#body"
+        },
+        "east": {
+          "uv": [
+            14.3125,
+            0.0,
+            14.6875,
+            8.5625
+          ],
+          "texture": "#body"
+        }
+      }
+    }
+  ]
+}

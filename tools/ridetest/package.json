@@ -1,0 +1,13 @@
+{
+  "name": "scootermc-ridetest",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Scripted protocol client that rides a ScooterMC scooter end to end",
+  "main": "ridetest.js",
+  "scripts": {
+    "test": "node ridetest.js"
+  },
+  "dependencies": {
+    "minecraft-protocol": "^1.68.0"
+  }
+}

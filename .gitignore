@@ -1,0 +1,19 @@
+# Maven
+target/
+
+# Generated preview renders
+build/
+
+# Python
+__pycache__/
+*.pyc
+
+# Node (the ride-test harness pulls its own dependency tree)
+tools/ridetest/node_modules/
+tools/ridetest/package-lock.json
+
+# Editors / OS
+.idea/
+*.iml
+.vscode/
+.DS_Store

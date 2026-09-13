@@ -1,0 +1,20 @@
+{
+  "subtitles.scootermc.scooter.motor_loop": "Scooter motor",
+  "subtitles.scootermc.scooter.tyre_roll": "Tyres rolling",
+  "subtitles.scootermc.scooter.throttle": "Throttle",
+  "subtitles.scootermc.scooter.brake": "Brakes squeal",
+  "subtitles.scootermc.scooter.regen": "Regenerative braking",
+  "subtitles.scootermc.scooter.horn": "Scooter horn",
+  "subtitles.scootermc.scooter.bell": "Scooter bell",
+  "subtitles.scootermc.scooter.kick": "Kick off",
+  "subtitles.scootermc.scooter.crash": "Scooter crashes",
+  "subtitles.scootermc.scooter.power_on": "Scooter powers up",
+  "subtitles.scootermc.scooter.power_off": "Scooter shuts down",
+  "subtitles.scootermc.scooter.beep": "Scooter beeps",
+  "subtitles.scootermc.scooter.mode": "Drive mode changed",
+  "subtitles.scootermc.scooter.low_battery": "Battery low",
+  "subtitles.scootermc.scooter.deploy": "Scooter set down",
+  "subtitles.scootermc.scooter.pickup": "Scooter folded",
+  "subtitles.scootermc.scooter.suspension": "Suspension compresses",
+  "subtitles.scootermc.scooter.lock": "Scooter locked"
+}

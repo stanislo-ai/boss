@@ -1,0 +1,165 @@
+# ============================================================================================
+#  ScooterMC
+#  Rideable electric scooters, modelled on a KuKirin G2 Pro.
+#
+#  The defaults below are the real machine's published figures: 600 W motor, 48 V 15.6 Ah
+#  (748.8 Wh) battery, 20/40/45 km/h speed modes, 58 km range, 120 kg load, 19 degree climb,
+#  5-12 m braking distance.  Change them freely - everything is validated on load.
+# ============================================================================================
+
+# Server-wide message language.  Bundled: en, pl.  Players can override it for themselves with
+# /scooter lang <code>.  Drop any other <code>.yml into plugins/ScooterMC/lang/ to add one.
+language: en
+
+item:
+  # The item the scooter model is attached to.  Appearance comes entirely from the resource pack's
+  # item_model component, so this only matters to players without the pack installed.
+  base-material: PAPER
+
+resource-pack:
+  # Nothing is sent to players unless this is on.
+  enabled: false
+  # A URL you host yourself.  Ignored when the built-in server below is enabled.
+  url: ""
+  # SHA-1 of the hosted file.  Without it clients re-download the pack on every join.
+  # The plugin logs the SHA-1 of its own copy at startup - use that if you host that file.
+  sha1: ""
+  # Kick players who decline the pack.
+  required: false
+  prompt-on-join: true
+  built-in-server:
+    # Serves the bundled pack over plain HTTP from the server process.  Handy for a private or
+    # test server; for anything public, host the file properly behind HTTPS instead.
+    enabled: false
+    port: 8123
+    # The host players should download from.  Leave blank and the plugin has to guess, which
+    # only works when everyone is on the same machine.
+    public-address: ""
+
+ride:
+  # The motor's force is fixed, so a heavier load accelerates and climbs more slowly.  80 kg is
+  # the reference the per-mode acceleration figures below are quoted at; go over max-load-kg and
+  # the scooter becomes noticeably sluggish, as an overloaded one is.
+  rider-mass-kg: 80.0
+  max-load-kg: 120.0
+
+  kick-start:
+    # Real controllers refuse throttle until the scooter is already rolling, so a bumped throttle
+    # cannot launch a parked machine.  Press jump to kick off.
+    enabled: true
+    engage-speed-kmh: 4.0
+    impulse-kmh: 8.0
+    cooldown-ticks: 8
+
+  # m/s^2.  6.6 (0.67 g) stops from 45 km/h in 11.8 m, just inside the quoted 5-12 m;
+  # from 20 km/h it is 2.3 m.  Anything below about 6.5 misses the manufacturer's figure.
+  brake-deceleration: 6.6
+  # Extra drag when the throttle is released.
+  coast-deceleration: 0.5
+  rolling-resistance: 0.35
+  # Walk-assist reverse.
+  reverse-max-kmh: 6.0
+  # How quickly the thumb throttle winds on; 0.14 reaches full power in about half a second.
+  throttle-ramp: 0.14
+
+  steering:
+    max-rate-deg-per-tick: 9.0
+    # Fraction of steering authority lost at top speed - scooters understeer badly when quick.
+    speed-falloff: 0.55
+    # A and D nudge the heading, so keyboard-only steering works.
+    key-steer-deg-per-tick: 2.6
+    # How far the front wheel is drawn over.
+    visual-limit-deg: 32.0
+
+  climb-limit-deg: 19.0
+
+  hop:
+    # Jump while rolling to hop a kerb.
+    enabled: true
+    velocity: 0.42
+    cooldown-ticks: 10
+
+  water:
+    # IP54 survives splashes, not immersion.
+    stalls: true
+
+  # Suspension takes some of the sting out of a drop.
+  fall-damage-multiplier: 0.5
+  safe-fall-bonus: 2.0
+
+  dismount-on-sneak: true
+  require-ground-to-mount: true
+
+  crash:
+    enabled: true
+    min-speed-kmh: 18.0
+    damage: 2.0
+    # Fraction of speed kept after hitting something.
+    speed-kept: 0.15
+
+modes:
+  default: DRIVE
+  eco:
+    max-speed-kmh: 20.0
+    acceleration: 1.8
+    wh-per-km: 9.0
+  drive:
+    max-speed-kmh: 40.0
+    acceleration: 2.8
+    # 748.8 Wh / 58 km, the manufacturer's quoted range.
+    wh-per-km: 12.9
+  sport:
+    max-speed-kmh: 45.0
+    acceleration: 3.6
+    wh-per-km: 17.0
+
+battery:
+  # 48 V x 15.6 Ah
+  capacity-wh: 748.8
+  drain: true
+  headlight-watts: 6.0
+  controller-idle-watts: 2.0
+  low-warning-percent: 15
+
+headlight:
+  enabled: true
+  # Sends a light block to nearby clients only.  The world is never modified.
+  fake-light-block: true
+  # A short warm beam of particles thrown forward from the lamp.
+  particles: true
+  particle-interval-ticks: 2
+
+hud:
+  action-bar: true
+  boss-bar: false
+  # kmh or mph
+  units: kmh
+
+audio:
+  enabled: true
+  motor-volume: 0.55
+  roll-volume: 0.35
+  # Minecraft clamps pitch to 0.5-2.0.
+  motor-min-pitch: 0.62
+  motor-max-pitch: 1.85
+
+render:
+  # Sink the scooter into the ground, in blocks.  0 keeps the wheels exactly on the surface and
+  # leaves the rider's feet about 1.5 pixels inside the deck; a small negative value trades one
+  # for the other.
+  vertical-offset: 0.0
+  # Display view range multiplier.
+  view-range: 1.4
+  animate-wheels: true
+  # Transform changes smaller than this are not sent, which saves a lot of packets.
+  transform-epsilon: 0.0025
+
+limits:
+  max-scooters-per-player: 5
+  max-total-scooters: 2000
+  # Remove scooters left parked and untouched this long.  0 disables the clean-up.
+  # Checked on the same schedule as storage.save-interval-seconds.
+  despawn-parked-after-minutes: 0
+
+storage:
+  save-interval-seconds: 120

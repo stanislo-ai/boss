@@ -1,0 +1,7 @@
+{
+  "parent": "scootermc:scooter/fork_base",
+  "textures": {
+    "body": "scootermc:scooter/fork_cyan",
+    "particle": "scootermc:scooter/fork_cyan"
+  }
+}

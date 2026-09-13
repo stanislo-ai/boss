@@ -1,0 +1,200 @@
+{
+  "scooter.motor_loop": {
+    "category": "neutral",
+    "subtitle": "subtitles.scootermc.scooter.motor_loop",
+    "sounds": [
+      {
+        "name": "scootermc:scooter/motor_loop",
+        "stream": false,
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "scooter.tyre_roll": {
+    "category": "neutral",
+    "subtitle": "subtitles.scootermc.scooter.tyre_roll",
+    "sounds": [
+      {
+        "name": "scootermc:scooter/tyre_roll",
+        "stream": false,
+        "attenuation_distance": 16
+      }
+    ]
+  },
+  "scooter.throttle": {
+    "category": "neutral",
+    "subtitle": "subtitles.scootermc.scooter.throttle",
+    "sounds": [
+      {
+        "name": "scootermc:scooter/throttle",
+        "stream": false,
+        "attenuation_distance": 20
+      }
+    ]
+  },
+  "scooter.brake": {
+    "category": "neutral",
+    "subtitle": "subtitles.scootermc.scooter.brake",
+    "sounds": [
+      {
+        "name": "scootermc:scooter/brake",
+        "stream": false,
+        "attenuation_distance": 20
+      }
+    ]
+  },
+  "scooter.regen": {
+    "category": "neutral",
+    "subtitle": "subtitles.scootermc.scooter.regen",
+    "sounds": [
+      {
+        "name": "scootermc:scooter/regen",
+        "stream": false,
+        "attenuation_distance": 18
+      }
+    ]
+  },
+  "scooter.horn": {
+    "category": "neutral",
+    "subtitle": "subtitles.scootermc.scooter.horn",
+    "sounds": [
+      {
+        "name": "scootermc:scooter/horn",
+        "stream": false,
+        "attenuation_distance": 40
+      }
+    ]
+  },
+  "scooter.bell": {
+    "category": "neutral",
+    "subtitle": "subtitles.scootermc.scooter.bell",
+    "sounds": [
+      {
+        "name": "scootermc:scooter/bell",
+        "stream": false,
+        "attenuation_distance": 32
+      }
+    ]
+  },
+  "scooter.kick": {
+    "category": "neutral",
+    "subtitle": "subtitles.scootermc.scooter.kick",
+    "sounds": [
+      {
+        "name": "scootermc:scooter/kick",
+        "stream": false,
+        "attenuation_distance": 16
+      }
+    ]
+  },
+  "scooter.crash": {
+    "category": "neutral",
+    "subtitle": "subtitles.scootermc.scooter.crash",
+    "sounds": [
+      {
+        "name": "scootermc:scooter/crash",
+        "stream": false,
+        "attenuation_distance": 24
+      }
+    ]
+  },
+  "scooter.power_on": {
+    "category": "neutral",
+    "subtitle": "subtitles.scootermc.scooter.power_on",
+    "sounds": [
+      {
+        "name": "scootermc:scooter/power_on",
+        "stream": false,
+        "attenuation_distance": 16
+      }
+    ]
+  },
+  "scooter.power_off": {
+    "category": "neutral",
+    "subtitle": "subtitles.scootermc.scooter.power_off",
+    "sounds": [
+      {
+        "name": "scootermc:scooter/power_off",
+        "stream": false,
+        "attenuation_distance": 16
+      }
+    ]
+  },
+  "scooter.beep": {
+    "category": "neutral",
+    "subtitle": "subtitles.scootermc.scooter.beep",
+    "sounds": [
+      {
+        "name": "scootermc:scooter/beep",
+        "stream": false,
+        "attenuation_distance": 16
+      }
+    ]
+  },
+  "scooter.mode": {
+    "category": "neutral",
+    "subtitle": "subtitles.scootermc.scooter.mode",
+    "sounds": [
+      {
+        "name": "scootermc:scooter/mode",
+        "stream": false,
+        "attenuation_distance": 16
+      }
+    ]
+  },
+  "scooter.low_battery": {
+    "category": "neutral",
+    "subtitle": "subtitles.scootermc.scooter.low_battery",
+    "sounds": [
+      {
+        "name": "scootermc:scooter/low_battery",
+        "stream": false,
+        "attenuation_distance": 16
+      }
+    ]
+  },
+  "scooter.deploy": {
+    "category": "neutral",
+    "subtitle": "subtitles.scootermc.scooter.deploy",
+    "sounds": [
+      {
+        "name": "scootermc:scooter/deploy",
+        "stream": false,
+        "attenuation_distance": 16
+      }
+    ]
+  },
+  "scooter.pickup": {
+    "category": "neutral",
+    "subtitle": "subtitles.scootermc.scooter.pickup",
+    "sounds": [
+      {
+        "name": "scootermc:scooter/pickup",
+        "stream": false,
+        "attenuation_distance": 16
+      }
+    ]
+  },
+  "scooter.suspension": {
+    "category": "neutral",
+    "subtitle": "subtitles.scootermc.scooter.suspension",
+    "sounds": [
+      {
+        "name": "scootermc:scooter/suspension",
+        "stream": false,
+        "attenuation_distance": 16
+      }
+    ]
+  },
+  "scooter.lock": {
+    "category": "neutral",
+    "subtitle": "subtitles.scootermc.scooter.lock",
+    "sounds": [
+      {
+        "name": "scootermc:scooter/lock",
+        "stream": false,
+        "attenuation_distance": 16
+      }
+    ]
+  }
+}

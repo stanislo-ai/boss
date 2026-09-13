@@ -1,0 +1,7 @@
+{
+  "parent": "scootermc:scooter/lamp_front_base",
+  "textures": {
+    "body": "scootermc:scooter/lamp_front",
+    "particle": "scootermc:scooter/lamp_front"
+  }
+}

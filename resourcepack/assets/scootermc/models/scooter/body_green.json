@@ -1,0 +1,7 @@
+{
+  "parent": "scootermc:scooter/body_base",
+  "textures": {
+    "body": "scootermc:scooter/body_green",
+    "particle": "scootermc:scooter/body_green"
+  }
+}

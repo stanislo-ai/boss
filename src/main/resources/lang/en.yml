@@ -1,0 +1,117 @@
+# ScooterMC - English.
+# MiniMessage formatting: https://docs.advntr.dev/minimessage/format.html
+# Placeholders are written <like_this> and are inserted as plain text.
+
+prefix: "<gradient:#FF6A00:#FFB066><bold>ScooterMC</bold></gradient> <dark_gray>»</dark_gray> "
+
+item:
+  name: "<#FF9A4D>KuKirin G2 Pro</#FF9A4D> <dark_gray>(<gray><color></gray>)</dark_gray>"
+  lore: |-
+    <dark_gray>Electric scooter · 600 W · 45 km/h</dark_gray>
+    <gray>Battery</gray> <white><battery>%</white>  <dark_gray>·</dark_gray>  <gray>Range</gray> <white>~<range> km</white>
+    <gray>Odometer</gray> <white><odometer> km</white>
+    <gray>Lock</gray> <white><locked></white>
+    <dark_gray>Right-click a block to set it down.</dark_gray>
+
+hud:
+  action-bar: "<#FF9A4D><speed></#FF9A4D> <gray><unit></gray>  <dark_gray>|</dark_gray>  <bar> <gray><battery>%</gray>  <dark_gray>|</dark_gray>  <white><mode></white>  <dark_gray>|</dark_gray>  <light>"
+  boss-bar: "<white><mode></white> <dark_gray>·</dark_gray> <#FF9A4D><speed> <unit></#FF9A4D> <dark_gray>·</dark_gray> <gray><battery>%</gray>"
+
+unit:
+  kmh: "km/h"
+  mph: "mph"
+
+mode:
+  eco: "ECO"
+  drive: "DRIVE"
+  sport: "SPORT"
+
+state:
+  locked: "locked"
+  unlocked: "unlocked"
+  light-on: "<yellow>LIGHT</yellow>"
+  light-off: "<dark_gray>light</dark_gray>"
+
+color:
+  orange: "Orange"
+  red: "Red"
+  blue: "Blue"
+  cyan: "Cyan"
+  green: "Green"
+  purple: "Purple"
+  yellow: "Yellow"
+  white: "White"
+  pink: "Pink"
+
+ride:
+  started: "<green>Powered up.</green> <gray>Battery <white><battery>%</white>, mode <white><mode></white>.</gray>"
+  controls: "<dark_gray>W</dark_gray> <gray>throttle</gray>  <dark_gray>S</dark_gray> <gray>brake</gray>  <dark_gray>A/D</dark_gray> <gray>steer</gray>  <dark_gray>Space</dark_gray> <gray>kick / hop</gray>  <dark_gray>scroll</dark_gray> <gray>mode</gray>  <dark_gray>F</dark_gray> <gray>light</gray>  <dark_gray>RMB</dark_gray> <gray>horn</gray>  <dark_gray>Shift</dark_gray> <gray>get off</gray>"
+  mode-changed: "<gray>Drive mode</gray> <white><mode></white> <dark_gray>(<speed> km/h)</dark_gray>"
+  light-on: "<yellow>Headlight on.</yellow>"
+  light-off: "<gray>Headlight off.</gray>"
+  low-battery: "<red>Battery low</red> <gray>(<battery>%). Find a charger.</gray>"
+  battery-empty: "<red>The battery is flat.</red> <gray>You coast to a stop.</gray>"
+  crash: "<red>You hit something.</red>"
+  water: "<aqua>Water is getting into the motor.</aqua> <gray>The scooter is cutting out.</gray>"
+
+scooter:
+  placed: "<green>Scooter set down.</green> <dark_gray>(<id>)</dark_gray>"
+  picked-up: "<green>Scooter folded up.</green> <dark_gray>(<id>)</dark_gray>"
+
+command:
+  given: "<green>Gave a scooter to <count> player(s).</green>"
+  received: "<green>You were given a <color> scooter.</green>"
+  list-header: "<gray><player> owns</gray> <white><count></white> <gray>scooter(s):</gray>"
+  list-entry: "<dark_gray> · </dark_gray><white><id></white> <gray><color></gray> <dark_gray>·</dark_gray> <gray><battery>%</gray> <dark_gray>·</dark_gray> <gray><world> <x>, <y>, <z></gray>"
+  info: |-
+    <gray>Scooter</gray> <white><id></white> <dark_gray>·</dark_gray> <gray>owner</gray> <white><owner></white>
+    <gray>Paint</gray> <white><color></white> <dark_gray>·</dark_gray> <gray>mode</gray> <white><mode></white> <dark_gray>·</dark_gray> <gray><locked></gray>
+    <gray>Battery</gray> <white><battery>% (<wh> Wh)</white> <dark_gray>·</dark_gray> <gray>range</gray> <white>~<range> km</white>
+    <gray>Odometer</gray> <white><odometer> km</white>
+  teleported: "<green>Teleported to scooter <id>.</green>"
+  charged: "<green>Charged scooter <id> to <battery>%.</green>"
+  painted: "<green>Repainted to <color>.</green>"
+  locked: "<green>Scooter <id> locked.</green>"
+  unlocked: "<green>Scooter <id> unlocked.</green>"
+  removed: "<green>Removed scooter <id>.</green>"
+  cleared: "<green>Removed <count> scooter(s) belonging to <player>.</green>"
+  pack-sent: "<green>Resource pack offered to <count> player(s).</green>"
+  language-set: "<green>Your language is now <language>.</green>"
+  language-reset: "<green>Using the server's language again.</green>"
+  reloaded: "<green>Configuration reloaded.</green>"
+
+help:
+  header: "<gradient:#FF6A00:#FFB066><bold>ScooterMC</bold></gradient> <dark_gray>v<version></dark_gray>"
+  body: |-
+    <dark_gray> · </dark_gray><white>/scooter give <players> [colour]</white> <gray>- hand out a scooter</gray>
+    <dark_gray> · </dark_gray><white>/scooter spawn [colour]</white> <gray>- put one down where you stand</gray>
+    <dark_gray> · </dark_gray><white>/scooter list [player]</white> <gray>- where your scooters are</gray>
+    <dark_gray> · </dark_gray><white>/scooter info</white> <gray>- details of the nearest scooter</gray>
+    <dark_gray> · </dark_gray><white>/scooter tp <id></white> <gray>- go to one of yours</gray>
+    <dark_gray> · </dark_gray><white>/scooter charge [percent]</white> <gray>- top up the battery</gray>
+    <dark_gray> · </dark_gray><white>/scooter paint <colour></white> <gray>- respray it</gray>
+    <dark_gray> · </dark_gray><white>/scooter lock | unlock</white> <gray>- stop others riding it</gray>
+    <dark_gray> · </dark_gray><white>/scooter remove <id></white> <dark_gray>·</dark_gray> <white>/scooter clear [player]</white>
+    <dark_gray> · </dark_gray><white>/scooter pack [players]</white> <gray>- offer the resource pack</gray>
+    <dark_gray> · </dark_gray><white>/scooter lang <en|pl|reset></white> <gray>- your own language</gray>
+    <dark_gray> · </dark_gray><white>/scooter reload</white>
+
+pack:
+  prompt: "<gray>ScooterMC needs this pack for the scooter models and sounds.</gray>"
+
+error:
+  no-permission: "<red>You are not allowed to do that.</red>"
+  players-only: "<red>Only a player can run that.</red>"
+  in-use: "<red>Someone is riding that scooter.</red>"
+  locked: "<red>That scooter is locked.</red> <gray>It belongs to <owner>.</gray>"
+  not-yours: "<red>That is not your scooter.</red>"
+  flat-battery: "<red>The battery is flat.</red> <gray>Charge it first.</gray>"
+  not-grounded: "<red>Get your feet on the ground first.</red>"
+  no-room: "<red>There is no room to set a scooter down there.</red>"
+  player-limit: "<red>You already have <limit> scooters out.</red>"
+  server-limit: "<red>The server has reached its scooter limit.</red>"
+  unknown-scooter: "<red>No scooter with id <id>.</red>"
+  no-scooter-nearby: "<red>No scooter nearby.</red> <gray>Stand next to one or ride it.</gray>"
+  bad-color: "<red><value> is not a paint colour.</red>"
+  bad-language: "<red><value> is not available.</red> <gray>Try: <available></gray>"
+  no-pack: "<red>No resource pack is configured.</red>"

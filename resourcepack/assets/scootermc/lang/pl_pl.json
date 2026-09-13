@@ -1,0 +1,20 @@
+{
+  "subtitles.scootermc.scooter.motor_loop": "Silnik hulajnogi",
+  "subtitles.scootermc.scooter.tyre_roll": "Toczenie opon",
+  "subtitles.scootermc.scooter.throttle": "Manetka",
+  "subtitles.scootermc.scooter.brake": "Pisk hamulców",
+  "subtitles.scootermc.scooter.regen": "Hamowanie odzyskowe",
+  "subtitles.scootermc.scooter.horn": "Klakson hulajnogi",
+  "subtitles.scootermc.scooter.bell": "Dzwonek hulajnogi",
+  "subtitles.scootermc.scooter.kick": "Odbicie nogą",
+  "subtitles.scootermc.scooter.crash": "Hulajnoga uderza",
+  "subtitles.scootermc.scooter.power_on": "Hulajnoga włącza się",
+  "subtitles.scootermc.scooter.power_off": "Hulajnoga wyłącza się",
+  "subtitles.scootermc.scooter.beep": "Sygnał hulajnogi",
+  "subtitles.scootermc.scooter.mode": "Zmiana trybu jazdy",
+  "subtitles.scootermc.scooter.low_battery": "Niski poziom baterii",
+  "subtitles.scootermc.scooter.deploy": "Hulajnoga postawiona",
+  "subtitles.scootermc.scooter.pickup": "Hulajnoga złożona",
+  "subtitles.scootermc.scooter.suspension": "Amortyzatory uginają się",
+  "subtitles.scootermc.scooter.lock": "Hulajnoga zablokowana"
+}
