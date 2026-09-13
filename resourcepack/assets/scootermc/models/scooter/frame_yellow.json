@@ -1,0 +1,7 @@
+{
+  "parent": "scootermc:scooter/frame_base",
+  "textures": {
+    "body": "scootermc:scooter/frame_yellow",
+    "particle": "scootermc:scooter/frame_yellow"
+  }
+}

@@ -222,10 +222,10 @@ S  = 16 · mm_per_unit / 1000       # uniform, chosen per part by the generator
 Articulation composes on the right, i.e. innermost first:
 
 * wheel — `R_y(−θ) ∘ R_x(rollAngle)`, pivot = axle centre, `rollAngle = distance / radius`
-* front wheel and fork — additionally `R_y(steer)` about the steering axis, so the fork, the front
-  fender and the front wheel all swing together and the axle position itself is rotated about that
-  axis before the yaw is applied
-* handlebar — `R_y(−θ + steer)`, pivot on the steering axis
+* the whole steering column — stem, bars, dash, headlight, fork and front wheel — rotates about the
+  **raked** steering axis, not a vertical one. The stem leans back 10°, so turning about a vertical
+  axis would swing the handlebars sideways through an arc instead of turning them in place.
+* pivots are rotated about that same axis before the yaw is applied
 
 The generator emits `assembly.json` (part scale + pivot + geometry constants) into the plugin jar so
 the model and the Java rig can never drift out of sync.
@@ -306,3 +306,87 @@ A full scripted run mounts, kick-starts, reaches 31 km/h, selects all three driv
 the headlight, sounds the horn, steers, brakes into walk-assist reverse, dismounts, folds the
 scooter into an item and puts it back down — with zero spurious crashes, zero exceptions in the
 server log, and the scooter still present after a restart.
+
+---
+
+## 8. Rebuilding the model against a photograph
+
+The first model was built from the spec sheet alone. A spec sheet gives overall size, wheel size
+and weight; it does not give the things that decide whether a shape reads as *this* scooter. The
+result looked generic, and wrong in one specific, very visible way.
+
+`tools/measure_reference.py` extracts the missing proportions from a studio side-on photo by
+thresholding it and reading pixel positions, scaled from one known dimension:
+
+```
+scale        1.32 mm/px
+stem rake    10.3 deg back from vertical
+deck top     ~200 mm above the ground
+accent bands 975..1008 mm (folding collar), 96..234 mm (suspension links)
+```
+
+What that changed:
+
+| | before | after |
+| --- | --- | --- |
+| stem | vertical | raked back **10°** |
+| what steers | the fork only | the **whole column** — stem, bars, dash, headlight, fork, front wheel |
+| headlight | 925 mm, high on the stem | **430 mm**, low, just above the wheel |
+| front axle | 192 mm ahead of the stem | **70 mm** ahead, wheel tucked under the column |
+| suspension | visible coil springs | the **orange swing links** that dominate the real machine |
+| fork crown | a 152 × 106 × 135 mm slab that swallowed the front wheel | a compact plate |
+
+The rake is the big one: it is the first thing the eye reads and no amount of detail compensates
+for getting it wrong.
+
+Two techniques were needed to build it:
+
+* **Sub-degree lean.** Element rotation only offers ±22.5° and ±45°, so the 10° stem is stacked
+  from forty short boxes each stepped back along Z. The step is about 4 mm — under a pixel on
+  screen — while the silhouette comes out at exactly the right angle. Interior caps are skipped
+  so the extra segments cost geometry, not texture space.
+* **A raked steering axis.** Because the whole column turns, the axis it turns about is tilted
+  too. `ScooterRig` rotates about that arbitrary axis rather than about Y; turning about a
+  vertical axis instead would swing the handlebars sideways through an arc rather than rotating
+  them in place.
+
+Building the fork also exposed a bug in the generator's auto-scaler: it sized the model from
+*post*-rotation corners, but model files store an element's corners **before** its rotation. A
+45° fork leg sits much further from the pivot un-rotated than it ever does in place, and the raw
+coordinates overflowed Minecraft's `[-16, 32]` element range. The scaler now satisfies whichever
+of the two is larger.
+
+---
+
+## 9. The rider stands, and what that costs
+
+The brief asks for the rider to stand, and they do — they are never a passenger, so they are never
+put in the sitting pose. There is a consequence worth stating plainly, because it is a Minecraft
+limitation and not something the plugin can configure away.
+
+From `LivingEntity.calculateEntityAnimation` in the 1.21.11 client:
+
+```java
+if (this.isPassenger() || !this.isAlive()) {
+    this.walkAnimation.stop();      // passengers' limbs are frozen
+} else {
+    this.updateWalkAnimation(distanceMovedThisTick);
+}
+```
+
+Limb swing is frozen **only for passengers**. A standing player who is moving animates their legs,
+and `walkAnimation` saturates at any speed above about 0.25 blocks per tick — so at scooter speeds
+the rider's legs swing at full sprint rate.
+
+The obvious escape would be a vehicle whose rider does not sit. That hook is gone: pre-1.21
+versions had `Entity.shouldRiderSit()`, but in 1.21.11 the humanoid render state carries a plain
+`boolean isPassenger` with nothing to override. **Every** passenger sits.
+
+So the two options are exclusive:
+
+| | pose | legs |
+| --- | --- | --- |
+| not a passenger (**what ScooterMC does**) | stands upright | animate as if running |
+| a passenger | sits down | frozen |
+
+Standing was the requirement, so standing is what ships.

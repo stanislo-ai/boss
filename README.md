@@ -26,6 +26,9 @@ verify the geometry.</sub>
 **Riding**
 
 - The rider **stands** — never a sitting passenger — with the scooter drawn under their feet.
+  (Minecraft freezes limb animation only for passengers, so a standing rider's legs still swing;
+  see [docs/RESEARCH.md §9](docs/RESEARCH.md) for why standing and still legs are mutually
+  exclusive.)
 - **Zero-start lock**, like a real controller: the throttle stays dead until you are already
   rolling, so you have to kick off first.
 - Three drive modes with the real machine's figures: **ECO 20 / DRIVE 40 / SPORT 45 km/h**.
@@ -46,7 +49,8 @@ verify the geometry.</sub>
 
 **Presentation**
 
-- Eight-part articulated rig: body, fork, handlebars, dash, both lamps and two wheels.
+- Eight-part articulated rig: frame, steering column, handlebars, dash, both lamps and two
+  wheels. The whole column turns on the raked steering axis, as on the real machine.
 - Head- and tail-lamps and the dash genuinely glow; the headlight throws light on the road using a
   **client-side-only** light block, so it can never modify or grief the world.
 - Eighteen synthesised sound effects — motor, tyre roll, brakes, regen, horn, bell, kick-off,
@@ -158,7 +162,7 @@ touching:
 | `ride.brake-deceleration` | `6.6` | m/s²; below ~6.5 you miss the quoted stopping distance |
 | `ride.steering.speed-falloff` | `0.55` | how much steering is lost at top speed |
 | `battery.capacity-wh` | `748.8` | 48 V × 15.6 Ah |
-| `render.vertical-offset` | `0.0` | sink the scooter if you prefer feet flush with the deck |
+| `render.vertical-offset` | `0.0` | sink the scooter; the deck top is 165 mm, so 0 leaves the wheels on the ground and the rider's feet ~2.5 texels into the deck |
 | `hud.units` | `kmh` | or `mph` |
 
 Messages are [MiniMessage](https://docs.advntr.dev/minimessage/format.html) in
@@ -186,11 +190,16 @@ the models can never drift apart.
 ```bash
 pip install numpy pillow soundfile
 
+python3 tools/measure_reference.py photo.jpg --height-mm 1315   # proportions from a photo
 python3 tools/gen_models.py      # models, textures, item definitions, assembly.json
 python3 tools/gen_sounds.py      # 18 OGG effects + sounds.json + subtitles
 python3 tools/preview.py --check # verify the rig maths
 python3 tools/preview.py         # render build/preview/*.png
 ```
+
+The shape itself came from measuring a manufacturer studio photo rather than guessing — stem rake,
+deck height, wheel placement and where the accents sit. `tools/measure_reference.py` does that
+measuring, and [docs/RESEARCH.md §8](docs/RESEARCH.md) records what it changed.
 
 `tools/preview.py` is a small software renderer. It reads the generated models exactly the way the
 game does and rasterises them, which is how the geometry gets checked without a Minecraft client.

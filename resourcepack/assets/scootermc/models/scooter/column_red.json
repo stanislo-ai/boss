@@ -1,0 +1,7 @@
+{
+  "parent": "scootermc:scooter/column_base",
+  "textures": {
+    "body": "scootermc:scooter/column_red",
+    "particle": "scootermc:scooter/column_red"
+  }
+}

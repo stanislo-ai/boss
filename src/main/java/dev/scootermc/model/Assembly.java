@@ -43,6 +43,8 @@ public final class Assembly {
     private final double frontAxleZ;
     private final double rearAxleZ;
     private final double steerAxisZ;
+    private final double steerAxisBaseY;
+    private final double steerRakeDeg;
     private final double deckTop;
     private final double deckCentreZ;
     private final double length;
@@ -56,6 +58,8 @@ public final class Assembly {
         frontAxleZ = mm(geo, "front_axle_z_mm");
         rearAxleZ = mm(geo, "rear_axle_z_mm");
         steerAxisZ = mm(geo, "steer_axis_z_mm");
+        steerAxisBaseY = mm(geo, "steer_axis_base_y_mm");
+        steerRakeDeg = geo.get("steer_rake_deg").getAsDouble();
         deckTop = mm(geo, "deck_top_mm");
         deckCentreZ = (mm(geo, "deck_z0_mm") + mm(geo, "deck_z1_mm")) / 2.0;
         length = mm(geo, "length_mm");
@@ -159,6 +163,22 @@ public final class Assembly {
 
     public double steerAxisZ() {
         return steerAxisZ;
+    }
+
+    /** Height at which {@link #steerAxisZ()} is measured; the axis leans back from here. */
+    public double steerAxisBaseY() {
+        return steerAxisBaseY;
+    }
+
+    /**
+     * How far the steering column leans back from vertical, in degrees.
+     *
+     * <p>The whole column turns, not just the fork, so the axis it turns about is tilted too.
+     * Rotating about a vertical axis instead would swing the handlebars sideways rather than
+     * turning them in place.
+     */
+    public double steerRakeDeg() {
+        return steerRakeDeg;
     }
 
     public double deckTop() {

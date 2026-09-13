@@ -205,12 +205,26 @@ def _tri(color, depth, scr, uv, tex, shade, ow, oh):
 # rig assembly - mirrors ScooterRig.java exactly
 # --------------------------------------------------------------------------------------------
 
+def axis_angle(axis, deg):
+    """Rotation about an arbitrary unit axis (the steering column is raked, not vertical)."""
+    a = math.radians(deg)
+    x, y, z = axis / np.linalg.norm(axis)
+    c, s, C = math.cos(a), math.sin(a), 1 - math.cos(a)
+    return np.array([
+        [x * x * C + c,     x * y * C - z * s, x * z * C + y * s],
+        [y * x * C + z * s, y * y * C + c,     y * z * C - x * s],
+        [z * x * C - y * s, z * y * C + x * s, z * z * C + c],
+    ])
+
+
 def rig_quads(asm, color_name, yaw_deg, steer_deg, roll_deg):
     geo = asm["geometry"]
     quads = []
     ry = rot("y", -yaw_deg)                     # MC yaw 0 = +Z and increases toward -X
-    steer = rot("y", steer_deg)
-    steer_axis = np.array([0.0, 0.0, geo["steer_axis_z_mm"]])
+    rake = math.radians(geo["steer_rake_deg"])
+    steer_dir = np.array([0.0, math.cos(rake), -math.sin(rake)])
+    steer = axis_angle(steer_dir, steer_deg)
+    steer_axis = np.array([0.0, geo["steer_axis_base_y_mm"], geo["steer_axis_z_mm"]])
 
     def add(part, articulation, pivot_mm):
         meta = asm["parts"][part]

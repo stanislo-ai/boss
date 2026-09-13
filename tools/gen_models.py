@@ -162,6 +162,47 @@ def face_geometry(b: Box, face, w, h):
 # procedural materials
 # ============================================================================================
 
+# A minimal 5x7 bitmap font, just enough for the wordmark on the stem.
+FONT = {
+    "K": ["#...#", "#..#.", "#.#..", "##...", "#.#..", "#..#.", "#...#"],
+    "U": ["#...#", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."],
+    "I": [".###.", "..#..", "..#..", "..#..", "..#..", "..#..", ".###."],
+    "R": ["####.", "#...#", "#...#", "####.", "#.#..", "#..#.", "#...#"],
+    "N": ["#...#", "##..#", "#.#.#", "#..##", "#...#", "#...#", "#...#"],
+    "G": [".###.", "#...#", "#....", "#..##", "#...#", "#...#", ".###."],
+    "P": ["####.", "#...#", "#...#", "####.", "#....", "#....", "#...."],
+    "2": [".###.", "#...#", "....#", "...#.", "..#..", ".#...", "#####"],
+    " ": ["!....", ".....", ".....", ".....", ".....", ".....", "....."],
+}
+FONT[" "] = ["....."] * 7
+
+
+def stamp_text(img, X, Y, text, y0, across0, across, cell, colour, axis="y"):
+    """
+    Paint `text` reading along +Y, with each glyph's rows running along the other in-plane axis.
+
+    The stem is built from sixteen stacked segments, but every texel knows its true millimetre
+    position on the scooter, so a wordmark laid out in millimetres crosses the segment joins
+    without the generator having to know they exist.
+    """
+    advance = cell * 6
+    for i, ch in enumerate(text.upper()):
+        glyph = FONT.get(ch)
+        if glyph is None:
+            continue
+        base = y0 + i * advance
+        for row, bits in enumerate(glyph):
+            for col, bit in enumerate(bits):
+                if bit != "#":
+                    continue
+                # glyph column -> up the stem, glyph row -> across the face
+                ly0 = base + col * cell
+                lx0 = across0 + (6 - row) * cell
+                m = ((Y >= ly0) & (Y < ly0 + cell)
+                     & (across >= lx0) & (across < lx0 + cell))
+                img[m] = colour
+
+
 def radial_center(b: Box, plane):
     """
     Centre a radial pattern should be measured from.  Discs are built with their rotation origin
@@ -218,9 +259,53 @@ def m_flat(base, grain=6.0, edge=0.22, streak_axis=None):
     return paint
 
 
+def m_stem_face(X, Y, Z, face, b, ctx, seed):
+    """
+    The stem: anodised aluminium carrying the wordmark and the warning label.
+
+    No edge darkening - the stem is sixteen stacked segments, and a dark border on each would draw
+    a ladder up the middle of the scooter.
+    """
+    img = _solid(X.shape, hex_rgb("#474C55"))
+    img += (np.sin(Y * 0.06) * 2.5)[..., None]
+    img += _noise(X.shape, seed, 3.5)[..., None]
+    if face in ("west", "east"):
+        stamp_text(img, X, Y, "KUKIRIN", 640.0, -34.0, Z, 9.0, hex_rgb("#EDEFF2"))
+        stamp_text(img, X, Y, "G2", 960.0, -26.0, Z, 7.0, hex_rgb("#EDEFF2"))
+        # Yellow hazard label lower down, as on the real stem.
+        label = (Y > 470) & (Y < 556) & (np.abs(Z - _centre(b, 2)) < 30)
+        img[label] = hex_rgb("#E8C21A")
+        bars = label & (np.mod(Y, 14.0) < 6.0)
+        img[bars] = hex_rgb("#1A1A18")
+    return _shade(img, FACE_LIGHT[face])
+
+
+def _centre(b, i):
+    return (b.p0[i] + b.p1[i]) / 2.0
+
+
+def m_seg(base, grain=4.0, streak=None):
+    """A plain material for segmented tubes: no edge darkening, so joins stay invisible."""
+    def paint(X, Y, Z, face, b, ctx, seed):
+        img = _solid(X.shape, base)
+        img += _noise(X.shape, seed, grain)[..., None]
+        if streak is not None:
+            axis = {"x": X, "y": Y, "z": Z}[streak]
+            img += (np.sin(axis * 0.5) * 3.0)[..., None]
+        return _shade(img, FACE_LIGHT[face])
+    return paint
+
+
+def m_chrome_seg(X, Y, Z, face, b, ctx, seed):
+    img = _solid(X.shape, hex_rgb("#BCC2CB"))
+    img *= (0.80 + 0.34 * np.exp(-((np.mod(Z, 40.0) / 40.0 - 0.4) ** 2) / 0.05))[..., None]
+    img += _noise(X.shape, seed, 4.0)[..., None]
+    return _shade(img, FACE_LIGHT[face])
+
+
 def m_grip(X, Y, Z, face, b, ctx, seed):
     """Deck grip tape: near-black with a coarse mineral speckle and moulded tread bars."""
-    img = _solid(X.shape, hex_rgb("#26282C"))
+    img = _solid(X.shape, hex_rgb("#33363C"))
     rng = np.random.default_rng(seed)
     speck = rng.random(X.shape)
     img[speck > 0.86] += 26
@@ -248,7 +333,7 @@ def m_accent(X, Y, Z, face, b, ctx, seed):
 
 
 def m_chrome(X, Y, Z, face, b, ctx, seed):
-    img = _solid(X.shape, hex_rgb("#A9AFB8"))
+    img = _solid(X.shape, hex_rgb("#BCC2CB"))
     span = Y if face not in ("up", "down") else X
     lo, hi = span.min(), span.max()
     if hi - lo > 1e-6:
@@ -261,7 +346,7 @@ def m_chrome(X, Y, Z, face, b, ctx, seed):
 
 def m_rubber(X, Y, Z, face, b, ctx, seed):
     """Handlebar grips: ribs running around the bar, i.e. periodic along X."""
-    img = _solid(X.shape, hex_rgb("#212327"))
+    img = _solid(X.shape, hex_rgb("#2C2F35"))
     rib = np.sin(X * 0.55) * 0.5 + 0.5
     img *= (0.82 + 0.34 * rib)[..., None]
     img += _noise(X.shape, seed, 4.0)[..., None]
@@ -273,7 +358,7 @@ def m_spring(X, Y, Z, face, b, ctx, seed):
     img = _solid(X.shape, ctx["accent"] * 0.92)
     coil = np.mod((Y + Z * 0.30) / 19.0, 1.0)   # ~19 mm coil pitch
     gap = coil < 0.34
-    img[gap] = hex_rgb("#191C20")
+    img[gap] = hex_rgb("#22262B")
     lit = np.abs(coil - 0.62) < 0.10
     img[lit] *= 1.32
     img += _noise(X.shape, seed, 4.0)[..., None]
@@ -291,10 +376,10 @@ def m_tread(X, Y, Z, face, b, ctx, seed):
     half_w = max(1.0, (b.p1[0] - b.p0[0]) / 2.0)
     chevron = 4.0 * (X / half_w)                    # skew the lugs across the tyre width
     lug = np.mod(ang + chevron, 11.25) < 6.2
-    img = _solid(X.shape, hex_rgb("#141619"))
-    img[lug] = hex_rgb("#2B2F35")
+    img = _solid(X.shape, hex_rgb("#1C1F24"))
+    img[lug] = hex_rgb("#383D46")
     # centre groove and two shoulder grooves
-    img[np.abs(X) < 5.0] = hex_rgb("#0E1013")
+    img[np.abs(X) < 5.0] = hex_rgb("#15171B")
     img[np.abs(np.abs(X) - half_w * 0.62) < 3.0] *= 0.7
     img += _noise(X.shape, seed, 5.0)[..., None]
     return _shade(img, FACE_LIGHT[face])
@@ -307,18 +392,18 @@ def m_wheelside(X, Y, Z, face, b, ctx, seed):
     """
     cy, cz = radial_center(b, "yz")
     r = np.hypot(Y - cy, Z - cz)
-    img = _solid(X.shape, hex_rgb("#1D2024"))
+    img = _solid(X.shape, hex_rgb("#26292F"))
 
     def ring(lo, hi, color):
         img[(r >= lo) & (r < hi)] = color
 
-    ring(0, 16, hex_rgb("#5A6068"))          # axle
-    ring(16, 50, hex_rgb("#41464D"))         # hub motor shell
-    ring(50, 70, hex_rgb("#23262B"))         # spoke face
+    ring(0, 16, hex_rgb("#6E757F"))          # axle
+    ring(16, 50, hex_rgb("#525863"))         # hub motor shell
+    ring(50, 70, hex_rgb("#2F333A"))         # spoke face
     ring(70, 78, ctx["accent"])              # rim lip
-    ring(78, 84, hex_rgb("#30343A"))         # bead
-    ring(84, 100, hex_rgb("#1D2024"))        # sidewall
-    ring(100, 200, hex_rgb("#141619"))       # tread shoulder
+    ring(78, 84, hex_rgb("#3E434B"))         # bead
+    ring(84, 100, hex_rgb("#26292F"))        # sidewall
+    ring(100, 200, hex_rgb("#1C1F24"))       # tread shoulder
 
     ang = np.degrees(np.arctan2(Z - cz, Y - cy))
     # cooling fins on the hub shell
@@ -336,7 +421,7 @@ def m_wheelside(X, Y, Z, face, b, ctx, seed):
 
 def m_motor(X, Y, Z, face, b, ctx, seed):
     cy, cz = radial_center(b, "yz")
-    img = _solid(X.shape, hex_rgb("#4A4F57"))
+    img = _solid(X.shape, hex_rgb("#5C636D"))
     ang = np.degrees(np.arctan2(Z - cz, Y - cy))
     fin = np.mod(ang, 22.5) < 10.0
     img[fin] *= 1.18
@@ -448,10 +533,14 @@ def m_reflector(X, Y, Z, face, b, ctx, seed):
 
 
 MATERIALS = {
-    "frame": m_flat(hex_rgb("#3A3E45"), grain=6.0, streak_axis="z"),
-    "frame_dark": m_flat(hex_rgb("#212429"), grain=5.0),
-    "plastic": m_flat(hex_rgb("#2A2D33"), grain=4.0),
+    "frame": m_flat(hex_rgb("#474C55"), grain=6.0, streak_axis="z"),
+    "frame_dark": m_flat(hex_rgb("#2A2E34"), grain=5.0),
+    "plastic": m_flat(hex_rgb("#34383F"), grain=4.0),
     "grip": m_grip,
+    "stem_face": m_stem_face,
+    "tube_dark": m_seg(hex_rgb("#2A2E34")),
+    "chrome_seg": m_chrome_seg,
+    "cable": m_seg(hex_rgb("#26292E"), grain=3.0),
     "rubber": m_rubber,
     "accent": m_accent,
     "chrome": m_chrome,
@@ -482,7 +571,12 @@ def build_part(key, boxes, pivot, tex_size, target_tpu):
         pivot = tuple((lo + hi) / 2.0)
     pivot = np.array(pivot, dtype=np.float64)
 
-    half = float(np.max(np.abs(np.array([c for b in boxes for c in rotated_corners(b)]) - pivot)))
+    # Model files store an element's corners BEFORE its rotation is applied, and a steeply rotated
+    # element (a 45 degree fork leg, say) can sit much further from the pivot un-rotated than it
+    # ever does in its final position.  The scale has to satisfy whichever is larger, or the raw
+    # coordinates overflow Minecraft's [-16, 32] element range.
+    corners = [c for b in boxes for c in (rotated_corners(b) + box_corners(b))]
+    half = float(np.max(np.abs(np.array(corners) - pivot)))
     mm_per_unit = max(half / HALF_EXTENT_UNITS, 1e-6)
 
     def to_units(p):
@@ -676,7 +770,7 @@ def main():
         "geometry": GEOMETRY,
         "colors": list(COLORS),
         "default_color": DEFAULT_COLOR,
-        "rig_parts": ["body", "fork", "handlebar", "lamp_front", "lamp_rear", "dash"],
+        "rig_parts": [k for k in PARTS if k not in ("wheel", "scooter")],
         "wheel_part": "wheel",
         "full_part": "scooter",
         "parts": parts_meta,

@@ -254,9 +254,7 @@ public final class ScooterRig {
         if (front) {
             rotateAboutSteerAxis(pivot, steer);
             // steer first, then roll: the axle itself has been swung round the steering axis
-            articulation = new Quaternionf()
-                    .rotationY((float) Math.toRadians(steer))
-                    .mul(articulation);
+            articulation = steerRotation(steer).mul(articulation);
         }
         pivot.y += (float) baseY;
         pivot.z -= (float) standOffsetZ;
@@ -280,7 +278,7 @@ public final class ScooterRig {
         Quaternionf articulation = new Quaternionf();
         if (part.steers()) {
             rotateAboutSteerAxis(pivot, steer);
-            articulation.rotationY((float) Math.toRadians(steer));
+            articulation.set(steerRotation(steer));
         }
         pivot.y += (float) baseY;
         pivot.z -= (float) standOffset;
@@ -298,11 +296,29 @@ public final class ScooterRig {
         return new Transformation(translation, left, new Vector3f(s, s, s), new Quaternionf());
     }
 
+    /**
+     * The steering axis, leaning back with the stem rather than standing vertical.
+     *
+     * <p>The whole column turns on a real scooter - stem, bars, fork and front wheel - and that
+     * column is raked back about ten degrees. Turning about a vertical axis instead would swing the
+     * handlebars sideways through an arc instead of rotating them in place.
+     */
+    private Quaternionf steerRotation(double steerDeg) {
+        return new Quaternionf().rotateAxis((float) Math.toRadians(steerDeg), steerAxis());
+    }
+
+    private Vector3f steerAxis() {
+        float rake = (float) Math.toRadians(assembly.steerRakeDeg());
+        // Leaning back means the top of the axis is further towards -Z.
+        return new Vector3f(0f, (float) Math.cos(rake), (float) -Math.sin(rake)).normalize();
+    }
+
     private void rotateAboutSteerAxis(Vector3f pivot, double steerDeg) {
-        float axisZ = (float) assembly.steerAxisZ();
-        Vector3f rel = new Vector3f(pivot.x, pivot.y, pivot.z - axisZ);
-        new Quaternionf().rotationY((float) Math.toRadians(steerDeg)).transform(rel);
-        pivot.set(rel.x, rel.y, rel.z + axisZ);
+        Vector3f base = new Vector3f(0f, (float) assembly.steerAxisBaseY(),
+                (float) assembly.steerAxisZ());
+        Vector3f rel = new Vector3f(pivot).sub(base);
+        steerRotation(steerDeg).transform(rel);
+        pivot.set(rel).add(base);
     }
 
     /**
