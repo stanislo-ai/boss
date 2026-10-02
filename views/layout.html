@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{csrf}}">
+<meta name="description" content="BiznesCreator – znajdź lokalne firmy bez strony internetowej i zamień je w klientów.">
+<meta name="theme-color" content="#0a0a0b">
+<title>{{title}}</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap">
+{{styles}}
+<link rel="stylesheet" href="/static/css/style.css">
+{{scripts}}
+</head>
+<body class="{{bodyClass}}">
+<div class="grid-bg"></div><div class="glow a"></div><div class="glow b"></div>
+<header>
+  <div class="wrap nav">
+    <a href="/" class="logo"><img src="/favicon.svg" alt="">BiznesCreator</a>
+    <button class="burger" aria-label="Menu" data-burger>☰</button>
+    <nav class="nav-links" data-nav>{{nav}}</nav>
+  </div>
+</header>
+<main>
+{{body}}
+</main>
+<footer>
+  <div class="wrap">
+    <span>© {{year}} BiznesCreator · projekt <a href="https://stanislobiznes.pl" rel="noopener">stanislobiznes.pl</a></span>
+    <span>Dane map © <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a></span>
+  </div>
+</footer>
+</body>
+</html>

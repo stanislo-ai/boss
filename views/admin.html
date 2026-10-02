@@ -1,0 +1,18 @@
+<div class="wrap page">
+  <div class="page-head"><div><span class="eyebrow">Administracja</span><h1>Panel admina</h1></div></div>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-tab="apps">Zgłoszenia</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="users">Użytkownicy</button>
+  </div>
+  <section class="hidden-pad" data-pane="apps">
+    <div class="tabs" data-app-filter>
+      <button class="tab" aria-selected="true" data-st="pending">Oczekujące</button>
+      <button class="tab" aria-selected="false" data-st="approved">Przyjęte</button>
+      <button class="tab" aria-selected="false" data-st="rejected">Odrzucone</button>
+    </div>
+    <div class="list" data-apps></div>
+  </section>
+  <section class="hidden hidden-pad" data-pane="users">
+    <div class="table-wrap"><table><thead><tr><th>Użytkownik</th><th>Rola</th><th>Status</th><th>Leady</th><th>Akcje</th></tr></thead><tbody data-users></tbody></table></div>
+  </section>
+</div>

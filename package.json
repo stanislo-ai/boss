@@ -1,0 +1,31 @@
+{
+  "name": "biznescreator",
+  "version": "1.0.0",
+  "description": "BiznesCreator – wyszukiwarka lokalnych firm bez strony internetowej",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "create-admin": "node scripts/create-admin.js",
+    "test": "node --test test/*.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stanislo-ai/boss.git"
+  },
+  "author": "",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/stanislo-ai/boss/issues"
+  },
+  "homepage": "https://github.com/stanislo-ai/boss#readme",
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "express": "^4.22.3",
+    "leaflet": "^1.9.4"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  }
+}

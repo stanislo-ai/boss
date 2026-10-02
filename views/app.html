@@ -1,0 +1,45 @@
+<div class="app">
+  <aside class="sidebar">
+    <div class="side-top">
+      <h2>Szukaj firm bez strony</h2>
+      <p class="muted small">1. Wybierz branże. 2. Zaznacz obszar na mapie. 3. Kliknij „Szukaj”.</p>
+      <div class="chips" data-cats></div>
+      <details class="filters">
+        <summary>Filtry</summary>
+        <div class="filters-body">
+          <label class="check"><input type="checkbox" data-f="none" checked> Brak strony</label>
+          <label class="check"><input type="checkbox" data-f="social" checked> Tylko Facebook / Instagram / Booksy</label>
+          <label class="check"><input type="checkbox" data-f="dead" checked> Strona nie działa</label>
+          <label class="check"><input type="checkbox" data-f="phone"> Tylko z numerem telefonu</label>
+          <label class="check"><input type="checkbox" data-f="hideSaved"> Ukryj zapisane w leadach</label>
+          <div class="row"><input type="search" placeholder="Szukaj po nazwie…" data-f="q"></div>
+          <div class="row" data-google-only>
+            <select data-f="minRating" aria-label="Minimalna ocena"><option value="0">Każda ocena</option><option value="3.5">≥ 3.5 ★</option><option value="4">≥ 4.0 ★</option><option value="4.5">≥ 4.5 ★</option></select>
+            <select data-f="minReviews" aria-label="Minimalna liczba opinii"><option value="0">Dowolne opinie</option><option value="10">≥ 10 opinii</option><option value="30">≥ 30 opinii</option><option value="100">≥ 100 opinii</option></select>
+          </div>
+          <div class="row" data-source-row>
+            <select data-source aria-label="Źródło danych"><option value="osm">Źródło: OpenStreetMap (darmowe)</option><option value="google">Źródło: Google Places</option></select>
+          </div>
+          <p class="muted small" data-google-usage></p>
+        </div>
+      </details>
+      <div class="side-actions">
+        <button class="btn btn-sm btn-ghost" data-draw aria-pressed="false">▭ Zaznacz obszar</button>
+        <button class="btn btn-sm" data-search disabled>Szukaj</button>
+      </div>
+    </div>
+    <div class="status-line"><span data-status>Zaznacz obszar na mapie.</span><button class="btn btn-xs btn-ghost hidden" data-save-all>Zapisz wszystkie</button></div>
+    <div class="progress hidden" data-progress><i></i></div>
+    <div class="results" data-results>
+      <div class="empty"><b>Brak wyników</b>Narysuj prostokąt na mapie, np. wokół centrum Twojego miasta lub osiedla.</div>
+    </div>
+  </aside>
+  <div class="mapwrap">
+    <div id="map"></div>
+    <div class="map-toolbar">
+      <button class="btn btn-sm btn-ghost" data-draw aria-pressed="false">▭ Zaznacz obszar</button>
+      <button class="btn btn-sm btn-ghost" data-locate>◎ Moja lokalizacja</button>
+    </div>
+    <div class="map-hint hidden" data-hint>Przytrzymaj i przeciągnij, żeby zaznaczyć prostokąt</div>
+  </div>
+</div>
