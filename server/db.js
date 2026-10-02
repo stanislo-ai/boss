@@ -1,12 +1,12 @@
 'use strict';
-const Database = require('better-sqlite3');
+// Database: libSQL / Turso. Locally it is a plain SQLite file (DATABASE_URL=file:...),
+// on Vercel it is a free Turso database reached over HTTPS.
+const { createClient } = require('@libsql/client');
 const config = require('./config');
 
-const db = new Database(config.dbPath);
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+const client = createClient({ url: config.databaseUrl, authToken: config.databaseToken || undefined });
 
-db.exec(`
+const SCHEMA = `
 CREATE TABLE IF NOT EXISTS users (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   email         TEXT NOT NULL UNIQUE COLLATE NOCASE,
@@ -75,11 +75,41 @@ CREATE TABLE IF NOT EXISTS audit_log (
   ip          TEXT,
   created_at  INTEGER NOT NULL
 );
-`);
 
-function audit(userId, action, detail, ip) {
-  db.prepare('INSERT INTO audit_log (user_id, action, detail, ip, created_at) VALUES (?,?,?,?,?)')
-    .run(userId || null, action, detail || null, ip || null, Date.now());
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key         TEXT PRIMARY KEY,
+  count       INTEGER NOT NULL,
+  reset_at    INTEGER NOT NULL
+);
+
+`;
+
+let ready;
+function init() {
+  if (!ready) {
+    ready = (async () => {
+      await client.execute('PRAGMA foreign_keys = ON');
+      await client.executeMultiple(SCHEMA);
+    })().catch((e) => { ready = null; throw e; });
+  }
+  return ready;
 }
 
-module.exports = { db, audit };
+const exec = async (sql, args = []) => { await init(); return client.execute({ sql, args }); };
+
+const db = {
+  init,
+  async get(sql, ...args) { return (await exec(sql, args)).rows[0]; },
+  async all(sql, ...args) { return (await exec(sql, args)).rows; },
+  async run(sql, ...args) {
+    const r = await exec(sql, args);
+    return { changes: r.rowsAffected, lastInsertRowid: r.lastInsertRowid != null ? Number(r.lastInsertRowid) : null };
+  },
+};
+
+async function audit(userId, action, detail, ip) {
+  await db.run('INSERT INTO audit_log (user_id, action, detail, ip, created_at) VALUES (?,?,?,?,?)',
+    userId || null, action, detail || null, ip || null, Date.now());
+}
+
+module.exports = { db, audit, client };

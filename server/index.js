@@ -8,6 +8,8 @@ const auth = require('./auth');
 const search = require('./search');
 const { checkMany } = require('./sitecheck');
 
+const { h } = auth;
+
 const app = express();
 app.disable('x-powered-by');
 app.set('trust proxy', config.trustProxy);
@@ -38,16 +40,16 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ limit: '200kb' }));
-app.use('/static', express.static(path.join(__dirname, '..', 'public'), { maxAge: config.isProd ? '7d' : 0 }));
-app.use('/static/leaflet', express.static(path.join(__dirname, '..', 'node_modules', 'leaflet', 'dist'), { maxAge: '30d' }));
-app.get('/favicon.svg', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'img', 'favicon.svg')));
+// On Vercel files in public/ are served by the CDN; locally Express serves them.
+app.use(express.static(path.join(__dirname, '..', 'public'), { maxAge: config.isProd ? '1d' : 0, index: false }));
 app.get('/favicon.ico', (req, res) => res.redirect(301, '/favicon.svg'));
 app.use(auth.loadSession);
 app.use(auth.requireCsrf);
 
 // ---------- views ----------
 const VIEWS = path.join(__dirname, '..', 'views');
-const layout = fs.readFileSync(path.join(VIEWS, 'layout.html'), 'utf8');
+const views = Object.fromEntries(fs.readdirSync(VIEWS).map((f) => [f, fs.readFileSync(path.join(VIEWS, f), 'utf8')]));
+const layout = views['layout.html'];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 function navFor(user) {
@@ -60,7 +62,7 @@ function navFor(user) {
 }
 
 function render(res, view, { title, req, scripts = [], styles = [], bodyClass = '' }) {
-  const body = fs.readFileSync(path.join(VIEWS, view), 'utf8');
+  const body = views[view];
   const html = layout
     .replace('{{title}}', esc(title ? `${title} · BiznesCreator` : 'BiznesCreator'))
     .replace('{{csrf}}', esc(req.session ? req.session.csrf : ''))
@@ -73,50 +75,50 @@ function render(res, view, { title, req, scripts = [], styles = [], bodyClass = 
   res.set('Cache-Control', 'no-store').type('html').send(html);
 }
 
-const LEAFLET = ['/static/leaflet/leaflet.css'];
+const LEAFLET = ['/vendor/leaflet/leaflet.css'];
 
-app.get('/', (req, res) => render(res, 'index.html', { req, title: '', scripts: ['/static/js/common.js'] }));
+app.get('/', (req, res) => render(res, 'index.html', { req, title: '', scripts: ['/js/common.js'] }));
 app.get('/login', (req, res) => {
   if (req.user) return res.redirect('/app');
-  render(res, 'login.html', { req, title: 'Logowanie', scripts: ['/static/js/common.js', '/static/js/login.js'] });
+  render(res, 'login.html', { req, title: 'Logowanie', scripts: ['/js/common.js', '/js/login.js'] });
 });
 app.get(['/register', '/rejestracja', '/signup'], (req, res) => res.redirect(302, '/rekrutacja'));
 app.get('/rekrutacja', (req, res) =>
-  render(res, 'rekrutacja.html', { req, title: 'Rekrutacja', scripts: ['/static/js/common.js', '/static/js/rekrutacja.js'] }));
+  render(res, 'rekrutacja.html', { req, title: 'Rekrutacja', scripts: ['/js/common.js', '/js/rekrutacja.js'] }));
 app.get('/aktywuj', (req, res) =>
-  render(res, 'aktywuj.html', { req, title: 'Ustaw hasło', scripts: ['/static/js/common.js', '/static/js/aktywuj.js'] }));
+  render(res, 'aktywuj.html', { req, title: 'Ustaw hasło', scripts: ['/js/common.js', '/js/aktywuj.js'] }));
 app.get('/app', auth.requireUser, (req, res) =>
   render(res, 'app.html', {
     req, title: 'Mapa', bodyClass: 'app-page', styles: LEAFLET,
-    scripts: ['/static/leaflet/leaflet.js', '/static/js/common.js', '/static/js/app.js'],
+    scripts: ['/vendor/leaflet/leaflet.js', '/js/common.js', '/js/app.js'],
   }));
 app.get('/app/leady', auth.requireUser, (req, res) =>
-  render(res, 'leady.html', { req, title: 'Leady', scripts: ['/static/js/common.js', '/static/js/leady.js'] }));
+  render(res, 'leady.html', { req, title: 'Leady', scripts: ['/js/common.js', '/js/leady.js'] }));
 app.get('/app/konto', auth.requireUser, (req, res) =>
-  render(res, 'konto.html', { req, title: 'Konto', scripts: ['/static/js/common.js', '/static/js/konto.js'] }));
+  render(res, 'konto.html', { req, title: 'Konto', scripts: ['/js/common.js', '/js/konto.js'] }));
 app.get('/admin', auth.requireUser, auth.requireAdmin, (req, res) =>
-  render(res, 'admin.html', { req, title: 'Admin', scripts: ['/static/js/common.js', '/static/js/admin.js'] }));
+  render(res, 'admin.html', { req, title: 'Admin', scripts: ['/js/common.js', '/js/admin.js'] }));
 
 // ---------- auth API ----------
-const loginLimiter = auth.rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
-app.post('/api/login', loginLimiter, (req, res) => {
+const loginLimiter = auth.rateLimit({ name: 'login', windowMs: 15 * 60 * 1000, max: 10 });
+app.post('/api/login', loginLimiter, h(async (req, res) => {
   const { email, password } = req.body || {};
-  const r = auth.attemptLogin(email, password, req.ip);
+  const r = await auth.attemptLogin(email, password, req.ip);
   if (r.error) return res.status(401).json({ error: r.error });
-  auth.createSession(req, res, r.user.id);
+  await auth.createSession(req, res, r.user.id);
   res.json({ ok: true });
-});
+}));
 
-app.post('/api/logout', (req, res) => {
-  auth.destroySession(req, res);
+app.post('/api/logout', h(async (req, res) => {
+  await auth.destroySession(req, res);
   res.json({ ok: true });
-});
+}));
 
 const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i;
 const str = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
-const applyLimiter = auth.rateLimit({ windowMs: 60 * 60 * 1000, max: 5, message: 'Za dużo zgłoszeń z tego adresu. Spróbuj za godzinę.' });
-app.post('/api/rekrutacja', applyLimiter, (req, res) => {
+const applyLimiter = auth.rateLimit({ name: 'apply', windowMs: 60 * 60 * 1000, max: 5, message: 'Za dużo zgłoszeń z tego adresu. Spróbuj za godzinę.' });
+app.post('/api/rekrutacja', applyLimiter, h(async (req, res) => {
   const b = req.body || {};
   if (b.website) return res.json({ ok: true }); // honeypot – bots fill hidden fields
   const a = {
@@ -138,69 +140,69 @@ app.post('/api/rekrutacja', applyLimiter, (req, res) => {
   if (a.why.length < 20) return res.status(400).json({ error: 'Napisz kilka zdań, dlaczego chcesz dołączyć (min. 20 znaków).' });
   if (!a.consent) return res.status(400).json({ error: 'Zaznacz zgodę na przetwarzanie danych.' });
 
-  const existingUser = db.prepare('SELECT 1 FROM users WHERE email = ?').get(a.email);
-  const pending = db.prepare("SELECT 1 FROM applications WHERE email = ? AND status = 'pending'").get(a.email);
+  const existingUser = await db.get('SELECT 1 AS x FROM users WHERE email = ?', a.email);
+  const pending = await db.get("SELECT 1 AS x FROM applications WHERE email = ? AND status = 'pending'", a.email);
   // Same answer either way so the form cannot be used to check who has an account.
   if (!existingUser && !pending) {
     const { name, email, ...answers } = a;
-    db.prepare('INSERT INTO applications (name, email, answers, created_at, ip) VALUES (?,?,?,?,?)')
-      .run(name, email, JSON.stringify(answers), Date.now(), req.ip);
+    await db.run('INSERT INTO applications (name, email, answers, created_at, ip) VALUES (?,?,?,?,?)',
+      name, email, JSON.stringify(answers), Date.now(), req.ip || null);
   }
   res.json({ ok: true });
-});
+}));
 
-app.get('/api/aktywuj', (req, res) => {
-  const t = auth.findToken(String(req.query.token || ''));
+app.get('/api/aktywuj', h(async (req, res) => {
+  const t = await auth.findToken(String(req.query.token || ''));
   if (!t) return res.status(400).json({ error: 'Link jest nieprawidłowy lub wygasł.' });
-  const u = db.prepare('SELECT name, email FROM users WHERE id = ?').get(t.user_id);
+  const u = await db.get('SELECT name, email FROM users WHERE id = ?', t.user_id);
   res.json({ name: u.name, email: u.email, purpose: t.purpose });
-});
+}));
 
-const activateLimiter = auth.rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
-app.post('/api/aktywuj', activateLimiter, (req, res) => {
+const activateLimiter = auth.rateLimit({ name: 'activate', windowMs: 15 * 60 * 1000, max: 20 });
+app.post('/api/aktywuj', activateLimiter, h(async (req, res) => {
   const { token, password } = req.body || {};
-  const t = auth.findToken(String(token || ''));
+  const t = await auth.findToken(String(token || ''));
   if (!t) return res.status(400).json({ error: 'Link jest nieprawidłowy lub wygasł.' });
   const pwErr = auth.validatePassword(password);
   if (pwErr) return res.status(400).json({ error: pwErr });
-  db.prepare('UPDATE users SET password_hash = ?, failed_logins = 0, locked_until = NULL WHERE id = ?')
-    .run(auth.hashPassword(password), t.user_id);
-  auth.consumeToken(token);
-  auth.destroyAllSessions(t.user_id);
-  audit(t.user_id, 'password_set', t.purpose, req.ip);
-  auth.createSession(req, res, t.user_id);
+  if (!(await auth.consumeToken(token))) return res.status(400).json({ error: 'Link jest nieprawidłowy lub wygasł.' });
+  await db.run('UPDATE users SET password_hash = ?, failed_logins = 0, locked_until = NULL WHERE id = ?',
+    auth.hashPassword(password), t.user_id);
+  await auth.destroyAllSessions(t.user_id);
+  await audit(t.user_id, 'password_set', t.purpose, req.ip);
+  await auth.createSession(req, res, t.user_id);
   res.json({ ok: true });
-});
+}));
 
-app.post('/api/account/password', auth.requireUser, loginLimiter, (req, res) => {
+app.post('/api/account/password', auth.requireUser, loginLimiter, h(async (req, res) => {
   const { current, password } = req.body || {};
-  const row = db.prepare('SELECT password_hash FROM users WHERE id = ?').get(req.user.id);
+  const row = await db.get('SELECT password_hash FROM users WHERE id = ?', req.user.id);
   if (!auth.verifyPassword(String(current || ''), row.password_hash)) {
     return res.status(400).json({ error: 'Obecne hasło jest nieprawidłowe.' });
   }
   const pwErr = auth.validatePassword(password);
   if (pwErr) return res.status(400).json({ error: pwErr });
-  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(auth.hashPassword(password), req.user.id);
-  auth.destroyAllSessions(req.user.id);
-  auth.createSession(req, res, req.user.id);
-  audit(req.user.id, 'password_changed', null, req.ip);
+  await db.run('UPDATE users SET password_hash = ? WHERE id = ?', auth.hashPassword(password), req.user.id);
+  await auth.destroyAllSessions(req.user.id);
+  await auth.createSession(req, res, req.user.id);
+  await audit(req.user.id, 'password_changed', null, req.ip);
   res.json({ ok: true });
-});
+}));
 
-app.post('/api/account/logout-all', auth.requireUser, (req, res) => {
-  auth.destroyAllSessions(req.user.id);
-  auth.destroySession(req, res);
+app.post('/api/account/logout-all', auth.requireUser, h(async (req, res) => {
+  await auth.destroyAllSessions(req.user.id);
+  await auth.destroySession(req, res);
   res.json({ ok: true });
-});
+}));
 
 app.get('/api/me', auth.requireUser, (req, res) => res.json({ user: req.user }));
 
 // ---------- search API ----------
-app.get('/api/categories', auth.requireUser, (req, res) => {
-  res.json({ categories: search.categoryList(), google: !!config.googleApiKey, googleUsage: search.googleUsage() });
-});
+app.get('/api/categories', auth.requireUser, h(async (req, res) => {
+  res.json({ categories: search.categoryList(), google: !!config.googleApiKey, googleUsage: await search.googleUsage() });
+}));
 
-const searchLimiter = auth.rateLimit({ windowMs: 60 * 1000, max: 8, key: (req) => 'u' + req.user.id, message: 'Za dużo wyszukiwań. Odczekaj minutę.' });
+const searchLimiter = auth.rateLimit({ name: 'search', windowMs: 60 * 1000, max: 8, key: (req) => req.user.id, message: 'Za dużo wyszukiwań. Odczekaj minutę.' });
 app.post('/api/search', auth.requireUser, searchLimiter, async (req, res) => {
   try {
     const r = await search.search(req.body || {});
@@ -212,12 +214,12 @@ app.post('/api/search', auth.requireUser, searchLimiter, async (req, res) => {
   }
 });
 
-const checkLimiter = auth.rateLimit({ windowMs: 60 * 1000, max: 30, key: (req) => 'c' + req.user.id, message: 'Za dużo sprawdzeń stron. Odczekaj chwilę.' });
-app.post('/api/check-sites', auth.requireUser, checkLimiter, async (req, res) => {
+const checkLimiter = auth.rateLimit({ name: 'check', windowMs: 60 * 1000, max: 30, key: (req) => req.user.id, message: 'Za dużo sprawdzeń stron. Odczekaj chwilę.' });
+app.post('/api/check-sites', auth.requireUser, checkLimiter, h(async (req, res) => {
   const urls = Array.isArray(req.body?.urls) ? req.body.urls.slice(0, 25).map((u) => str(u, 500)) : [];
   const statuses = await checkMany(urls);
   res.json({ statuses });
-});
+}));
 
 // ---------- leads (CRM) ----------
 const LEAD_STATUSES = ['new', 'called', 'interested', 'client', 'rejected'];
@@ -237,100 +239,100 @@ function sanitizeLead(l) {
 
 const leadRow = (r) => ({ id: r.id, placeId: r.place_id, status: r.status, notes: r.notes, createdAt: r.created_at, updatedAt: r.updated_at, ...JSON.parse(r.data) });
 
-app.get('/api/leads', auth.requireUser, (req, res) => {
-  const rows = db.prepare('SELECT * FROM leads WHERE user_id = ? ORDER BY updated_at DESC').all(req.user.id);
+app.get('/api/leads', auth.requireUser, h(async (req, res) => {
+  const rows = await db.all('SELECT * FROM leads WHERE user_id = ? ORDER BY updated_at DESC', req.user.id);
   res.json({ leads: rows.map(leadRow) });
-});
+}));
 
-app.post('/api/leads', auth.requireUser, (req, res) => {
+app.post('/api/leads', auth.requireUser, h(async (req, res) => {
   const l = req.body || {};
   const placeId = str(l.id, 120);
   if (!/^(osm|google):/.test(placeId)) return res.status(400).json({ error: 'Nieprawidłowy lead.' });
-  const count = db.prepare('SELECT COUNT(*) AS c FROM leads WHERE user_id = ?').get(req.user.id).c;
-  if (count >= 5000) return res.status(400).json({ error: 'Osiągnięto limit 5000 leadów.' });
+  const { c } = await db.get('SELECT COUNT(*) AS c FROM leads WHERE user_id = ?', req.user.id);
+  if (c >= 5000) return res.status(400).json({ error: 'Osiągnięto limit 5000 leadów.' });
   const now = Date.now();
-  db.prepare(`INSERT INTO leads (user_id, place_id, data, created_at, updated_at) VALUES (?,?,?,?,?)
-              ON CONFLICT(user_id, place_id) DO NOTHING`)
-    .run(req.user.id, placeId, JSON.stringify(sanitizeLead(l)), now, now);
-  const row = db.prepare('SELECT * FROM leads WHERE user_id = ? AND place_id = ?').get(req.user.id, placeId);
+  await db.run(`INSERT INTO leads (user_id, place_id, data, created_at, updated_at) VALUES (?,?,?,?,?)
+                ON CONFLICT(user_id, place_id) DO NOTHING`,
+  req.user.id, placeId, JSON.stringify(sanitizeLead(l)), now, now);
+  const row = await db.get('SELECT * FROM leads WHERE user_id = ? AND place_id = ?', req.user.id, placeId);
   res.json({ lead: leadRow(row) });
-});
+}));
 
-app.patch('/api/leads/:id', auth.requireUser, (req, res) => {
-  const row = db.prepare('SELECT * FROM leads WHERE id = ? AND user_id = ?').get(Number(req.params.id), req.user.id);
+app.patch('/api/leads/:id', auth.requireUser, h(async (req, res) => {
+  const row = await db.get('SELECT * FROM leads WHERE id = ? AND user_id = ?', Number(req.params.id), req.user.id);
   if (!row) return res.status(404).json({ error: 'Nie znaleziono leada.' });
   const status = req.body?.status !== undefined ? req.body.status : row.status;
   if (!LEAD_STATUSES.includes(status)) return res.status(400).json({ error: 'Nieprawidłowy status.' });
   const notes = req.body?.notes !== undefined ? str(req.body.notes, 5000) : row.notes;
-  db.prepare('UPDATE leads SET status = ?, notes = ?, updated_at = ? WHERE id = ?').run(status, notes, Date.now(), row.id);
-  res.json({ lead: leadRow(db.prepare('SELECT * FROM leads WHERE id = ?').get(row.id)) });
-});
+  await db.run('UPDATE leads SET status = ?, notes = ?, updated_at = ? WHERE id = ?', status, notes, Date.now(), row.id);
+  res.json({ lead: leadRow(await db.get('SELECT * FROM leads WHERE id = ?', row.id)) });
+}));
 
-app.delete('/api/leads/:id', auth.requireUser, (req, res) => {
-  db.prepare('DELETE FROM leads WHERE id = ? AND user_id = ?').run(Number(req.params.id), req.user.id);
+app.delete('/api/leads/:id', auth.requireUser, h(async (req, res) => {
+  await db.run('DELETE FROM leads WHERE id = ? AND user_id = ?', Number(req.params.id), req.user.id);
   res.json({ ok: true });
-});
+}));
 
 // ---------- admin ----------
 const adminOnly = [auth.requireUser, auth.requireAdmin];
 
-app.get('/api/admin/applications', adminOnly, (req, res) => {
-  const rows = db.prepare('SELECT * FROM applications ORDER BY status = \'pending\' DESC, created_at DESC LIMIT 500').all();
+app.get('/api/admin/applications', adminOnly, h(async (req, res) => {
+  const rows = await db.all("SELECT * FROM applications ORDER BY status = 'pending' DESC, created_at DESC LIMIT 500");
   res.json({ applications: rows.map((r) => ({ ...r, answers: JSON.parse(r.answers) })) });
-});
+}));
 
-app.post('/api/admin/applications/:id/:decision', adminOnly, (req, res) => {
-  const appRow = db.prepare('SELECT * FROM applications WHERE id = ?').get(Number(req.params.id));
+app.post('/api/admin/applications/:id/:decision', adminOnly, h(async (req, res) => {
+  const appRow = await db.get('SELECT * FROM applications WHERE id = ?', Number(req.params.id));
   if (!appRow) return res.status(404).json({ error: 'Nie znaleziono zgłoszenia.' });
   if (appRow.status !== 'pending') return res.status(400).json({ error: 'Zgłoszenie zostało już rozpatrzone.' });
   const decision = req.params.decision;
   if (decision === 'reject') {
-    db.prepare("UPDATE applications SET status = 'rejected', decided_at = ? WHERE id = ?").run(Date.now(), appRow.id);
-    audit(req.user.id, 'application_rejected', appRow.email, req.ip);
+    await db.run("UPDATE applications SET status = 'rejected', decided_at = ? WHERE id = ?", Date.now(), appRow.id);
+    await audit(req.user.id, 'application_rejected', appRow.email, req.ip);
     return res.json({ ok: true });
   }
   if (decision !== 'approve') return res.status(400).json({ error: 'Nieznana akcja.' });
-  let user = db.prepare('SELECT * FROM users WHERE email = ?').get(appRow.email);
+  let user = await db.get('SELECT * FROM users WHERE email = ?', appRow.email);
   if (!user) {
-    const r = db.prepare('INSERT INTO users (email, name, created_at) VALUES (?,?,?)').run(appRow.email, appRow.name, Date.now());
+    const r = await db.run('INSERT INTO users (email, name, created_at) VALUES (?,?,?)', appRow.email, appRow.name, Date.now());
     user = { id: r.lastInsertRowid };
   }
-  const token = auth.createToken(user.id, 'activate', 72);
-  db.prepare("UPDATE applications SET status = 'approved', decided_at = ? WHERE id = ?").run(Date.now(), appRow.id);
-  audit(req.user.id, 'application_approved', appRow.email, req.ip);
+  const token = await auth.createToken(user.id, 'activate', 72);
+  await db.run("UPDATE applications SET status = 'approved', decided_at = ? WHERE id = ?", Date.now(), appRow.id);
+  await audit(req.user.id, 'application_approved', appRow.email, req.ip);
   res.json({ ok: true, link: `${config.baseUrl}/aktywuj?token=${token}`, email: appRow.email, name: appRow.name });
-});
+}));
 
-app.get('/api/admin/users', adminOnly, (req, res) => {
-  const rows = db.prepare(`SELECT u.id, u.email, u.name, u.role, u.active, u.created_at,
+app.get('/api/admin/users', adminOnly, h(async (req, res) => {
+  const rows = await db.all(`SELECT u.id, u.email, u.name, u.role, u.active, u.created_at,
       (u.password_hash IS NOT NULL) AS activated,
       (SELECT COUNT(*) FROM leads l WHERE l.user_id = u.id) AS leads
-    FROM users u ORDER BY u.created_at DESC`).all();
+    FROM users u ORDER BY u.created_at DESC`);
   res.json({ users: rows });
-});
+}));
 
-app.post('/api/admin/users/:id/toggle', adminOnly, (req, res) => {
+app.post('/api/admin/users/:id/toggle', adminOnly, h(async (req, res) => {
   const id = Number(req.params.id);
   if (id === req.user.id) return res.status(400).json({ error: 'Nie możesz zablokować samego siebie.' });
-  const u = db.prepare('SELECT active FROM users WHERE id = ?').get(id);
+  const u = await db.get('SELECT active FROM users WHERE id = ?', id);
   if (!u) return res.status(404).json({ error: 'Nie znaleziono użytkownika.' });
-  db.prepare('UPDATE users SET active = ? WHERE id = ?').run(u.active ? 0 : 1, id);
-  if (u.active) auth.destroyAllSessions(id);
-  audit(req.user.id, u.active ? 'user_blocked' : 'user_unblocked', String(id), req.ip);
+  await db.run('UPDATE users SET active = ? WHERE id = ?', u.active ? 0 : 1, id);
+  if (u.active) await auth.destroyAllSessions(id);
+  await audit(req.user.id, u.active ? 'user_blocked' : 'user_unblocked', String(id), req.ip);
   res.json({ ok: true, active: !u.active });
-});
+}));
 
-app.post('/api/admin/users/:id/reset', adminOnly, (req, res) => {
-  const u = db.prepare('SELECT id, email, name FROM users WHERE id = ?').get(Number(req.params.id));
+app.post('/api/admin/users/:id/reset', adminOnly, h(async (req, res) => {
+  const u = await db.get('SELECT id, email, name FROM users WHERE id = ?', Number(req.params.id));
   if (!u) return res.status(404).json({ error: 'Nie znaleziono użytkownika.' });
-  const token = auth.createToken(u.id, 'reset', 24);
-  audit(req.user.id, 'reset_link_created', u.email, req.ip);
+  const token = await auth.createToken(u.id, 'reset', 24);
+  await audit(req.user.id, 'reset_link_created', u.email, req.ip);
   res.json({ ok: true, link: `${config.baseUrl}/aktywuj?token=${token}`, email: u.email, name: u.name });
-});
+}));
 
 // ---------- errors ----------
 app.use('/api', (req, res) => res.status(404).json({ error: 'Nie znaleziono.' }));
-app.use((req, res) => res.status(404).type('html').send('<!doctype html><meta charset="utf-8"><title>404</title><p style="font-family:sans-serif">Nie znaleziono strony. <a href="/">Wróć</a></p>'));
+app.use((req, res) => res.status(404).type('html').send('<!doctype html><meta charset="utf-8"><title>404</title><p>Nie znaleziono strony. <a href="/">Wróć</a></p>'));
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   console.error(err);

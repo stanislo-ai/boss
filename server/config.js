@@ -18,10 +18,12 @@ module.exports = {
   isProd,
   port: Number(env.PORT || 3000),
   host: env.HOST || '127.0.0.1',
-  baseUrl: (env.BASE_URL || 'http://localhost:3000').replace(/\/$/, ''),
-  dbPath: env.DB_PATH || path.join(__dirname, '..', 'data', 'biznescreator.db'),
-  // Behind nginx / Cloudflare set TRUST_PROXY=1 so req.ip is the real client IP.
-  trustProxy: env.TRUST_PROXY ? Number(env.TRUST_PROXY) || env.TRUST_PROXY : false,
+  baseUrl: (env.BASE_URL || (env.VERCEL_PROJECT_PRODUCTION_URL ? 'https://' + env.VERCEL_PROJECT_PRODUCTION_URL : 'http://localhost:3000')).replace(/\/$/, ''),
+  // Turso: libsql://twoja-baza.turso.io + token. Locally falls back to a SQLite file.
+  databaseUrl: env.DATABASE_URL || 'file:' + (env.DB_PATH || path.join(__dirname, '..', 'data', 'biznescreator.db')),
+  databaseToken: env.DATABASE_AUTH_TOKEN || '',
+  // Behind Vercel / nginx the client IP comes from X-Forwarded-For.
+  trustProxy: env.VERCEL ? 1 : env.TRUST_PROXY ? Number(env.TRUST_PROXY) || env.TRUST_PROXY : false,
   sessionDays: Number(env.SESSION_DAYS || 7),
   // Optional Google Places (New) key. Empty = only free OpenStreetMap data is used.
   googleApiKey: env.GOOGLE_PLACES_API_KEY || '',

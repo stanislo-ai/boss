@@ -11,6 +11,9 @@ const LOCK_MS = 15 * 60 * 1000;
 const sha256 = (s) => crypto.createHash('sha256').update(s).digest('hex');
 const randomToken = (bytes = 32) => crypto.randomBytes(bytes).toString('base64url');
 
+// Wraps async handlers so rejections reach Express' error handler.
+const h = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
 // ---------- passwords (scrypt, built into Node) ----------
 function hashPassword(password) {
   const salt = crypto.randomBytes(16);
@@ -58,42 +61,52 @@ function setSessionCookie(res, value, maxAgeSec) {
   res.append('Set-Cookie', attrs.join('; '));
 }
 
-function createSession(req, res, userId) {
+async function createSession(req, res, userId) {
   const sid = randomToken();
   const now = Date.now();
   const expires = now + config.sessionDays * 86400000;
-  db.prepare(`INSERT INTO sessions (id_hash, user_id, csrf, created_at, expires_at, ip, user_agent)
-              VALUES (?,?,?,?,?,?,?)`)
-    .run(sha256(sid), userId, randomToken(), now, expires, req.ip, String(req.get('user-agent') || '').slice(0, 300));
+  await db.run(`INSERT INTO sessions (id_hash, user_id, csrf, created_at, expires_at, ip, user_agent)
+                VALUES (?,?,?,?,?,?,?)`,
+  sha256(sid), userId, randomToken(), now, expires, req.ip || null, String(req.get('user-agent') || '').slice(0, 300));
   setSessionCookie(res, sid, config.sessionDays * 86400);
 }
 
-function destroySession(req, res) {
+async function destroySession(req, res) {
   const sid = parseCookies(req.headers.cookie)[SESSION_COOKIE];
-  if (sid) db.prepare('DELETE FROM sessions WHERE id_hash = ?').run(sha256(sid));
+  if (sid) await db.run('DELETE FROM sessions WHERE id_hash = ?', sha256(sid));
   setSessionCookie(res, '', 0);
 }
 
-function destroyAllSessions(userId) {
-  db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId);
+async function destroyAllSessions(userId) {
+  await db.run('DELETE FROM sessions WHERE user_id = ?', userId);
+}
+
+// Occasional cleanup of expired rows (no background timers on serverless).
+async function maybeCleanup() {
+  if (Math.random() > 0.02) return;
+  const now = Date.now();
+  await db.run('DELETE FROM sessions WHERE expires_at < ?', now);
+  await db.run('DELETE FROM tokens WHERE expires_at < ?', now);
+  await db.run('DELETE FROM rate_limits WHERE reset_at < ?', now);
 }
 
 // Attaches req.user / req.session when a valid session cookie is present.
-function loadSession(req, res, next) {
+const loadSession = h(async (req, res, next) => {
+  await maybeCleanup();
   const sid = parseCookies(req.headers.cookie)[SESSION_COOKIE];
   if (sid) {
-    const row = db.prepare(`
+    const row = await db.get(`
       SELECT s.id_hash, s.csrf, s.expires_at, u.id, u.email, u.name, u.role, u.active
-      FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.id_hash = ?`).get(sha256(sid));
+      FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.id_hash = ?`, sha256(sid));
     if (row && row.expires_at > Date.now() && row.active) {
       req.session = { idHash: row.id_hash, csrf: row.csrf };
       req.user = { id: row.id, email: row.email, name: row.name, role: row.role };
     } else if (row) {
-      db.prepare('DELETE FROM sessions WHERE id_hash = ?').run(row.id_hash);
+      await db.run('DELETE FROM sessions WHERE id_hash = ?', row.id_hash);
     }
   }
   next();
-}
+});
 
 // ---------- guards ----------
 function requireUser(req, res, next) {
@@ -108,15 +121,18 @@ function requireAdmin(req, res, next) {
   return res.status(404).send('Nie znaleziono');
 }
 
-// CSRF: every state-changing request from a logged-in user must carry the
-// per-session token in the X-CSRF-Token header (set by public/js/common.js).
+// CSRF: the Origin header (when sent) must match the host, and every state-changing
+// request from a logged-in user must carry the per-session token in X-CSRF-Token.
 function requireCsrf(req, res, next) {
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
   const origin = req.get('origin');
-  if (origin && origin !== config.baseUrl) return res.status(403).json({ error: 'Nieprawidłowe źródło żądania.' });
+  if (origin) {
+    let host = '';
+    try { host = new URL(origin).host; } catch { /* invalid */ }
+    if (host !== req.get('host')) return res.status(403).json({ error: 'Nieprawidłowe źródło żądania.' });
+  }
   if (req.session) {
-    const sent = String(req.get('x-csrf-token') || '');
-    const a = Buffer.from(sent);
+    const a = Buffer.from(String(req.get('x-csrf-token') || ''));
     const b = Buffer.from(req.session.csrf);
     if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
       return res.status(403).json({ error: 'Sesja wygasła, odśwież stronę.' });
@@ -125,30 +141,28 @@ function requireCsrf(req, res, next) {
   next();
 }
 
-// ---------- simple in-memory rate limiter ----------
-function rateLimit({ windowMs, max, key = (req) => req.ip, message = 'Za dużo prób. Spróbuj później.' }) {
-  const hits = new Map();
-  setInterval(() => {
+// ---------- rate limiter stored in the database (works across serverless instances) ----------
+function rateLimit({ name, windowMs, max, key = (req) => req.ip, message = 'Za dużo prób. Spróbuj później.' }) {
+  return h(async (req, res, next) => {
+    const k = `${name}:${key(req)}`;
     const now = Date.now();
-    for (const [k, v] of hits) if (v.reset < now) hits.delete(k);
-  }, windowMs).unref();
-  return (req, res, next) => {
-    const k = key(req);
-    const now = Date.now();
-    let entry = hits.get(k);
-    if (!entry || entry.reset < now) { entry = { count: 0, reset: now + windowMs }; hits.set(k, entry); }
-    entry.count++;
-    if (entry.count > max) {
-      res.set('Retry-After', Math.ceil((entry.reset - now) / 1000));
+    await db.run(`INSERT INTO rate_limits (key, count, reset_at) VALUES (?, 1, ?)
+                  ON CONFLICT(key) DO UPDATE SET
+                    count = CASE WHEN reset_at < ? THEN 1 ELSE count + 1 END,
+                    reset_at = CASE WHEN reset_at < ? THEN excluded.reset_at ELSE reset_at END`,
+    k, now + windowMs, now, now);
+    const row = await db.get('SELECT count, reset_at FROM rate_limits WHERE key = ?', k);
+    if (row && row.count > max) {
+      res.set('Retry-After', String(Math.ceil((row.reset_at - now) / 1000)));
       return res.status(429).json({ error: message });
     }
     next();
-  };
+  });
 }
 
 // ---------- login with account lockout ----------
-function attemptLogin(email, password, ip) {
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(String(email || '').trim());
+async function attemptLogin(email, password, ip) {
+  const user = await db.get('SELECT * FROM users WHERE email = ?', String(email || '').trim());
   if (!user || !user.password_hash) {
     verifyPassword(String(password || ''), DUMMY_HASH);
     return { error: 'Nieprawidłowy e-mail lub hasło.' };
@@ -159,45 +173,39 @@ function attemptLogin(email, password, ip) {
   if (!verifyPassword(String(password || ''), user.password_hash) || !user.active) {
     const failed = user.failed_logins + 1;
     const lock = failed >= MAX_FAILED ? Date.now() + LOCK_MS : null;
-    db.prepare('UPDATE users SET failed_logins = ?, locked_until = ? WHERE id = ?')
-      .run(lock ? 0 : failed, lock, user.id);
-    audit(user.id, 'login_failed', null, ip);
+    await db.run('UPDATE users SET failed_logins = ?, locked_until = ? WHERE id = ?', lock ? 0 : failed, lock, user.id);
+    await audit(user.id, 'login_failed', null, ip);
     return { error: 'Nieprawidłowy e-mail lub hasło.' };
   }
-  db.prepare('UPDATE users SET failed_logins = 0, locked_until = NULL WHERE id = ?').run(user.id);
-  audit(user.id, 'login', null, ip);
+  await db.run('UPDATE users SET failed_logins = 0, locked_until = NULL WHERE id = ?', user.id);
+  await audit(user.id, 'login', null, ip);
   return { user };
 }
 
 // ---------- one-time tokens (activation / password reset) ----------
-function createToken(userId, purpose, hours = 72) {
+async function createToken(userId, purpose, hours = 72) {
   const token = randomToken();
-  db.prepare('DELETE FROM tokens WHERE user_id = ? AND purpose = ?').run(userId, purpose);
-  db.prepare('INSERT INTO tokens (token_hash, user_id, purpose, expires_at) VALUES (?,?,?,?)')
-    .run(sha256(token), userId, purpose, Date.now() + hours * 3600000);
+  await db.run('DELETE FROM tokens WHERE user_id = ? AND purpose = ?', userId, purpose);
+  await db.run('INSERT INTO tokens (token_hash, user_id, purpose, expires_at) VALUES (?,?,?,?)',
+    sha256(token), userId, purpose, Date.now() + hours * 3600000);
   return token;
 }
 
-function findToken(token) {
+async function findToken(token) {
   if (typeof token !== 'string' || token.length < 20) return null;
-  const row = db.prepare('SELECT * FROM tokens WHERE token_hash = ?').get(sha256(token));
+  const row = await db.get('SELECT * FROM tokens WHERE token_hash = ?', sha256(token));
   if (!row || row.used_at || row.expires_at < Date.now()) return null;
   return row;
 }
 
-function consumeToken(token) {
-  db.prepare('UPDATE tokens SET used_at = ? WHERE token_hash = ?').run(Date.now(), sha256(token));
+// Marks the token used; returns false if it was already used (race-safe).
+async function consumeToken(token) {
+  const r = await db.run('UPDATE tokens SET used_at = ? WHERE token_hash = ? AND used_at IS NULL', Date.now(), sha256(token));
+  return r.changes === 1;
 }
 
-// Periodic cleanup of expired sessions/tokens.
-setInterval(() => {
-  const now = Date.now();
-  db.prepare('DELETE FROM sessions WHERE expires_at < ?').run(now);
-  db.prepare('DELETE FROM tokens WHERE expires_at < ?').run(now);
-}, 3600000).unref();
-
 module.exports = {
-  hashPassword, verifyPassword, validatePassword,
+  h, hashPassword, verifyPassword, validatePassword,
   createSession, destroySession, destroyAllSessions, loadSession,
   requireUser, requireAdmin, requireCsrf, rateLimit,
   attemptLogin, createToken, findToken, consumeToken,

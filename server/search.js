@@ -136,19 +136,19 @@ function currentMonth() {
   return new Date().toISOString().slice(0, 7);
 }
 
-function googleUsage() {
-  const row = db.prepare('SELECT google_calls FROM api_usage WHERE month = ?').get(currentMonth());
+async function googleUsage() {
+  const row = await db.get('SELECT google_calls FROM api_usage WHERE month = ?', currentMonth());
   return { used: row ? row.google_calls : 0, cap: config.googleMonthlyCap };
 }
 
 // Atomically reserve one call; returns false when the cap is reached.
-const reserveGoogleCall = db.transaction(() => {
+async function reserveGoogleCall() {
   const m = currentMonth();
-  db.prepare('INSERT OR IGNORE INTO api_usage (month, google_calls) VALUES (?, 0)').run(m);
-  const r = db.prepare('UPDATE api_usage SET google_calls = google_calls + 1 WHERE month = ? AND google_calls < ?')
-    .run(m, config.googleMonthlyCap);
+  await db.run('INSERT OR IGNORE INTO api_usage (month, google_calls) VALUES (?, 0)', m);
+  const r = await db.run('UPDATE api_usage SET google_calls = google_calls + 1 WHERE month = ? AND google_calls < ?',
+    m, config.googleMonthlyCap);
   return r.changes === 1;
-});
+}
 
 const GOOGLE_FIELDS = [
   'places.id', 'places.displayName', 'places.formattedAddress', 'places.nationalPhoneNumber',
@@ -164,7 +164,7 @@ async function searchGoogle(bounds, cats) {
   for (const cat of cats) {
     let pageToken;
     for (let page = 0; page < 3; page++) {
-      if (!reserveGoogleCall()) { capHit = true; break; }
+      if (!(await reserveGoogleCall())) { capHit = true; break; }
       const body = {
         textQuery: CATEGORIES[cat].google,
         languageCode: 'pl',

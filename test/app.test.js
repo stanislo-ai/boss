@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'bc-'));
-process.env.DB_PATH = path.join(tmp, 'test.db');
+process.env.DATABASE_URL = 'file:' + path.join(tmp, 'test.db');
 process.env.BASE_URL = 'http://localhost';
 
 const app = require('../server/index');
@@ -67,19 +67,19 @@ test('recruitment validation + honeypot', async () => {
   assert.equal((await c.req('POST', '/api/rekrutacja', { ...application, email: 'zly' })).status, 400);
   assert.equal((await c.req('POST', '/api/rekrutacja', { ...application, consent: false })).status, 400);
   assert.equal((await c.req('POST', '/api/rekrutacja', { ...application, website: 'spam' })).status, 200);
-  assert.equal(db.prepare('SELECT COUNT(*) c FROM applications').get().c, 0);
+  assert.equal((await db.get('SELECT COUNT(*) c FROM applications')).c, 0);
 });
 
 test('full flow: apply -> admin approves -> activate -> login -> leads', async () => {
   // admin
-  const adminId = db.prepare("INSERT INTO users (email,name,role,password_hash,created_at) VALUES ('admin@x.pl','Admin','admin',?,?)")
-    .run(auth.hashPassword('AdminHaslo1234'), Date.now()).lastInsertRowid;
+  const adminId = (await db.run("INSERT INTO users (email,name,role,password_hash,created_at) VALUES ('admin@x.pl','Admin','admin',?,?)",
+    auth.hashPassword('AdminHaslo1234'), Date.now())).lastInsertRowid;
   assert.ok(adminId);
 
   const visitor = client();
   assert.equal((await visitor.req('POST', '/api/rekrutacja', application)).status, 200);
   assert.equal((await visitor.req('POST', '/api/rekrutacja', application)).status, 200); // duplicate ignored
-  assert.equal(db.prepare('SELECT COUNT(*) c FROM applications').get().c, 1);
+  assert.equal((await db.get('SELECT COUNT(*) c FROM applications')).c, 1);
 
   const admin = client();
   assert.equal((await admin.req('POST', '/api/login', { email: 'admin@x.pl', password: 'zle' })).status, 401);
@@ -118,10 +118,29 @@ test('full flow: apply -> admin approves -> activate -> login -> leads', async (
 });
 
 test('account lockout after 5 failed logins', async () => {
-  db.prepare("INSERT INTO users (email,name,password_hash,created_at) VALUES ('lock@x.pl','L',?,?)").run(auth.hashPassword('Poprawne12345'), Date.now());
-  for (let i = 0; i < 5; i++) auth.attemptLogin('lock@x.pl', 'zle', '1.1.1.1');
-  const r = auth.attemptLogin('lock@x.pl', 'Poprawne12345', '1.1.1.1');
+  await db.run("INSERT INTO users (email,name,password_hash,created_at) VALUES ('lock@x.pl','L',?,?)", auth.hashPassword('Poprawne12345'), Date.now());
+  for (let i = 0; i < 5; i++) await auth.attemptLogin('lock@x.pl', 'zle', '1.1.1.1');
+  const r = await auth.attemptLogin('lock@x.pl', 'Poprawne12345', '1.1.1.1');
   assert.match(r.error, /zablokowane/);
+});
+
+test('login rate limit stored in DB', async () => {
+  const c = client();
+  let last;
+  for (let i = 0; i < 11; i++) last = await c.req('POST', '/api/login', { email: 'nikt@x.pl', password: 'x' });
+  assert.equal(last.status, 429);
+  await db.run('DELETE FROM rate_limits');
+});
+
+test('cross-site Origin is rejected', async () => {
+  const r = await fetch(base + '/api/rekrutacja', { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'https://evil.example' }, body: '{}' });
+  assert.equal(r.status, 403);
+});
+
+test('static files served at root', async () => {
+  for (const p of ['/css/style.css', '/js/app.js', '/favicon.svg', '/vendor/leaflet/leaflet.js']) {
+    assert.equal((await fetch(base + p)).status, 200, p);
+  }
 });
 
 test('security headers present', async () => {

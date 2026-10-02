@@ -30,70 +30,36 @@ Google Places API daje dokładniejsze dane (oceny, liczba opinii), ale wymaga ko
 
 Zapomniane hasło: admin w zakładce **Użytkownicy** klika **Link do hasła** i wysyła go użytkownikowi.
 
-## Uruchomienie lokalne
+## Hosting: Vercel + Turso (0 zł)
 
-Wymagany Node.js 20+.
+- **Vercel** uruchamia aplikację (folder `api/` i plik `vercel.json`).
+- **Turso** to darmowa baza danych w chmurze (kompatybilna z SQLite, bez karty).
+  Vercel nie przechowuje plików, dlatego baza musi być zewnętrzna.
+
+Pełna instrukcja krok po kroku: **[WDROZENIE.md](WDROZENIE.md)**.
+
+Lokalnie (Node.js 20+):
 
 ```bash
 npm install
-cp .env.example .env              # lokalnie zmień NODE_ENV=development i BASE_URL=http://localhost:3000
-npm run create-admin -- twoj@email.pl "Stanisław"
-npm start                         # http://localhost:3000
+npm run create-admin -- twoj@email.pl "Stanisław"   # wypisze link do ustawienia hasła
+npm start                                           # http://localhost:3000
+npm test
 ```
 
-`create-admin` wypisze link do ustawienia hasła. Hasło nigdy nie przechodzi przez wiersz poleceń.
-
-Testy: `npm test`.
-
-## Wdrożenie na biznescreator.pl
-
-Aplikacja potrzebuje serwera z Node.js. Zwykły hosting „na PHP” nie wystarczy. Darmowe lub tanie opcje:
-
-- **Oracle Cloud Always Free**: darmowy VPS na zawsze.
-- **mikr.us**: polski VPS za kilkadziesiąt zł rocznie.
-- dowolny VPS z Ubuntu.
-
-Na serwerze:
-
-```bash
-git clone <repo> biznescreator && cd biznescreator
-npm ci --omit=dev
-cp .env.example .env   # NODE_ENV=production, BASE_URL=https://biznescreator.pl, TRUST_PROXY=1
-npm run create-admin -- twoj@email.pl "Stanisław"
-sudo npm i -g pm2 && pm2 start server/index.js --name biznescreator && pm2 save && pm2 startup
-```
-
-Przed aplikacją postaw **nginx z HTTPS** (Let's Encrypt, darmowy certyfikat):
-
-```nginx
-server {
-  server_name biznescreator.pl www.biznescreator.pl;
-  location / {
-    proxy_pass http://127.0.0.1:3000;
-    proxy_set_header Host $host;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-  }
-  client_max_body_size 1m;
-}
-```
-
-```bash
-sudo certbot --nginx -d biznescreator.pl -d www.biznescreator.pl
-```
-
-Ustaw w DNS domeny rekord `A` wskazujący na IP serwera.
+Bez `DATABASE_URL` aplikacja używa lokalnego pliku `data/biznescreator.db`.
 
 Zanim wpuścisz użytkowników, przeczytaj **[BEZPIECZENSTWO.md](BEZPIECZENSTWO.md)**.
 
 ## Struktura
 
 ```
-server/      index.js (trasy), auth.js (logowanie, sesje, CSRF), search.js (OSM + Google),
-             sitecheck.js (sprawdzanie stron, ochrona SSRF), db.js (SQLite), config.js
+api/         index.js – wejście dla Vercel
+server/      index.js (trasy), auth.js (logowanie, sesje, CSRF, limity), search.js (OSM + Google),
+             sitecheck.js (sprawdzanie stron, ochrona SSRF), db.js (Turso / SQLite), config.js
 views/       strony HTML (layout + podstrony)
-public/      css, js, logo (img/favicon.svg, img/logo.svg)
+public/      css, js, vendor/leaflet, favicon.svg, img/logo.svg (serwowane bezpośrednio przez CDN)
 scripts/     create-admin.js
 test/        testy (node --test)
-data/        baza SQLite (nie trafia do gita)
+data/        lokalna baza SQLite (nie trafia do gita)
 ```
