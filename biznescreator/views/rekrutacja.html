@@ -1,0 +1,40 @@
+<div class="wrap narrow auth">
+  <div class="panel" data-panel>
+    <span class="eyebrow">Rekrutacja</span>
+    <h1>Dołącz do BiznesCreator</h1>
+    <p class="intro">Dostęp do narzędzia dostają osoby, które przejdą rekrutację. Odpowiedz na 10 pytań. Jeśli Cię przyjmiemy, na podany e-mail dostaniesz link do ustawienia hasła.</p>
+    <div class="alert alert-error hidden" data-error></div>
+    <form data-form novalidate>
+      <div class="hp" aria-hidden="true"><label>Strona <input name="website" tabindex="-1" autocomplete="off"></label></div>
+      <div class="field"><label for="name"><span class="qnum">01</span>Imię i nazwisko</label><input id="name" name="name" autocomplete="name" maxlength="100" required></div>
+      <div class="field"><label for="email"><span class="qnum">02</span>Adres e-mail</label><input id="email" name="email" type="email" autocomplete="email" maxlength="254" required><span class="hint">Na ten adres wyślemy decyzję i link aktywacyjny. Będzie to też Twój login.</span></div>
+      <div class="grid-2">
+        <div class="field"><label for="age"><span class="qnum">03</span>Wiek</label><input id="age" name="age" type="number" min="13" max="99" inputmode="numeric" required></div>
+        <div class="field"><label for="city"><span class="qnum">04</span>Miasto / region działania</label><input id="city" name="city" maxlength="100" placeholder="np. Kraków" required></div>
+      </div>
+      <div class="field"><label for="why"><span class="qnum">05</span>Dlaczego chcesz dołączyć do BiznesCreator?</label><textarea id="why" name="why" maxlength="2000" required placeholder="Kilka zdań o Tobie i Twoich celach…"></textarea></div>
+      <div class="field"><label for="experience"><span class="qnum">06</span>Doświadczenie w tworzeniu stron</label>
+        <select id="experience" name="experience" required>
+          <option value="">Wybierz…</option><option>Żadne, dopiero zaczynam</option><option>Zrobiłem kilka stron dla siebie</option><option>Robiłem strony dla klientów</option><option>Robię to zawodowo</option>
+        </select></div>
+      <div class="grid-2">
+        <div class="field"><label for="hours"><span class="qnum">07</span>Ile czasu tygodniowo?</label>
+          <select id="hours" name="hours" required><option value="">Wybierz…</option><option>Do 3 godzin</option><option>3–10 godzin</option><option>10–20 godzin</option><option>Ponad 20 godzin</option></select></div>
+        <div class="field"><label for="goal"><span class="qnum">08</span>Twój cel miesięczny</label>
+          <select id="goal" name="goal" required><option value="">Wybierz…</option><option>1–2 klientów</option><option>3–5 klientów</option><option>Ponad 5 klientów</option><option>Na razie chcę się nauczyć</option></select></div>
+      </div>
+      <div class="field"><label for="source"><span class="qnum">09</span>Skąd wiesz o BiznesCreator?</label>
+        <select id="source" name="source" required><option value="">Wybierz…</option><option>TikTok</option><option>Instagram</option><option>YouTube</option><option>stanislobiznes.pl</option><option>Od znajomego</option><option>Inne</option></select></div>
+      <div class="field"><label for="social"><span class="qnum">10</span>Link do portfolio lub social media <span class="muted">(opcjonalnie)</span></label><input id="social" name="social" maxlength="300" placeholder="https://…"></div>
+      <label class="check mb16"><input type="checkbox" name="consent" required><span>Wyrażam zgodę na przetwarzanie moich danych w celu przeprowadzenia rekrutacji do BiznesCreator. Jeśli mam mniej niż 16 lat, mam zgodę rodzica lub opiekuna.</span></label>
+      <button class="btn btn-block" type="submit">Wyślij zgłoszenie</button>
+    </form>
+    <p class="below">Masz już konto? <a href="/login">Zaloguj się</a></p>
+  </div>
+  <div class="panel hidden" data-done>
+    <span class="eyebrow">Gotowe</span>
+    <h1>Zgłoszenie wysłane ✓</h1>
+    <p class="intro">Dziękujemy! Przejrzymy Twoje odpowiedzi i odezwiemy się na podany adres e-mail. Sprawdzaj też folder spam.</p>
+    <a href="/" class="btn btn-ghost">Wróć na stronę główną</a>
+  </div>
+</div>
