@@ -390,6 +390,223 @@ footer{border-top:1px solid var(--line);padding:44px 0;position:relative;z-index
   ]
 }
 </script>
+<style id="v2">
+/* ===== v2: odświeżony wygląd ===== */
+:root{
+  --bg:#07080a; --bg2:#0b0c0f; --surface:#101114; --surface2:#15171b;
+  --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.13);
+  --text:#f5f6f7; --dim:#a3a7b0; --mut:#6c707a;
+  --acc:#c4f25a; --acc2:#38e1b0; --acc3:#5ab8ff;
+  --grad:linear-gradient(115deg,var(--acc) 0%,var(--acc2) 55%,var(--acc3) 100%);
+  --glass:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  --shadow:0 1px 0 rgba(255,255,255,.05) inset,0 24px 60px -30px rgba(0,0,0,.9);
+}
+::selection{background:rgba(196,242,90,.28);color:#fff}
+body{background:radial-gradient(1200px 700px at 80% -10%,rgba(56,225,176,.07),transparent 60%),radial-gradient(900px 600px at -10% 10%,rgba(196,242,90,.06),transparent 60%),var(--bg)}
+body::after{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.035;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.grid-bg{background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:72px 72px}
+.glow{opacity:.75;filter:blur(110px)}
+.glow.a{background:radial-gradient(circle,rgba(196,242,90,.16),transparent 70%)}
+.glow.b{background:radial-gradient(circle,rgba(56,225,176,.13),transparent 70%)}
+section{padding:100px 0}
+
+/* gradient text */
+.grad-line,.gt{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+
+/* eyebrow */
+.eyebrow{color:var(--dim);letter-spacing:.22em;font-size:.74rem;padding:7px 14px 7px 10px;border:1px solid var(--line);border-radius:100px;background:rgba(255,255,255,.025);gap:10px}
+.eyebrow::before{width:7px;height:7px;border-radius:50%;background:var(--acc);box-shadow:0 0 12px var(--acc)}
+.eyebrow b{font-weight:600;color:var(--acc);letter-spacing:.1em}
+
+/* progress + nav */
+.progress{background:var(--grad);box-shadow:0 0 14px rgba(196,242,90,.5)}
+header{padding-top:14px;transition:padding .4s var(--ease)}
+header.scrolled{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;border-bottom-color:transparent;padding-top:10px}
+header .nav{height:62px;padding:0 10px 0 18px;border:1px solid transparent;border-radius:18px;transition:background .4s,border-color .4s,box-shadow .4s;max-width:calc(var(--maxw) - 20px)}
+header.scrolled .nav{background:rgba(14,15,18,.72);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);border-color:var(--line2);box-shadow:0 18px 50px -20px rgba(0,0,0,.8)}
+.logo .mk{background:var(--grad);color:#07080a;border-radius:9px;box-shadow:0 6px 20px -6px rgba(196,242,90,.6)}
+.nav-links{gap:6px}
+.nav-links a{padding:8px 13px;border-radius:10px;transition:color .25s,background .25s}
+.nav-links a:hover{background:rgba(255,255,255,.05)}
+.nav-links a.active{color:var(--text);background:rgba(255,255,255,.07)}
+.nav-cta{background:var(--grad);border-radius:11px;padding:10px 20px}
+.nav-cta:hover{box-shadow:0 10px 30px -6px rgba(196,242,90,.55)}
+
+/* przyciski */
+.btn{border-radius:13px;padding:15px 28px}
+.btn-primary{background:var(--grad);color:#07080a;box-shadow:0 10px 30px -10px rgba(196,242,90,.55),inset 0 1px 0 rgba(255,255,255,.5)}
+.btn-primary:hover{box-shadow:0 18px 44px -10px rgba(56,225,176,.6),inset 0 1px 0 rgba(255,255,255,.5)}
+.btn-primary::after{background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent)}
+.btn-ghost{background:rgba(255,255,255,.03);border-color:var(--line2);backdrop-filter:blur(8px)}
+.btn-ghost:hover{border-color:rgba(196,242,90,.6);background:rgba(196,242,90,.06)}
+
+/* hero */
+.hero{padding-top:96px}
+.badge{border-color:rgba(196,242,90,.25);background:rgba(196,242,90,.06);color:#dfe9c9}
+.badge .dot{background:var(--acc);box-shadow:0 0 0 0 rgba(196,242,90,.6);animation:pulse 2.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(196,242,90,.55)}70%{box-shadow:0 0 0 10px rgba(196,242,90,0)}100%{box-shadow:0 0 0 0 rgba(196,242,90,0)}}
+.hero h1{font-size:clamp(2.6rem,5.6vw,4.7rem);letter-spacing:-.04em;line-height:1.03}
+@media(min-width:921px){.hero .wrap{grid-template-columns:1.2fr .8fr}}
+.shead{max-width:760px}
+.hero .lead{color:#b4b8c1}
+.hero-stats{gap:0;margin-top:46px;display:inline-flex;border:1px solid var(--line);border-radius:18px;background:var(--glass);box-shadow:var(--shadow);overflow:hidden}
+.hero-stats>div{padding:18px 30px}
+.hero-stats>div+div{border-left:1px solid var(--line)}
+.hero-stats .n{font-size:2rem;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.obj-stage::before{content:'';position:absolute;width:440px;height:440px;max-width:92vw;max-height:92vw;border-radius:50%;border:1px dashed rgba(255,255,255,.08);animation:spin 60s linear infinite}
+.obj-stage::after{content:'';position:absolute;width:330px;height:330px;max-width:70vw;max-height:70vw;border-radius:50%;border:1px solid rgba(196,242,90,.1)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.obj-glow{width:360px;height:360px;background:radial-gradient(circle,rgba(196,242,90,.22),rgba(56,225,176,.08) 45%,transparent 70%)}
+.float-tag{position:absolute;z-index:2;display:flex;align-items:center;gap:9px;padding:10px 14px;border:1px solid var(--line2);border-radius:14px;background:rgba(16,17,20,.78);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font-family:'Space Grotesk';font-weight:600;font-size:.84rem;box-shadow:0 20px 40px -18px rgba(0,0,0,.9);animation:bob 6s ease-in-out infinite}
+.float-tag i{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:rgba(196,242,90,.12);color:var(--acc);font-style:normal;font-size:.85rem}
+.float-tag.t1{top:12%;left:2%}
+.float-tag.t2{bottom:16%;right:0;animation-delay:-3s}
+.float-tag.t3{bottom:-2%;left:4%;animation-delay:-1.5s}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+/* pasek z hasłami */
+.ticker{position:relative;z-index:2;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(255,255,255,.015);padding:20px 0;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
+.ticker-track{display:flex;gap:48px;width:max-content;animation:scrollX 40s linear infinite}
+.ticker span{font-family:'Space Grotesk';font-weight:600;font-size:1.15rem;color:var(--mut);display:flex;align-items:center;gap:48px;white-space:nowrap}
+.ticker span::after{content:'✦';color:var(--acc);font-size:.8rem}
+
+/* sekcje */
+.shead h2,.about h2,.contact h2{font-size:clamp(2rem,4.2vw,3.1rem);letter-spacing:-.035em}
+.shead p{color:#a9adb6}
+
+/* karty – wspólny wygląd + światło pod kursorem */
+.bcard,.quote-card,.ot-card,.citem,.plan,.step,.cta-card,.tcard,.qa,.modal{background:var(--glass),var(--surface);border-color:var(--line);box-shadow:var(--shadow)}
+.spot{position:relative;isolation:isolate}
+.spot::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;opacity:0;transition:opacity .35s;
+  background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(196,242,90,.09),transparent 45%)}
+.spot:hover::before{opacity:1}
+.bcard:hover,.ot-card:hover,.plan:hover,.step:hover{border-color:rgba(196,242,90,.28)}
+.bcard .ic,.citem .ic,.step .snum,.mic{background:linear-gradient(135deg,rgba(196,242,90,.16),rgba(56,225,176,.06));border-color:rgba(196,242,90,.22);color:var(--acc)}
+.bcard .ic svg{stroke:var(--acc)}
+.bcard{padding:30px 28px}
+.bcard h3{font-size:1.18rem}
+.bcard .ix{position:absolute;top:24px;right:24px;font-family:'Space Grotesk';font-size:.78rem;color:var(--mut);letter-spacing:.1em}
+
+/* cytat */
+.quote-card{border-radius:26px;padding:48px 44px;overflow:hidden}
+.quote-card::after{content:'';position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(140deg,rgba(196,242,90,.55),transparent 35%,transparent 65%,rgba(56,225,176,.45));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.quote-card .qm{font-size:5rem;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:.6}
+.quote-card blockquote{font-size:1.5rem;letter-spacing:-.01em}
+.quote-card cite{display:flex;align-items:center;gap:12px}
+.quote-card cite::before{content:'';width:34px;height:1px;background:var(--acc)}
+.about p strong{color:var(--acc)}
+
+/* e-booki */
+.books{gap:26px}
+.book-item{padding:44px 26px 34px;border:1px solid var(--line);border-radius:26px;background:var(--glass),var(--surface);box-shadow:var(--shadow);transition:transform .4s var(--ease),border-color .4s}
+.book-item:hover{transform:translateY(-6px);border-color:rgba(196,242,90,.28)}
+.book-scene{position:relative}
+.book-scene::after{content:'';position:absolute;left:10%;right:10%;bottom:-22px;height:22px;border-radius:50%;background:radial-gradient(ellipse,rgba(196,242,90,.28),transparent 70%);filter:blur(6px)}
+.book-link{color:var(--acc);padding:9px 16px;border:1px solid rgba(196,242,90,.3);border-radius:100px;background:rgba(196,242,90,.06);transition:gap .25s,background .25s}
+.book-link:hover{background:rgba(196,242,90,.12)}
+
+/* oferta – teaser */
+.offer-teaser{gap:20px}
+.ot-card{border-radius:22px;padding:30px 30px 28px;position:relative;overflow:hidden}
+.ot-card.featured{background:linear-gradient(160deg,rgba(196,242,90,.10),rgba(56,225,176,.04) 50%,transparent),var(--surface2);border-color:rgba(196,242,90,.35)}
+.ot-card.featured::after{content:'Polecana';position:absolute;top:22px;right:22px;font-family:'Space Grotesk';font-weight:600;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:#07080a;background:var(--grad);padding:5px 11px;border-radius:100px}
+.ot-price{font-size:2.6rem;letter-spacing:-.03em}
+
+/* BiznesCreator */
+.bc{display:grid;grid-template-columns:1fr 1.05fr;gap:56px;align-items:center;padding:56px;border:1px solid var(--line2);border-radius:32px;background:radial-gradient(600px 400px at 0% 0%,rgba(196,242,90,.10),transparent 60%),radial-gradient(500px 400px at 100% 100%,rgba(90,184,255,.08),transparent 60%),var(--surface);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.bc h2{font-size:clamp(2rem,4vw,3rem);letter-spacing:-.035em;margin-bottom:18px}
+.bc>div>p{color:#a9adb6;font-size:1.06rem;margin-bottom:24px}
+.bc-list{list-style:none;display:flex;flex-direction:column;gap:12px;margin-bottom:32px}
+.bc-list li{display:flex;gap:12px;align-items:flex-start;color:var(--text);font-size:.98rem}
+.bc-list li svg{width:20px;height:20px;flex-shrink:0;padding:3px;border-radius:6px;background:rgba(196,242,90,.14);stroke:var(--acc);margin-top:2px}
+.bc-actions{display:flex;gap:12px;flex-wrap:wrap}
+.bc-app{border:1px solid var(--line2);border-radius:20px;background:#0b0c0f;overflow:hidden;box-shadow:0 40px 80px -30px rgba(0,0,0,.9),0 0 0 6px rgba(255,255,255,.02);transform:perspective(1400px) rotateY(-8deg) rotateX(4deg);transition:transform .6s var(--ease)}
+.bc-app:hover{transform:perspective(1400px) rotateY(0) rotateX(0)}
+.bc-bar{display:flex;align-items:center;gap:7px;padding:12px 14px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.02)}
+.bc-bar i{width:10px;height:10px;border-radius:50%;background:#2a2c31}
+.bc-bar span{margin-left:10px;font-size:.74rem;color:var(--mut);padding:4px 12px;border-radius:7px;background:rgba(255,255,255,.04)}
+.bc-body{display:grid;grid-template-columns:1.2fr 1fr}
+.bc-map{position:relative;min-height:280px;background:
+  linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px) 0 0/28px 28px,
+  linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px) 0 0/28px 28px,
+  radial-gradient(circle at 30% 40%,#13161a,#0d0f12)}
+.bc-map::before{content:'';position:absolute;left:-10%;right:-10%;top:58%;height:14px;background:rgba(255,255,255,.05);transform:rotate(-12deg)}
+.bc-map::after{content:'';position:absolute;top:-10%;bottom:-10%;left:44%;width:10px;background:rgba(255,255,255,.04);transform:rotate(18deg)}
+.bc-sel{position:absolute;left:16%;top:18%;width:60%;height:56%;border:1.5px dashed var(--acc);border-radius:6px;background:rgba(196,242,90,.06);z-index:1}
+.pin{position:absolute;z-index:2;width:12px;height:12px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 4px rgba(196,242,90,.2),0 0 16px rgba(196,242,90,.7)}
+.pin.o{background:#3b3f47;box-shadow:none}
+.pin.b{background:var(--acc3);box-shadow:0 0 0 4px rgba(90,184,255,.2)}
+.bc-leads{border-left:1px solid var(--line);padding:14px;display:flex;flex-direction:column;gap:9px}
+.bc-leads b{font-family:'Space Grotesk';font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:600;margin-bottom:2px}
+.lead-row{display:flex;align-items:center;gap:9px;padding:9px 10px;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.02);font-size:.8rem}
+.lead-row .av{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:rgba(255,255,255,.06);font-family:'Space Grotesk';font-weight:600;font-size:.72rem;flex-shrink:0}
+.lead-row .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st{font-size:.64rem;font-weight:600;padding:3px 8px;border-radius:100px;white-space:nowrap}
+.st.n{background:rgba(90,184,255,.14);color:#9fd3ff}
+.st.z{background:rgba(196,242,90,.14);color:var(--acc)}
+.st.k{background:rgba(56,225,176,.16);color:var(--acc2)}
+
+/* CTA */
+.cta-card{border-radius:32px;padding:76px 48px}
+.cta-card::before{background:radial-gradient(500px 260px at 50% 0%,rgba(196,242,90,.14),transparent 70%)}
+.cta-card h2{font-size:clamp(2rem,4vw,3rem);letter-spacing:-.035em}
+.cta-card.support .heart{width:64px;height:64px;margin:0 auto 22px;border-radius:20px;display:grid;place-items:center;background:var(--grad);color:#07080a;position:relative;box-shadow:0 18px 40px -12px rgba(196,242,90,.6)}
+.cta-card.support .heart svg{width:28px;height:28px}
+
+/* kontakt */
+.citem{border-radius:18px;padding:18px 20px}
+.citem:hover{border-color:rgba(196,242,90,.3)}
+.citem:hover .carrow{stroke:var(--acc)}
+.contact .avail{display:inline-flex;align-items:center;gap:10px;margin-top:8px;padding:10px 16px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.02);color:var(--dim);font-size:.9rem}
+.contact .avail::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--acc2);box-shadow:0 0 10px var(--acc2)}
+
+/* stopka */
+footer{border-top:1px solid var(--line);background:linear-gradient(180deg,transparent,rgba(196,242,90,.025));padding:56px 0 48px}
+.foot p a{color:var(--dim);text-decoration:none;border-bottom:1px solid rgba(196,242,90,.4)}
+.foot p a:hover{color:var(--acc)}
+.foot-soc a:hover{color:var(--acc);border-color:rgba(196,242,90,.4)}
+
+/* oferta stron */
+.plans{gap:22px;max-width:920px}
+.plan{border-radius:28px;padding:44px 38px}
+.plan.featured{background:linear-gradient(170deg,rgba(196,242,90,.10),rgba(56,225,176,.03) 45%,transparent),var(--surface2);border-color:rgba(196,242,90,.38);box-shadow:0 40px 90px -40px rgba(196,242,90,.35),var(--shadow)}
+.plan .tag{background:var(--grad);color:#07080a}
+.plan .price{font-size:3.2rem;letter-spacing:-.035em}
+.plan.featured .price{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.plan li svg{stroke:var(--acc);padding:2px;border-radius:6px;background:rgba(196,242,90,.12);width:20px;height:20px}
+.steps{position:relative}
+.step{border-radius:22px;padding:30px 26px}
+.step .snum{font-size:1.05rem;width:42px;height:42px;border-radius:12px}
+
+/* modal / do góry */
+.copy:hover,.copy.done{color:var(--acc);border-color:rgba(196,242,90,.4)}
+.totop:hover{border-color:var(--acc);color:var(--acc)}
+:focus-visible{outline-color:var(--acc)}
+
+@media(max-width:920px){
+  header{padding-top:8px}
+  header .nav{background:rgba(14,15,18,.72);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-color:var(--line2);margin:0 12px;width:auto}
+  .nav-links.open{top:70px;left:12px;right:12px;border:1px solid var(--line2);border-radius:18px;padding:12px}
+  .nav-links.open a{padding:12px 14px}
+  .bc{grid-template-columns:1fr;padding:34px 24px;gap:36px}
+  .bc-app{transform:none}
+  .float-tag.t1{left:0}
+}
+@media(max-width:600px){
+  section{padding:80px 0}
+  .hero-stats{display:flex;width:100%}
+  .hero-stats>div{flex:1;padding:16px 12px;text-align:center}
+  .float-tag{display:none}
+  .bc-body{grid-template-columns:1fr}
+  .bc-leads{border-left:0;border-top:1px solid var(--line)}
+  .bc-map{min-height:200px}
+  .quote-card{padding:36px 28px}
+  .cta-card{padding:52px 22px}
+  .plan{padding:36px 26px}
+}
+@media(prefers-reduced-motion:reduce){.ticker-track,.float-tag,.obj-stage::before,.badge .dot{animation:none}}
+</style>
 </head>
 <body>
 <div class="progress" id="progress"></div>
@@ -427,13 +644,15 @@ footer{border-top:1px solid var(--line);padding:44px 0;position:relative;z-index
       <div><div class="n">&#8734;</div><div class="l">Pomysłów</div></div>
     </div>
   </div>
-  <div class="obj-stage rev in d2"><div class="obj-glow"></div><div id="obj3d"><div class="obj-fallback">Stanislo</div></div></div>
+  <div class="obj-stage rev in d2"><div class="obj-glow"></div><div class="float-tag t1"><i>✦</i>Sztuczna inteligencja</div><div class="float-tag t2"><i>↗</i>Własne projekty</div><div class="float-tag t3"><i>zł</i>Zarabianie online</div><div id="obj3d"><div class="obj-fallback">Stanislo</div></div></div>
 </div></section>
+
+<div class="ticker" aria-hidden="true"><div class="ticker-track"><span>Sztuczna inteligencja</span><span>Grafika</span><span>Strony internetowe</span><span>Programowanie</span><span>E-booki</span><span>Dropshipping</span><span>Marketing afiliacyjny</span><span>BiznesCreator</span><span>Sztuczna inteligencja</span><span>Grafika</span><span>Strony internetowe</span><span>Programowanie</span><span>E-booki</span><span>Dropshipping</span><span>Marketing afiliacyjny</span><span>BiznesCreator</span></div></div>
 
 <!-- O MNIE -->
 <section class="about" id="omnie"><div class="wrap">
   <div class="rev">
-    <span class="eyebrow">Krótki wstęp</span>
+    <span class="eyebrow"><b>01</b>Krótki wstęp</span>
     <h2>Sukces finansowy nie ma metryki.</h2>
     <p>Czy jako nastolatek chciałeś odnieść sukces finansowy, ale przeszkadzał Ci młody wiek? Chciałeś zarabiać, ale znudziły Ci się prace na działce babci?</p>
     <p>Na szczęście żyjemy w <strong>XXI wieku</strong>. Żeby zarabiać, nie musisz męczyć się na polu - wystarczy telefon albo komputer i dostęp do internetu.</p>
@@ -448,7 +667,7 @@ footer{border-top:1px solid var(--line);padding:44px 0;position:relative;z-index
 
 <!-- UMIEJETNOSCI -->
 <section id="umiejetnosci"><div class="wrap">
-  <div class="shead rev"><span class="eyebrow">Co potrafię</span><h2>Pracuję z technologią przyszłości.</h2><p>Łączę kreatywność z umiejętnościami technicznymi - to one pozwalają zamieniać pomysły w realne, zarabiające projekty.</p>
+  <div class="shead rev"><span class="eyebrow"><b>02</b>Co potrafię</span><h2>Pracuję z technologią przyszłości.</h2><p>Łączę kreatywność z umiejętnościami technicznymi - to one pozwalają zamieniać pomysły w realne, zarabiające projekty.</p>
   <a href="https://stanisloart.netlify.app/" target="_blank" rel="noopener" class="section-link">Czytaj więcej <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M9 7h8v8"/></svg></a></div>
   <div class="skills">
     <div class="bcard rev"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9zM9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/></svg></div><h3>Sztuczna inteligencja</h3><p>Wykorzystuję AI do nauki, tworzenia treści i automatyzacji codziennej pracy.</p></div>
@@ -460,7 +679,7 @@ footer{border-top:1px solid var(--line);padding:44px 0;position:relative;z-index
 
 <!-- E-BOOKI -->
 <section id="ebooki"><div class="wrap">
-  <div class="shead rev"><span class="eyebrow">Moje e-booki</span><h2>Wiedza, która zarabia.</h2><p>Dopiero zaczynam, ale mam już kilka e-booków o zarabianiu. Oto niektóre z nich - kliknij, aby dowiedzieć się więcej.</p></div>
+  <div class="shead rev"><span class="eyebrow"><b>03</b>Moje e-booki</span><h2>Wiedza, która zarabia.</h2><p>Dopiero zaczynam, ale mam już kilka e-booków o zarabianiu. Oto niektóre z nich - kliknij, aby dowiedzieć się więcej.</p></div>
   <div class="books">
     <div class="book-item rev">
       <div class="book-scene"><div class="book">
@@ -502,7 +721,7 @@ footer{border-top:1px solid var(--line);padding:44px 0;position:relative;z-index
 
 <!-- STRONY (usluga) -->
 <section id="strony"><div class="wrap">
-  <div class="shead rev"><span class="eyebrow">Zamów u mnie</span><h2>Zrobię Ci taką stronę.</h2><p>Tworzę nowoczesne, szybkie strony internetowe - od prostej wizytówki po rozbudowany serwis z animacjami i efektami 3D. Dokładnie w stylu tej, którą właśnie oglądasz. Umiejętności mam duże, a każdą stronę robię z dbałością o detale.</p></div>
+  <div class="shead rev"><span class="eyebrow"><b>04</b>Zamów u mnie</span><h2>Zrobię Ci taką stronę.</h2><p>Tworzę nowoczesne, szybkie strony internetowe - od prostej wizytówki po rozbudowany serwis z animacjami i efektami 3D. Dokładnie w stylu tej, którą właśnie oglądasz. Umiejętności mam duże, a każdą stronę robię z dbałością o detale.</p></div>
   <div class="offer-teaser rev d1">
     <div class="ot-card"><div class="ot-name">Podstawowa</div><div class="ot-price">500 zł</div><div class="ot-desc">Elegancka strona-wizytówka na start.</div></div>
     <div class="ot-card featured"><div class="ot-name">Zaawansowana</div><div class="ot-price">800 zł</div><div class="ot-desc">Rozbudowana strona z animacjami i efektami 3D.</div></div>
@@ -511,15 +730,43 @@ footer{border-top:1px solid var(--line);padding:44px 0;position:relative;z-index
 </div></section>
 
 <!-- BIZNESCREATOR -->
-<section id="biznescreator"><div class="wrap"><div class="cta-card rev">
-  <span class="eyebrow">Mój projekt</span>
-  <h2>BiznesCreator - znajdź firmy bez strony.</h2>
-  <p>Narzędzie, które wyszukuje na mapie lokalne firmy bez strony internetowej i zapisuje je jako leady w prostym CRM. Idealne, żeby znaleźć pierwszych klientów na swoją stronę.</p>
-  <a href="https://biznescreator.pl" target="_blank" rel="noopener" class="btn btn-primary" style="margin:0 auto">Wejdź na BiznesCreator <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M9 7h8v8"/></svg></a>
+<section id="biznescreator"><div class="wrap"><div class="bc rev">
+  <div>
+    <span class="eyebrow"><b>05</b>Mój projekt</span>
+    <h2><span class="gt">BiznesCreator</span> - znajdź firmy bez strony.</h2>
+    <p>Narzędzie, które wyszukuje na mapie lokalne firmy bez strony internetowej i zapisuje je jako leady w prostym CRM. Idealne, żeby znaleźć pierwszych klientów na swoją stronę.</p>
+    <ul class="bc-list">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Zaznaczasz obszar na mapie i wybierasz branże</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Widzisz firmy bez strony albo z niedziałającą stroną</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Prowadzisz leady: statusy, notatki, klienci</li>
+    </ul>
+    <div class="bc-actions">
+      <a href="https://biznescreator.pl" target="_blank" rel="noopener" class="btn btn-primary">Wejdź na BiznesCreator <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M9 7h8v8"/></svg></a>
+      <a href="https://biznescreator.pl/rekrutacja" target="_blank" rel="noopener" class="btn btn-ghost">Dołącz</a>
+    </div>
+  </div>
+  <div class="bc-app" aria-hidden="true">
+    <div class="bc-bar"><i></i><i></i><i></i><span>biznescreator.pl</span></div>
+    <div class="bc-body">
+      <div class="bc-map">
+        <div class="bc-sel"></div>
+        <i class="pin" style="left:28%;top:30%"></i><i class="pin" style="left:52%;top:44%"></i><i class="pin b" style="left:38%;top:58%"></i>
+        <i class="pin" style="left:64%;top:26%"></i><i class="pin o" style="left:84%;top:70%"></i><i class="pin o" style="left:8%;top:80%"></i><i class="pin o" style="left:88%;top:14%"></i>
+      </div>
+      <div class="bc-leads">
+        <b>Leady · 4</b>
+        <div class="lead-row"><span class="av">F</span><span class="nm">Fryzjer Ania</span><span class="st z">Zainteresowany</span></div>
+        <div class="lead-row"><span class="av">P</span><span class="nm">Pizzeria Roma</span><span class="st n">Nowy</span></div>
+        <div class="lead-row"><span class="av">M</span><span class="nm">Mechanik Auto-Fix</span><span class="st k">Klient</span></div>
+        <div class="lead-row"><span class="av">B</span><span class="nm">Barber Shop 21</span><span class="st n">Nowy</span></div>
+      </div>
+    </div>
+  </div>
 </div></div></section>
 
 <!-- WSPARCIE -->
-<section><div class="wrap"><div class="cta-card rev">
+<section><div class="wrap"><div class="cta-card support rev">
+  <div class="heart"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.6-9.3-8.4C1 9.7 2.5 6 6 6c2 0 3.2 1.1 4 2.3C10.8 7.1 12 6 14 6c3.5 0 5 3.7 3.3 6.6C19 16.4 12 21 12 21z"/></svg></div>
   <h2>Chcesz mnie wesprzeć?</h2>
   <p>Każde wsparcie pomaga mi tworzyć więcej materiałów i rozwijać projekt. Dziękuję, że jesteś częścią tej drogi.</p>
   <a href="https://tipply.pl/@stanislo-biznes" target="_blank" rel="noopener" class="btn btn-primary" style="margin:0 auto">Wesprzyj mnie <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.6-9.3-8.4C1 9.7 2.5 6 6 6c2 0 3.2 1.1 4 2.3C10.8 7.1 12 6 14 6c3.5 0 5 3.7 3.3 6.6C19 16.4 12 21 12 21z"/></svg></a>
@@ -528,9 +775,9 @@ footer{border-top:1px solid var(--line);padding:44px 0;position:relative;z-index
 <!-- KONTAKT -->
 <section class="contact" id="kontakt"><div class="wrap">
   <div class="rev">
-    <span class="eyebrow">Kontakt</span><h2>Skontaktuj się ze mną!</h2>
+    <span class="eyebrow"><b>06</b>Kontakt</span><h2>Skontaktuj się ze mną!</h2>
     <p class="lead">Masz pytanie albo pomysł na współpracę? Napisz lub złap mnie w social mediach.</p>
-    <p class="cnote">Staram się odpowiadać na wszystkie wiadomości jak najszybciej.</p>
+    <p class="avail">Staram się odpowiadać na wszystkie wiadomości jak najszybciej.</p>
   </div>
   <div class="cpanel rev d1">
     <a href="mailto:stanislo.biznes@gmail.com" class="citem"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg></span><span class="ctext"><span class="clbl">E-mail</span><span class="cval">stanislo.biznes@gmail.com</span></span><svg class="carrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M9 7h8v8"/></svg></a>
@@ -634,13 +881,13 @@ if(box&&typeof THREE!=='undefined'){try{
   var cam=new THREE.PerspectiveCamera(45,W/H,0.1,100);cam.position.z=6;
   var grp=new THREE.Group();scene.add(grp);
   var g1=new THREE.IcosahedronGeometry(2,1);
-  var m1=new THREE.MeshBasicMaterial({color:0xffffff,wireframe:true,transparent:true,opacity:0.42});
+  var m1=new THREE.MeshBasicMaterial({color:0xc4f25a,wireframe:true,transparent:true,opacity:0.42});
   grp.add(new THREE.Mesh(g1,m1));
   var g2=new THREE.IcosahedronGeometry(1.3,0);
-  grp.add(new THREE.Mesh(g2,new THREE.MeshBasicMaterial({color:0xffffff,wireframe:true,transparent:true,opacity:0.16})));
+  grp.add(new THREE.Mesh(g2,new THREE.MeshBasicMaterial({color:0x38e1b0,wireframe:true,transparent:true,opacity:0.3})));
   // wierzcholki jako punkty
   var pv=new THREE.BufferGeometry();pv.setAttribute('position',g1.getAttribute('position'));
-  grp.add(new THREE.Points(pv,new THREE.PointsMaterial({color:0xffffff,size:0.05,transparent:true,opacity:0.8})));
+  grp.add(new THREE.Points(pv,new THREE.PointsMaterial({color:0xe9ffc0,size:0.06,transparent:true,opacity:0.8})));
   // pyl
   var N=420,pos=new Float32Array(N*3);
   for(var i=0;i<N;i++){var r=4+Math.random()*6,th=Math.random()*6.28,ph=Math.acos(2*Math.random()-1);
@@ -662,6 +909,10 @@ if(box&&typeof THREE!=='undefined'){try{
   if(reduce){rnd.render(scene,cam);}else{loop();}
 }catch(err){}}
 })();
+</script>
+<script>
+(function(){var els=document.querySelectorAll('.bcard,.ot-card,.citem,.plan,.step,.book-item,.quote-card');
+els.forEach(function(el){el.classList.add('spot');el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect();el.style.setProperty('--mx',(e.clientX-r.left)+'px');el.style.setProperty('--my',(e.clientY-r.top)+'px');});});})();
 </script>
 </body>
 </html>
