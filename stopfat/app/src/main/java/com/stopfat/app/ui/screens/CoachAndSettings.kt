@@ -62,6 +62,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.stopfat.app.BuildConfig
 import com.stopfat.app.data.AI_MODELS
+import com.stopfat.app.data.AiProvider
+import com.stopfat.app.data.GEMINI_MODELS
 import com.stopfat.app.data.ActivityLevel
 import com.stopfat.app.data.DietType
 import com.stopfat.app.data.Sex
@@ -152,7 +154,7 @@ fun CoachScreen(vm: MainViewModel, nav: Nav) {
                     .background(if (input.isNotBlank() && !busy) Glass.accent else Brush.linearGradient(listOf(Glass.Fill, Glass.Fill))),
             ) {
                 IconButton(onClick = { vm.sendChat(input); input = "" }, enabled = input.isNotBlank() && !busy) {
-                    Icon(Icons.AutoMirrored.Rounded.Send, "Wyślij", tint = if (input.isNotBlank()) Color(0xFF07122A) else Glass.TextTertiary)
+                    Icon(Icons.AutoMirrored.Rounded.Send, "Wyślij", tint = if (input.isNotBlank()) Color.White else Glass.TextTertiary)
                 }
             }
         }
@@ -168,13 +170,13 @@ private fun ChatBubble(fromUser: Boolean, text: String) {
                 .widthIn(max = 300.dp)
                 .clip(shape)
                 .background(
-                    if (fromUser) Brush.linearGradient(listOf(Glass.Teal.copy(alpha = 0.55f), Glass.Violet.copy(alpha = 0.55f)))
-                    else Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.14f), Color.White.copy(alpha = 0.06f))),
+                    if (fromUser) Glass.accent
+                    else Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.9f), Color.White.copy(alpha = 0.65f))),
                 )
-                .border(1.dp, Color.White.copy(alpha = 0.25f), shape)
+                .border(1.dp, Color.White, shape)
                 .padding(horizontal = 14.dp, vertical = 10.dp),
         ) {
-            if (fromUser) Text(text, color = Glass.Text) else MarkdownText(text)
+            if (fromUser) Text(text, color = Color.White) else MarkdownText(text)
         }
     }
 }
@@ -200,6 +202,12 @@ fun SettingsScreen(vm: MainViewModel, nav: Nav) {
     var kcalOverride by remember(profile) { mutableStateOf(if (profile.calorieGoalOverride > 0) profile.calorieGoalOverride.toString() else "") }
     var apiKey by remember(profile) { mutableStateOf(profile.apiKey) }
     var model by remember(profile) { mutableStateOf(profile.aiModel) }
+    var provider by remember(profile) { mutableStateOf(profile.aiProvider) }
+    var geminiKey by remember(profile) { mutableStateOf(profile.geminiKey) }
+    var geminiModel by remember(profile) { mutableStateOf(profile.geminiModel) }
+    var insulin by remember(profile) { mutableStateOf(profile.insulinResistance) }
+    var fetchedModels by remember { mutableStateOf(emptyList<String>()) }
+    var loadingModels by remember { mutableStateOf(false) }
     var reminders by remember(profile) { mutableStateOf(profile.remindersEnabled) }
     var baseUrl by remember(savedBaseUrl) { mutableStateOf(savedBaseUrl) }
     var showKey by remember { mutableStateOf(false) }
@@ -220,6 +228,10 @@ fun SettingsScreen(vm: MainViewModel, nav: Nav) {
         apiKey = apiKey.trim(),
         aiModel = model,
         remindersEnabled = reminders,
+        aiProvider = provider,
+        geminiKey = geminiKey.trim(),
+        geminiModel = geminiModel,
+        insulinResistance = insulin,
     )
 
     Page {
@@ -227,12 +239,25 @@ fun SettingsScreen(vm: MainViewModel, nav: Nav) {
 
         SectionTitle("🤖 Połączenie z AI")
         GlassCard(Modifier.fillMaxWidth()) {
-            Text("StopFat korzysta z modeli Claude firmy Anthropic. Klucz API utworzysz na console.anthropic.com → API Keys.", color = Glass.TextSecondary, style = MaterialTheme.typography.bodySmall)
+            Text("Dostawca AI", color = Glass.TextSecondary, style = MaterialTheme.typography.labelLarge)
+            Spacer(Modifier.height(6.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                AiProvider.entries.forEach { p ->
+                    GlassPill(if (p == AiProvider.GEMINI) "✨ Gemini (darmowe)" else "Claude", provider == p, Modifier.weight(1f)) { provider = p; testResult = null }
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+            val isGemini = provider == AiProvider.GEMINI
+            Text(
+                if (isGemini) "Google Gemini ma darmowy limit zapytań. Klucz utworzysz w 1 minutę w Google AI Studio (konto Google) → „Get API key”."
+                else "Claude (Anthropic) – bardzo dokładny, płatny wg zużycia. Klucz utworzysz na console.anthropic.com → API Keys.",
+                color = Glass.TextSecondary, style = MaterialTheme.typography.bodySmall,
+            )
             Spacer(Modifier.height(10.dp))
             androidx.compose.material3.OutlinedTextField(
-                value = apiKey,
-                onValueChange = { apiKey = it.trim(); testResult = null },
-                label = { Text("Klucz API") },
+                value = if (isGemini) geminiKey else apiKey,
+                onValueChange = { v -> if (isGemini) geminiKey = v.trim() else apiKey = v.trim(); testResult = null },
+                label = { Text(if (isGemini) "Klucz Gemini API" else "Klucz Claude API") },
                 singleLine = true,
                 visualTransformation = if (showKey) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
@@ -242,22 +267,44 @@ fun SettingsScreen(vm: MainViewModel, nav: Nav) {
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
-                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Glass.Teal, unfocusedBorderColor = Glass.Stroke, focusedLabelColor = Glass.Teal,
-                    unfocusedLabelColor = Glass.TextSecondary, cursorColor = Glass.Teal, focusedTextColor = Glass.Text, unfocusedTextColor = Glass.Text,
-                ),
+                colors = com.stopfat.app.ui.components.glassFieldColors(),
             )
             Spacer(Modifier.height(10.dp))
             Text("Model", color = Glass.TextSecondary, style = MaterialTheme.typography.labelLarge)
             Spacer(Modifier.height(6.dp))
-            AI_MODELS.forEach { (id, label) ->
-                GlassPill(label, model == id, Modifier.fillMaxWidth().padding(vertical = 3.dp)) { model = id }
+            if (isGemini) {
+                val options = (GEMINI_MODELS.map { it.first } + fetchedModels + geminiModel).distinct()
+                options.forEach { id ->
+                    val label = GEMINI_MODELS.firstOrNull { it.first == id }?.second ?: id
+                    GlassPill(label, geminiModel == id, Modifier.fillMaxWidth().padding(vertical = 3.dp)) { geminiModel = id }
+                }
+                Spacer(Modifier.height(6.dp))
+                GlassPill(if (loadingModels) "Pobieram listę…" else "↻ Pobierz modele dostępne dla klucza", false) {
+                    if (geminiKey.isNotBlank() && !loadingModels) {
+                        loadingModels = true
+                        scope.launch {
+                            try {
+                                vm.setBaseUrl(baseUrl).join()
+                                fetchedModels = vm.container.geminiModels(geminiKey)
+                                testResult = "✅ Dostępne modele Gemini: ${fetchedModels.size}"
+                            } catch (e: Exception) {
+                                testResult = "❌ ${e.message}"
+                            } finally {
+                                loadingModels = false
+                            }
+                        }
+                    }
+                }
+            } else {
+                AI_MODELS.forEach { (id, label) ->
+                    GlassPill(label, model == id, Modifier.fillMaxWidth().padding(vertical = 3.dp)) { model = id }
+                }
             }
             Spacer(Modifier.height(10.dp))
-            GlassTextField(baseUrl, { baseUrl = it }, "Własny adres API (opcjonalnie, proxy)", placeholder = "https://api.anthropic.com")
+            GlassTextField(baseUrl, { baseUrl = it }, "Własny adres API (opcjonalnie, proxy)", placeholder = if (isGemini) "https://generativelanguage.googleapis.com" else "https://api.anthropic.com")
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                GlassButton("Testuj połączenie", Modifier.weight(1f), secondary = true, loading = testing, enabled = apiKey.isNotBlank()) {
+                GlassButton("Testuj", Modifier.weight(1f), secondary = true, loading = testing, enabled = (if (isGemini) geminiKey else apiKey).isNotBlank()) {
                     testing = true
                     testResult = null
                     scope.launch {
@@ -266,7 +313,7 @@ fun SettingsScreen(vm: MainViewModel, nav: Nav) {
                         testResult = try {
                             val ai = vm.ai() ?: throw IllegalStateException("Brak klucza")
                             ai.coach(current(), "test połączenia", emptyList(), "Odpowiedz jednym krótkim zdaniem po polsku, że połączenie działa.")
-                            "✅ Połączono z AI – wszystko działa!"
+                            "✅ Połączono z ${ai.providerName} – wszystko działa!"
                         } catch (e: Exception) {
                             "❌ ${e.message}"
                         } finally {
@@ -275,10 +322,22 @@ fun SettingsScreen(vm: MainViewModel, nav: Nav) {
                     }
                 }
                 GlassButton("Pobierz klucz", Modifier.weight(1f), secondary = true) {
-                    runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://console.anthropic.com/settings/keys"))) }
+                    val url = if (isGemini) "https://aistudio.google.com/apikey" else "https://console.anthropic.com/settings/keys"
+                    runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
                 }
             }
-            testResult?.let { Text(it, color = if (it.startsWith("✅")) Glass.Teal else Glass.Amber, modifier = Modifier.padding(top = 10.dp)) }
+            testResult?.let { Text(it, color = if (it.startsWith("✅")) Glass.TealText else Glass.AmberText, modifier = Modifier.padding(top = 10.dp)) }
+        }
+
+        SectionTitle("🩺 Insulinooporność")
+        GlassCard(Modifier.fillMaxWidth()) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Mam insulinooporność / stan przedcukrzycowy", color = Glass.Text, style = MaterialTheme.typography.titleSmall)
+                    Text("Dieta o niskim IG, oznaczenia IG i ładunku glikemicznego, AI dostosowane do IO.", color = Glass.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                }
+                Switch(insulin, { on -> insulin = on; if (on && diet == DietType.BALANCED) diet = DietType.LOW_GI }, colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Glass.Violet))
+            }
         }
 
         SectionTitle("👤 Profil")
@@ -309,7 +368,7 @@ fun SettingsScreen(vm: MainViewModel, nav: Nav) {
                 GlassTextField(kcalOverride, { kcalOverride = it.filter(Char::isDigit).take(4) }, "Własny limit kalorii (puste = automatycznie $auto)", keyboardType = KeyboardType.Number, suffix = "kcal")
                 GlassTextField(water, { water = it.filter(Char::isDigit).take(4) }, "Cel wody", keyboardType = KeyboardType.Number, suffix = "ml")
                 Text("Cel kroków: ${((stepGoal.toInt() / 500) * 500).thousands()}", color = Glass.Text)
-                Slider(stepGoal, { stepGoal = it }, valueRange = 3000f..25000f, colors = SliderDefaults.colors(thumbColor = Glass.Teal, activeTrackColor = Glass.Teal, inactiveTrackColor = Glass.FillStrong))
+                Slider(stepGoal, { stepGoal = it }, valueRange = 3000f..25000f, colors = SliderDefaults.colors(thumbColor = Glass.Violet, activeTrackColor = Glass.Violet, inactiveTrackColor = Glass.FillStrong))
             }
         }
 
@@ -320,7 +379,7 @@ fun SettingsScreen(vm: MainViewModel, nav: Nav) {
                     Text("Przypomnienia", color = Glass.Text, style = MaterialTheme.typography.titleSmall)
                     Text("Posiłki, woda i koniec postu", color = Glass.TextSecondary, style = MaterialTheme.typography.bodySmall)
                 }
-                Switch(reminders, { reminders = it }, colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Glass.Teal))
+                Switch(reminders, { reminders = it }, colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Glass.Violet))
             }
             if (Build.VERSION.SDK_INT >= 33) {
                 Spacer(Modifier.height(8.dp))

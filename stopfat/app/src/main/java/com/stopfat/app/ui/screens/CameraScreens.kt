@@ -165,7 +165,7 @@ fun BarcodeScreen(vm: MainViewModel, nav: Nav, meal: MealType) {
             GlassTextField(manual, { manual = it.filter(Char::isDigit).take(14) }, "Lub wpisz kod ręcznie", Modifier.weight(1f), KeyboardType.Number)
             GlassButton("Szukaj", enabled = manual.length >= 6 && !busy) { lookup(manual) }
         }
-        status?.let { if (permission && !scanning) Text(it, color = Glass.Amber, modifier = Modifier.padding(top = 10.dp)) }
+        status?.let { if (permission && !scanning) Text(it, color = Glass.AmberText, modifier = Modifier.padding(top = 10.dp)) }
         notFoundCode?.let { code ->
             Spacer(Modifier.height(10.dp))
             GlassButton("Dodaj produkt ręcznie (zapamiętam kod)", Modifier.fillMaxWidth(), secondary = true) { nav.go(Routes.customFood(meal, code)) }
@@ -315,7 +315,7 @@ fun PhotoScanScreen(vm: MainViewModel, nav: Nav, meal: MealType) {
         if (!profile.hasAi) {
             GlassCard(Modifier.fillMaxWidth(), corner = 22.dp) {
                 Text("🔑 Ta funkcja wymaga połączenia z AI", color = Glass.Text, style = MaterialTheme.typography.titleMedium)
-                Text("Dodaj klucz API Claude w Ustawieniach. Do tego czasu możesz opisać posiłek tekstem (tryb offline).", color = Glass.TextSecondary)
+                Text("Dodaj darmowy klucz Gemini (lub Claude) w Ustawieniach. Do tego czasu możesz opisać posiłek tekstem (tryb offline).", color = Glass.TextSecondary)
                 Spacer(Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     GlassButton("Ustawienia", Modifier.weight(1f), secondary = true) { nav.go(Routes.SETTINGS) }

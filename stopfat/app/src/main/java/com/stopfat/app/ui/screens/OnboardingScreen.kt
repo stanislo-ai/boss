@@ -81,6 +81,8 @@ fun OnboardingScreen(vm: MainViewModel, onDone: () -> Unit) {
     var diet by rememberSaveable { mutableStateOf(DietType.BALANCED) }
     var stepGoal by rememberSaveable { mutableStateOf(8000f) }
     var apiKey by rememberSaveable { mutableStateOf("") }
+    var provider by rememberSaveable { mutableStateOf(com.stopfat.app.data.AiProvider.GEMINI) }
+    var insulin by rememberSaveable { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { }
 
@@ -96,7 +98,10 @@ fun OnboardingScreen(vm: MainViewModel, onDone: () -> Unit) {
         diet = diet,
         stepGoal = (stepGoal.toInt() / 500) * 500,
         waterGoalMl = Nutrition.waterGoalFor(parseNumber(weight) ?: 85.0).coerceIn(1500, 4000),
-        apiKey = apiKey.trim(),
+        apiKey = if (provider == com.stopfat.app.data.AiProvider.CLAUDE) apiKey.trim() else "",
+        geminiKey = if (provider == com.stopfat.app.data.AiProvider.GEMINI) apiKey.trim() else "",
+        aiProvider = provider,
+        insulinResistance = insulin,
         onboarded = onboarded,
     )
 
@@ -137,7 +142,7 @@ fun OnboardingScreen(vm: MainViewModel, onDone: () -> Unit) {
                 when (s) {
                     0 -> {
                         Spacer(Modifier.height(30.dp))
-                        Text("🔥", fontSize = 72.sp, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                        com.stopfat.app.ui.components.FloatingEmoji("🔥", 72, Modifier.fillMaxWidth())
                         Text("StopFat", style = MaterialTheme.typography.displaySmall, color = Glass.Text, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
                         Text(
                             "Twój osobisty dietetyk i trener z AI.\nLiczenie kalorii, skaner kodów i zdjęć, plany treningowe, kroki i dokładny plan odchudzania – w jednym miejscu.",
@@ -207,7 +212,24 @@ fun OnboardingScreen(vm: MainViewModel, onDone: () -> Unit) {
                                     else "Cel utrzymania wagi – ok. ${plan.recommendedIntake} kcal dziennie.",
                                     color = Glass.Text,
                                 )
-                                if (plan.safety == PlanSafety.TOO_FAST) Text("Bezpieczna data: ${WeightLossPlanner.formatDate(plan.safeTargetDate)}", color = Glass.Amber, modifier = Modifier.padding(top = 6.dp))
+                                if (plan.safety == PlanSafety.TOO_FAST) Text("Bezpieczna data: ${WeightLossPlanner.formatDate(plan.safeTargetDate)}", color = Glass.AmberText, modifier = Modifier.padding(top = 6.dp))
+                            }
+                        }
+                        GlassCard(Modifier.fillMaxWidth(), corner = 20.dp, strong = insulin, onClick = {
+                            insulin = !insulin
+                            if (insulin && diet == DietType.BALANCED) diet = DietType.LOW_GI
+                        }) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("🩺", fontSize = 26.sp)
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text("Mam insulinooporność", color = Glass.Text, style = MaterialTheme.typography.titleMedium)
+                                    Text("Dieta o niskim IG, ładunek glikemiczny, AI dopasowane do IO", color = Glass.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                                }
+                                androidx.compose.material3.Switch(
+                                    insulin, { on -> insulin = on; if (on && diet == DietType.BALANCED) diet = DietType.LOW_GI },
+                                    colors = androidx.compose.material3.SwitchDefaults.colors(checkedThumbColor = androidx.compose.ui.graphics.Color.White, checkedTrackColor = Glass.Violet),
+                                )
                             }
                         }
                         Text("Styl diety", style = MaterialTheme.typography.titleMedium, color = Glass.Text)
@@ -219,24 +241,36 @@ fun OnboardingScreen(vm: MainViewModel, onDone: () -> Unit) {
                         Text("Aktywność", style = MaterialTheme.typography.headlineMedium, color = Glass.Text)
                         ActivityLevel.entries.forEach { a ->
                             GlassCard(Modifier.fillMaxWidth(), corner = 20.dp, strong = a == activity, onClick = { activity = a }, padding = androidx.compose.foundation.layout.PaddingValues(14.dp)) {
-                                Text(a.label, color = if (a == activity) Glass.Teal else Glass.Text, style = MaterialTheme.typography.titleMedium)
+                                Text(a.label, color = if (a == activity) Glass.TealText else Glass.Text, style = MaterialTheme.typography.titleMedium)
                                 Text(a.description, color = Glass.TextSecondary, style = MaterialTheme.typography.bodySmall)
                             }
                         }
                         Text("Dzienny cel kroków: ${(stepGoal.toInt() / 500 * 500).thousands()}", color = Glass.Text, style = MaterialTheme.typography.titleMedium)
                         Slider(
                             stepGoal, { stepGoal = it }, valueRange = 3000f..20000f,
-                            colors = SliderDefaults.colors(thumbColor = Glass.Teal, activeTrackColor = Glass.Teal, inactiveTrackColor = Glass.FillStrong),
+                            colors = SliderDefaults.colors(thumbColor = Glass.Violet, activeTrackColor = Glass.Violet, inactiveTrackColor = Glass.FillStrong),
                         )
                     }
                     else -> {
                         Text("Połącz z AI", style = MaterialTheme.typography.headlineMedium, color = Glass.Text)
                         Text(
-                            "StopFat używa modeli Claude (Anthropic) do analizy zdjęć posiłków, liczenia kalorii z opisu, planów treningowych i Coacha AI. " +
-                                "Wklej swój klucz API z console.anthropic.com. Możesz to zrobić też później w Ustawieniach – bez klucza działają funkcje offline.",
+                            "AI analizuje zdjęcia posiłków, liczy kalorie z opisu, układa plany treningowe i odpowiada jako Coach. " +
+                                "Najprościej: darmowy klucz Google Gemini z Google AI Studio. Możesz to zrobić też później w Ustawieniach – bez klucza działają funkcje offline.",
                             color = Glass.TextSecondary,
                         )
-                        GlassTextField(apiKey, { apiKey = it.trim() }, "Klucz API (sk-ant-...)", leading = Icons.Rounded.Key)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            com.stopfat.app.data.AiProvider.entries.forEach { p ->
+                                GlassPill(if (p == com.stopfat.app.data.AiProvider.GEMINI) "✨ Gemini (darmowe)" else "Claude", provider == p, Modifier.weight(1f)) { provider = p }
+                            }
+                        }
+                        GlassTextField(
+                            apiKey, { apiKey = it.trim() },
+                            if (provider == com.stopfat.app.data.AiProvider.GEMINI) "Klucz Gemini API (AIza...)" else "Klucz Claude API (sk-ant-...)",
+                            leading = Icons.Rounded.Key,
+                        )
+                        GlassButton("Pobierz darmowy klucz Gemini", Modifier.fillMaxWidth(), secondary = true) {
+                            runCatching { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(if (provider == com.stopfat.app.data.AiProvider.GEMINI) "https://aistudio.google.com/apikey" else "https://console.anthropic.com/settings/keys"))) }
+                        }
                         GlassCard(Modifier.fillMaxWidth(), corner = 20.dp) {
                             Text("Uprawnienia", color = Glass.Text, style = MaterialTheme.typography.titleMedium)
                             Text("Zezwól na dostęp do aktywności fizycznej (licznik kroków) i powiadomień (przypomnienia).", color = Glass.TextSecondary, style = MaterialTheme.typography.bodySmall)
@@ -283,7 +317,7 @@ fun OnboardingScreen(vm: MainViewModel, onDone: () -> Unit) {
 
 fun safetyColor(s: PlanSafety) = when (s) {
     PlanSafety.MAINTAIN, PlanSafety.GENTLE -> Glass.Sky
-    PlanSafety.OPTIMAL -> Glass.Teal
-    PlanSafety.AMBITIOUS -> Glass.Amber
+    PlanSafety.OPTIMAL -> Glass.TealText
+    PlanSafety.AMBITIOUS -> Glass.AmberText
     PlanSafety.TOO_FAST -> Glass.Red
 }

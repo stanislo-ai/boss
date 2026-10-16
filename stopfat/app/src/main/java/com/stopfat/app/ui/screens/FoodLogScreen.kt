@@ -119,9 +119,9 @@ fun FoodLogScreen(vm: MainViewModel, nav: Nav) {
                         Text("Dodaj ${meal.label.lowercase()}", color = Glass.TextSecondary)
                     }
                 } else {
-                    list.forEach { e -> EntryRow(e, onClick = { editing = e }) }
+                    list.forEach { e -> EntryRow(e, showGi = profile.insulinResistance, onClick = { editing = e }) }
                     Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.End) {
-                        Text("Razem: ${list.sumOf { it.kcal }.kcal()}", color = Glass.Teal, style = MaterialTheme.typography.labelLarge)
+                        Text("Razem: ${list.sumOf { it.kcal }.kcal()}", color = Glass.TealText, style = MaterialTheme.typography.labelLarge)
                     }
                 }
             }
@@ -156,7 +156,7 @@ fun FoodLogScreen(vm: MainViewModel, nav: Nav) {
 }
 
 @Composable
-fun EntryRow(e: FoodEntry, onClick: () -> Unit) {
+fun EntryRow(e: FoodEntry, showGi: Boolean = false, onClick: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -171,6 +171,10 @@ fun EntryRow(e: FoodEntry, onClick: () -> Unit) {
                 "${amountLabel(e)} · B ${e.protein.roundToInt()} · W ${e.carbs.roundToInt()} · T ${e.fat.roundToInt()}" + if (e.source.isNotBlank()) " · ${e.source}" else "",
                 color = Glass.TextTertiary, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
+        }
+        if (showGi) {
+            GiBadge(e.gi)
+            Spacer(Modifier.width(8.dp))
         }
         Text(e.kcal.roundToInt().toString(), color = Glass.Text, fontWeight = FontWeight.Bold)
         Text(" kcal", color = Glass.TextSecondary, style = MaterialTheme.typography.labelSmall)
@@ -247,7 +251,7 @@ fun EditEntryDialog(e: FoodEntry, onDismiss: () -> Unit, onDelete: () -> Unit, o
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { if (g > 0) onSave(g) }, enabled = g > 0) { Text("Zapisz", color = Glass.Teal, fontWeight = FontWeight.Bold) } },
+        confirmButton = { TextButton(onClick = { if (g > 0) onSave(g) }, enabled = g > 0) { Text("Zapisz", color = Glass.TealText, fontWeight = FontWeight.Bold) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Anuluj", color = Glass.TextSecondary) } },
     )
 }

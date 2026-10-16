@@ -46,6 +46,8 @@ val PL: Locale = Locale.forLanguageTag("pl-PL")
 /** Standard scrollable page with system-bar padding. [tabPage] adds space for the floating tab bar. */
 @Composable
 fun Page(tabPage: Boolean = false, scroll: Boolean = true, content: @Composable ColumnScope.() -> Unit) {
+    val stagger = androidx.compose.runtime.remember { com.stopfat.app.ui.components.StaggerCounter() }
+    androidx.compose.runtime.CompositionLocalProvider(com.stopfat.app.ui.components.LocalStagger provides stagger) {
     Column(
         Modifier
             .fillMaxSize()
@@ -56,6 +58,7 @@ fun Page(tabPage: Boolean = false, scroll: Boolean = true, content: @Composable 
     ) {
         content()
         Spacer(Modifier.height(if (tabPage) 120.dp else 28.dp))
+    }
     }
 }
 
@@ -116,6 +119,7 @@ fun AmountDialog(
     unitGrams: Double,
     unitName: String,
     initialMeal: MealType,
+    gi: Int? = null,
     onDismiss: () -> Unit,
     onConfirm: (grams: Double, meal: MealType) -> Unit,
 ) {
@@ -139,11 +143,19 @@ fun AmountDialog(
                     GlassPill("200 g", false) { gramsText = "200" }
                 }
                 MacroLine(n.kcal, n.protein, n.carbs, n.fat)
+                if (gi != null) {
+                    val level = com.stopfat.app.domain.Glycemic.level(gi)
+                    Text(
+                        "${level.label} · ${com.stopfat.app.domain.Glycemic.describe(gi, n.carbs)}" +
+                            if (gi > 0) " (ładunek ${com.stopfat.app.domain.Glycemic.loadLabel(com.stopfat.app.domain.Glycemic.load(gi, n.carbs))})" else "",
+                        color = giColor(level), style = MaterialTheme.typography.labelLarge,
+                    )
+                }
                 MealSelector(meal) { meal = it }
             }
         },
         confirmButton = {
-            TextButton(onClick = { if (grams > 0) onConfirm(grams, meal) }, enabled = grams > 0) { Text("Dodaj", color = Glass.Teal, fontWeight = FontWeight.Bold) }
+            TextButton(onClick = { if (grams > 0) onConfirm(grams, meal) }, enabled = grams > 0) { Text("Dodaj", color = Glass.TealText, fontWeight = FontWeight.Bold) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Anuluj", color = Glass.TextSecondary) } },
     )
@@ -156,14 +168,14 @@ fun InfoDialog(title: String, text: String, onDismiss: () -> Unit) {
         containerColor = Glass.Dialog,
         title = { Text(title, color = Glass.Text) },
         text = { Text(text, color = Glass.TextSecondary) },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("OK", color = Glass.Teal) } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("OK", color = Glass.TealText) } },
     )
 }
 
 @Composable
 fun ErrorBanner(message: String?, modifier: Modifier = Modifier) {
     if (message.isNullOrBlank()) return
-    com.stopfat.app.ui.components.GlassCard(modifier.fillMaxWidth().padding(vertical = 6.dp), corner = 18.dp, padding = androidx.compose.foundation.layout.PaddingValues(14.dp)) {
-        Text("⚠️ $message", color = Glass.Amber, style = MaterialTheme.typography.bodyMedium)
+    com.stopfat.app.ui.components.GlassCard(modifier.fillMaxWidth().padding(vertical = 6.dp), corner = 18.dp, padding = androidx.compose.foundation.layout.PaddingValues(14.dp), animate = false) {
+        Text("⚠️ $message", color = Glass.AmberText, style = MaterialTheme.typography.bodyMedium)
     }
 }

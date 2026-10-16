@@ -105,7 +105,7 @@ fun ProgressScreen(vm: MainViewModel, nav: Nav) {
                             change < 0 -> "▼ ${(-change).oneDecimal()} kg od startu"
                             else -> "▲ ${change.oneDecimal()} kg od startu"
                         },
-                        color = if (change <= 0) Glass.Teal else Glass.Pink, style = MaterialTheme.typography.labelLarge,
+                        color = if (change <= 0) Glass.TealText else Glass.Pink, style = MaterialTheme.typography.labelLarge,
                     )
                 }
                 GlassButton("Waga", icon = Icons.Rounded.Add) { showWeight = true }
@@ -147,8 +147,8 @@ fun ProgressScreen(vm: MainViewModel, nav: Nav) {
             val logged = values.filter { it.value > 0 }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 StatChip(if (logged.isEmpty()) "—" else logged.map { it.value }.average().roundToInt().thousands(), "średnio kcal", Glass.Text)
-                StatChip(goal.thousands(), "cel kcal", Glass.Amber)
-                StatChip("${logged.count { it.value <= goal * 1.05f }}/${logged.size}", "dni w limicie", Glass.Teal)
+                StatChip(goal.thousands(), "cel kcal", Glass.AmberText)
+                StatChip("${logged.count { it.value <= goal * 1.05f }}/${logged.size}", "dni w limicie", Glass.TealText)
             }
             Spacer(Modifier.height(14.dp))
             BarChart(values, goal = goal.toFloat())
@@ -161,9 +161,9 @@ fun ProgressScreen(vm: MainViewModel, nav: Nav) {
             val values = (6 downTo 0).map { d -> val day = today - d; BarValue(shortDay(day), (map[day] ?: 0).toFloat(), day == today) }
             val total = values.sumOf { it.value.toDouble() }.toInt()
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                StatChip((total / 7).thousands(), "średnio/dzień", Glass.Lime)
+                StatChip((total / 7).thousands(), "średnio/dzień", Glass.LimeText)
                 StatChip(total.thousands(), "w tygodniu", Glass.Text)
-                StatChip("${Nutrition.stepsToKcal(total, profile.weightKg).roundToInt().thousands()}", "kcal spalone", Glass.Amber)
+                StatChip("${Nutrition.stepsToKcal(total, profile.weightKg).roundToInt().thousands()}", "kcal spalone", Glass.AmberText)
             }
             Spacer(Modifier.height(14.dp))
             BarChart(values, goal = profile.stepGoal.toFloat(), color = Glass.Lime, overColor = Glass.Teal)
@@ -177,7 +177,7 @@ fun ProgressScreen(vm: MainViewModel, nav: Nav) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 StatChip(bmi.oneDecimal(), "BMI", Glass.Sky)
                 StatChip("${bf.roundToInt()}%", "tkanka tłuszcz. (szac.)", Glass.Pink)
-                StatChip("${plan.tdee.thousands()}", "TDEE kcal", Glass.Amber)
+                StatChip("${plan.tdee.thousands()}", "TDEE kcal", Glass.AmberText)
             }
             Spacer(Modifier.height(8.dp))
             Text(Nutrition.bmiCategory(bmi), color = Glass.TextSecondary, style = MaterialTheme.typography.bodySmall, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
@@ -201,7 +201,7 @@ fun ProgressScreen(vm: MainViewModel, nav: Nav) {
                     Text(a.emoji, fontSize = 28.sp, modifier = Modifier.padding(2.dp), color = if (a.unlocked) Glass.Text else Glass.TextTertiary)
                 }
             }
-            Text("🔥 Seria: ${Achievements.streak(loggedDays, today)} dni · rekord: ${Achievements.bestStreak(loggedDays)} dni", color = Glass.Amber, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 6.dp))
+            Text("🔥 Seria: ${Achievements.streak(loggedDays, today)} dni · rekord: ${Achievements.bestStreak(loggedDays)} dni", color = Glass.AmberText, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 6.dp))
         }
 
         // Weight log list
@@ -256,7 +256,7 @@ fun WeightDialog(current: Double, onDismiss: () -> Unit, onSave: (Double, Long) 
         },
         confirmButton = {
             TextButton(onClick = { if (kg != null && kg in 30.0..350.0) onSave(kg, day) }, enabled = kg != null && kg in 30.0..350.0) {
-                Text("Zapisz", color = Glass.Teal, fontWeight = FontWeight.Bold)
+                Text("Zapisz", color = Glass.TealText, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Anuluj", color = Glass.TextSecondary) } },
@@ -309,9 +309,9 @@ fun AnalysisScreen(vm: MainViewModel, nav: Nav) {
             NumberRow("Wydatek dzienny (TDEE)", "${plan.tdee.thousands()} kcal")
             NumberRow("Wymagany deficyt", "${plan.requiredDailyDeficit.thousands()} kcal/dzień")
             NumberRow("Kalorie wg terminu", "${plan.requiredIntake.thousands()} kcal", if (plan.requiredIntake < plan.minimumIntake) Glass.Red else Glass.Text)
-            NumberRow("Zalecane kalorie", "${plan.recommendedIntake.thousands()} kcal", Glass.Teal)
+            NumberRow("Zalecane kalorie", "${plan.recommendedIntake.thousands()} kcal", Glass.TealText)
             NumberRow("Bezpieczne minimum", "${plan.minimumIntake.thousands()} kcal")
-            if (plan.extraStepsNeeded > 0) NumberRow("Dodatkowy ruch", "+${plan.extraStepsNeeded.thousands()} kroków/dzień", Glass.Amber)
+            if (plan.extraStepsNeeded > 0) NumberRow("Dodatkowy ruch", "+${plan.extraStepsNeeded.thousands()} kroków/dzień", Glass.AmberText)
             NumberRow("Bezpieczna data celu", WeightLossPlanner.formatDate(plan.safeTargetDate))
             NumberRow("Prognoza w dniu celu", "${plan.expectedWeightAtTarget.oneDecimal()} kg", Glass.Violet)
             val macros = Nutrition.macroTargets(profile, plan.recommendedIntake)
@@ -339,7 +339,7 @@ fun AnalysisScreen(vm: MainViewModel, nav: Nav) {
                     Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(m.label, color = Glass.Text, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("${m.weightKg.oneDecimal()} kg", color = Glass.Teal, fontWeight = FontWeight.Bold)
+                            Text("${m.weightKg.oneDecimal()} kg", color = Glass.TealText, fontWeight = FontWeight.Bold)
                             Text(WeightLossPlanner.formatDate(m.date), color = Glass.TextTertiary, style = MaterialTheme.typography.labelSmall)
                         }
                     }
@@ -433,7 +433,7 @@ fun AnalysisScreen(vm: MainViewModel, nav: Nav) {
                         aiText = null
                         editTarget = false
                     }
-                }) { Text("Zapisz", color = Glass.Teal, fontWeight = FontWeight.Bold) }
+                }) { Text("Zapisz", color = Glass.TealText, fontWeight = FontWeight.Bold) }
             },
             dismissButton = { TextButton(onClick = { editTarget = false }) { Text("Anuluj", color = Glass.TextSecondary) } },
         )
@@ -480,7 +480,7 @@ fun AchievementsScreen(vm: MainViewModel, nav: Nav) {
                         LinearProgressIndicator(
                             progress = { a.progress },
                             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(50)),
-                            color = if (a.unlocked) Glass.Teal else Glass.Violet,
+                            color = if (a.unlocked) Glass.TealText else Glass.Violet,
                             trackColor = Glass.Fill,
                         )
                     }
@@ -522,7 +522,7 @@ fun FastingScreen(vm: MainViewModel, nav: Nav) {
                         val s = elapsed / 1000
                         Text("%d:%02d:%02d".format(s / 3600, (s / 60) % 60, s % 60), color = Glass.Text, style = MaterialTheme.typography.headlineMedium)
                         val left = (target - elapsed).coerceAtLeast(0) / 60_000
-                        Text(if (left > 0) "zostało ${left / 60} h ${left % 60} min" else "Cel osiągnięty! 🎉", color = Glass.Amber, style = MaterialTheme.typography.labelLarge)
+                        Text(if (left > 0) "zostało ${left / 60} h ${left % 60} min" else "Cel osiągnięty! 🎉", color = Glass.AmberText, style = MaterialTheme.typography.labelLarge)
                     } else {
                         Text("${hours}:${24 - hours}", color = Glass.Text, style = MaterialTheme.typography.headlineLarge)
                         Text("gotowy do startu", color = Glass.TextSecondary, style = MaterialTheme.typography.labelLarge)
@@ -555,7 +555,7 @@ fun FastingScreen(vm: MainViewModel, nav: Nav) {
                 Row(Modifier.padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(if (reached) "✅" else "⏳", fontSize = 16.sp)
                     Spacer(Modifier.width(10.dp))
-                    Text("$h h", color = if (reached) Glass.Teal else Glass.TextSecondary, fontWeight = FontWeight.Bold, modifier = Modifier.width(44.dp))
+                    Text("$h h", color = if (reached) Glass.TealText else Glass.TextSecondary, fontWeight = FontWeight.Bold, modifier = Modifier.width(44.dp))
                     Text(t, color = Glass.Text, style = MaterialTheme.typography.bodySmall)
                 }
             }
@@ -567,7 +567,7 @@ fun FastingScreen(vm: MainViewModel, nav: Nav) {
                     val h = (l.endMillis - l.startMillis) / 3_600_000.0
                     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                         Text(java.text.SimpleDateFormat("d MMM, HH:mm", PL).format(java.util.Date(l.startMillis)), color = Glass.TextSecondary, modifier = Modifier.weight(1f))
-                        Text("${h.oneDecimal()} h / ${l.targetHours} h", color = if (h >= l.targetHours) Glass.Teal else Glass.Amber, fontWeight = FontWeight.Bold)
+                        Text("${h.oneDecimal()} h / ${l.targetHours} h", color = if (h >= l.targetHours) Glass.TealText else Glass.AmberText, fontWeight = FontWeight.Bold)
                     }
                 }
             }

@@ -21,6 +21,7 @@ import com.stopfat.app.data.db.FastingLog
 import com.stopfat.app.data.db.FoodEntry
 import com.stopfat.app.data.db.WeightEntry
 import com.stopfat.app.data.db.WorkoutLog
+import com.stopfat.app.domain.Glycemic
 import com.stopfat.app.domain.Nutrition
 import com.stopfat.app.domain.WorkoutGenerator
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -94,24 +95,44 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun calorieGoal(p: UserProfile) = Nutrition.calorieGoal(p)
 
     // ---------- food ----------
-    fun addFood(meal: MealType, name: String, grams: Double, kcal: Double, p: Double, c: Double, f: Double, source: String, day: Long = _selectedDay.value) =
+    // ---- toast ("Dodano!") shown by the root composable ----
+    val toast = MutableStateFlow<String?>(null)
+
+    /** Lets screens outside the tab host switch the main tab (e.g. open Coach AI). */
+    val openTabRequest = MutableStateFlow<Int?>(null)
+    private var toastId = 0
+    fun notify(message: String) {
+        val id = ++toastId
+        toast.value = message
         viewModelScope.launch {
-            db.food().insert(FoodEntry(epochDay = day, meal = meal.name, name = name, grams = grams, kcal = kcal, protein = p, carbs = c, fat = f, source = source))
+            kotlinx.coroutines.delay(2200)
+            if (toastId == id) toast.value = null
         }
+    }
+
+    fun addFood(
+        meal: MealType, name: String, grams: Double, kcal: Double, p: Double, c: Double, f: Double, source: String,
+        day: Long = _selectedDay.value, gi: Int = -1,
+    ) = viewModelScope.launch {
+        db.food().insert(FoodEntry(epochDay = day, meal = meal.name, name = name, grams = grams, kcal = kcal, protein = p, carbs = c, fat = f, source = source, gi = gi))
+        notify("Dodano: $name")
+    }
 
     fun addFood(meal: MealType, food: Food, grams: Double, source: String = "baza") {
         val n = food.scaled(grams)
-        addFood(meal, food.name, grams, n.kcal, n.protein, n.carbs, n.fat, source)
+        addFood(meal, food.name, grams, n.kcal, n.protein, n.carbs, n.fat, source, gi = food.gi ?: Glycemic.giById[food.id] ?: -1)
     }
 
     fun addGuesses(meal: MealType, items: List<FoodGuess>, source: String) = viewModelScope.launch {
         val day = _selectedDay.value
-        db.food().insertAll(items.map { FoodEntry(epochDay = day, meal = meal.name, name = it.name, grams = it.grams, kcal = it.kcal, protein = it.protein, carbs = it.carbs, fat = it.fat, source = source) })
+        db.food().insertAll(items.map { FoodEntry(epochDay = day, meal = meal.name, name = it.name, grams = it.grams, kcal = it.kcal, protein = it.protein, carbs = it.carbs, fat = it.fat, source = source, gi = it.gi) })
+        notify("Dodano ${items.size} ${if (items.size == 1) "produkt" else if (items.size in 2..4) "produkty" else "produktów"}")
     }
 
     /** Recipes are stored with "grams" = servings × 100, so editing the amount scales per serving. */
     fun addRecipe(meal: MealType, r: Recipe, servings: Double) = addFood(
         meal, r.name, servings * 100.0, r.kcal * servings, r.protein * servings, r.carbs * servings, r.fat * servings, SOURCE_RECIPE,
+        gi = if (com.stopfat.app.data.RecipeCatalog.isLowGi(r)) 40 else 60,
     )
 
     fun deleteFood(id: Long) = viewModelScope.launch { db.food().delete(id) }
@@ -137,10 +158,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun addWater(ml: Int) = viewModelScope.launch {
         val s = db.dayStats().dayOnce(today) ?: DayStat(today)
         db.dayStats().upsert(s.copy(waterMl = (s.waterMl + ml).coerceIn(0, 10_000)))
+        if (ml > 0) notify("💧 +$ml ml wody")
     }
 
     fun logWeight(kg: Double, day: Long = today) = viewModelScope.launch {
         db.weights().upsert(WeightEntry(day, kg))
+        notify("⚖️ Zapisano ${"%.1f".format(kg)} kg")
         if (day >= (weights.value.maxOfOrNull { it.epochDay } ?: 0L)) store.update { it.copy(weightKg = kg) }
     }
 
@@ -189,6 +212,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val met = WorkoutGenerator.metFor(plan?.location ?: com.stopfat.app.data.WorkoutLocation.GYM, workoutPrefs.value.goal)
         val kcal = Nutrition.workoutKcal(met, p.weightKg, minutes).roundToInt()
         db.workouts().insert(WorkoutLog(epochDay = today, name = name, minutes = minutes, kcal = kcal, completedSets = sets))
+        notify("💪 Trening zapisany: $kcal kcal")
     }
 
     fun logCustomActivity(name: String, minutes: Int, met: Double) = viewModelScope.launch {

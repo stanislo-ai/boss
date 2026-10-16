@@ -125,7 +125,7 @@ object LocalFoodParser {
             else -> quantity * food.unitGrams
         }
         val n = food.scaled(grams)
-        return FoodGuess(food.name, grams, n.kcal, n.protein, n.carbs, n.fat, confidence = "baza offline")
+        return FoodGuess(food.name, grams, n.kcal, n.protein, n.carbs, n.fat, confidence = "baza offline", gi = food.gi ?: Glycemic.giById[food.id] ?: -1)
     }
 
     private fun matchUnit(word: String): Unit? {
@@ -161,8 +161,10 @@ object LocalFoodParser {
      * Score = 100 per query word matched by any word of the food's name/aliases (inflection tolerant),
      * +10 per exact word match, +50 when the whole phrase equals a name/alias.
      */
-    private fun matchScore(food: Food, joined: String, words: List<String>): Int {
-        val names = (food.aliases + food.name).map { it.lowercase() }
+    private fun matchScore(food: Food, joinedRaw: String, wordsRaw: List<String>): Int {
+        val joined = FoodCatalog.normalize(joinedRaw)
+        val words = wordsRaw.map(FoodCatalog::normalize)
+        val names = (food.aliases + food.name).map(FoodCatalog::normalize)
         val tokens = names.flatMap { it.split(" ") }.filter { it.length >= 3 }.toSet()
         var score = 0
         for (w in words.toSet()) {

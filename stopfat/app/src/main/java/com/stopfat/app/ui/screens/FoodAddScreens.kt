@@ -53,6 +53,7 @@ import com.stopfat.app.ui.components.GlassPill
 import com.stopfat.app.ui.components.GlassTextField
 import com.stopfat.app.ui.components.ScreenHeader
 import com.stopfat.app.ui.components.SectionTitle
+import com.stopfat.app.ui.components.liquidClickable
 import com.stopfat.app.ui.theme.Glass
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -69,9 +70,15 @@ fun FoodSearchScreen(vm: MainViewModel, nav: Nav, meal: MealType) {
     var added by remember { mutableStateOf<String?>(null) }
     val custom by vm.customFoods.collectAsState()
     val recent by vm.recentEntries.collectAsState()
+    val profile by vm.profile.collectAsState()
+    val ir = profile.insulinResistance
+    var lowGiOnly by remember { mutableStateOf(false) }
     val customFoods = custom.map { it.toFood() }
-    val results = remember(query, category, custom) {
-        FoodCatalog.search(query, customFoods).filter { category == null || it.category == category }.take(80)
+    val results = remember(query, category, custom, lowGiOnly) {
+        FoodCatalog.search(query, customFoods)
+            .filter { category == null || it.category == category }
+            .filter { !lowGiOnly || (it.gi != null && it.gi in 0..55) }
+            .take(80)
     }
 
     Page {
@@ -80,17 +87,18 @@ fun FoodSearchScreen(vm: MainViewModel, nav: Nav, meal: MealType) {
             trailing = { if (query.isNotEmpty()) IconButton(onClick = { query = "" }) { Icon(Icons.Rounded.Close, "Wyczyść", tint = Glass.TextSecondary) } })
         Spacer(Modifier.height(10.dp))
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (ir) GlassPill("🩺 Niski IG", lowGiOnly) { lowGiOnly = !lowGiOnly }
             GlassPill("Wszystko", category == null) { category = null }
             (listOf("Moje produkty") + FoodCatalog.categories).forEach { c -> GlassPill(c, category == c) { category = if (category == c) null else c } }
         }
-        added?.let { Text("✅ Dodano: $it", color = Glass.Teal, modifier = Modifier.padding(top = 10.dp)) }
+        added?.let { Text("✅ Dodano: $it", color = Glass.TealText, modifier = Modifier.padding(top = 10.dp)) }
 
         if (query.isBlank() && category == null && recent.isNotEmpty()) {
             SectionTitle("Ostatnio dodawane")
             GlassCard(Modifier.fillMaxWidth(), corner = 22.dp, padding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)) {
                 recent.take(8).forEach { e ->
-                    FoodRow(e.name, "${amountLabel(e)} · ${e.kcal.roundToInt()} kcal") {
-                        vm.addFood(meal, e.name, e.grams, e.kcal, e.protein, e.carbs, e.fat, e.source.ifBlank { "ostatnie" })
+                    FoodRow(e.name, "${amountLabel(e)} · ${e.kcal.roundToInt()} kcal", gi = if (ir) e.gi else null) {
+                        vm.addFood(meal, e.name, e.grams, e.kcal, e.protein, e.carbs, e.fat, e.source.ifBlank { "ostatnie" }, gi = e.gi)
                         added = e.name
                     }
                 }
@@ -103,7 +111,7 @@ fun FoodSearchScreen(vm: MainViewModel, nav: Nav, meal: MealType) {
                 Text("Nie znaleziono. Spróbuj opisu tekstem (AI) lub dodaj własny produkt.", color = Glass.TextSecondary, modifier = Modifier.padding(vertical = 12.dp))
             }
             results.forEach { f ->
-                FoodRow(f.name, "${f.kcal.roundToInt()} kcal / 100 g · B ${f.protein.oneDecimal()} W ${f.carbs.oneDecimal()} T ${f.fat.oneDecimal()}") { picked = f }
+                FoodRow(f.name, "${f.kcal.roundToInt()} kcal / 100 g · B ${f.protein.oneDecimal()} W ${f.carbs.oneDecimal()} T ${f.fat.oneDecimal()}", gi = if (ir) f.gi else null) { picked = f }
             }
         }
     }
@@ -115,6 +123,7 @@ fun FoodSearchScreen(vm: MainViewModel, nav: Nav, meal: MealType) {
             unitGrams = f.unitGrams,
             unitName = f.unitName,
             initialMeal = meal,
+            gi = if (ir) f.gi else null,
             onDismiss = { picked = null },
         ) { grams, m ->
             vm.addFood(m, f, grams)
@@ -125,12 +134,12 @@ fun FoodSearchScreen(vm: MainViewModel, nav: Nav, meal: MealType) {
 }
 
 @Composable
-fun FoodRow(title: String, subtitle: String, onClick: () -> Unit) {
+fun FoodRow(title: String, subtitle: String, gi: Int? = null, onClick: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick)
+            .liquidClickable(0.97f, onClick = onClick)
             .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -138,7 +147,11 @@ fun FoodRow(title: String, subtitle: String, onClick: () -> Unit) {
             Text(title, color = Glass.Text, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(subtitle, color = Glass.TextTertiary, style = MaterialTheme.typography.labelSmall, maxLines = 1)
         }
-        Icon(Icons.Rounded.Add, "Dodaj", tint = Glass.Teal)
+        if (gi != null) {
+            GiBadge(gi)
+            Spacer(Modifier.width(8.dp))
+        }
+        Icon(Icons.Rounded.Add, "Dodaj", tint = Glass.Violet)
     }
 }
 
@@ -195,7 +208,13 @@ fun GuessesEditor(items: SnapshotStateList<FoodGuess>, meal: MealType, onMealCha
                     Column(Modifier.weight(1f)) {
                         Text(item.name, color = Glass.Text, style = MaterialTheme.typography.titleSmall)
                         MacroLine(item.kcal, item.protein, item.carbs, item.fat)
-                        if (item.confidence.isNotBlank()) Text("pewność: ${item.confidence}", color = Glass.TextTertiary, style = MaterialTheme.typography.labelSmall)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (item.gi >= 0) {
+                                GiBadge(item.gi)
+                                Spacer(Modifier.width(6.dp))
+                            }
+                            if (item.confidence.isNotBlank()) Text("pewność: ${item.confidence}", color = Glass.TextTertiary, style = MaterialTheme.typography.labelSmall)
+                        }
                     }
                     Spacer(Modifier.width(8.dp))
                     GlassTextField(
@@ -213,7 +232,7 @@ fun GuessesEditor(items: SnapshotStateList<FoodGuess>, meal: MealType, onMealCha
         Spacer(Modifier.height(6.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Razem", color = Glass.TextSecondary, modifier = Modifier.weight(1f))
-            Text(items.sumOf { it.kcal }.kcal(), color = Glass.Teal, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+            Text(items.sumOf { it.kcal }.kcal(), color = Glass.TealText, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
         }
         if (!notes.isNullOrBlank()) Text("💡 $notes", color = Glass.TextSecondary, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
     }

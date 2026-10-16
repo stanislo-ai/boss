@@ -44,6 +44,10 @@ class ProfileStore(private val context: Context) {
         val stepBaselineDay = longPreferencesKey("step_baseline_day")
         val stepLastCounter = longPreferencesKey("step_last_counter")
         val stepLastDay = longPreferencesKey("step_last_day")
+        val provider = stringPreferencesKey("ai_provider")
+        val geminiKey = stringPreferencesKey("gemini_key")
+        val geminiModel = stringPreferencesKey("gemini_model")
+        val insulin = booleanPreferencesKey("insulin_resistance")
     }
 
     val profile: Flow<UserProfile> = context.dataStore.data.map { p ->
@@ -67,6 +71,12 @@ class ProfileStore(private val context: Context) {
             remindersEnabled = p[K.reminders] ?: true,
             fastingStartMillis = p[K.fastingStart] ?: 0L,
             fastingHours = p[K.fastingHours] ?: 16,
+            // Installs from before Gemini support only had a Claude key – keep them on Claude.
+            aiProvider = p[K.provider]?.let { runCatching { AiProvider.valueOf(it) }.getOrNull() }
+                ?: if (!p[K.apiKey].isNullOrBlank()) AiProvider.CLAUDE else AiProvider.GEMINI,
+            geminiKey = p[K.geminiKey] ?: "",
+            geminiModel = p[K.geminiModel] ?: DEFAULT_GEMINI_MODEL,
+            insulinResistance = p[K.insulin] ?: false,
         )
     }
 
@@ -96,6 +106,10 @@ class ProfileStore(private val context: Context) {
             it[K.reminders] = p.remindersEnabled
             it[K.fastingStart] = p.fastingStartMillis
             it[K.fastingHours] = p.fastingHours
+            it[K.provider] = p.aiProvider.name
+            it[K.geminiKey] = p.geminiKey.trim()
+            it[K.geminiModel] = p.geminiModel
+            it[K.insulin] = p.insulinResistance
         }
     }
 

@@ -229,6 +229,11 @@ object WeightLossPlanner {
         }
         tips += "Waż się rano, na czczo, 2–3 razy w tygodniu i patrz na średnią – waga waha się o 0,5–1,5 kg dziennie."
         tips += "Pij min. ${"%.1f".format(p.waterGoalMl / 1000.0)} l wody i śpij 7–9 h – niewyspanie zwiększa apetyt nawet o 300 kcal."
+        if (p.insulinResistance) {
+            tips += "Insulinooporność: wybieraj węglowodany o niskim IG i maks. ok. ${Glycemic.CARBS_PER_MEAL_IR} g węglowodanów na posiłek – łącz je z białkiem i warzywami."
+            tips += "Po każdym większym posiłku zrób 10–15 min spaceru – to obniża skok glukozy i insuliny."
+            tips += "Już 5–10% spadku masy ciała wyraźnie poprawia wrażliwość na insulinę."
+        }
         if (kgToLose > 10) tips += "Przy dużym celu rób co 8–12 tygodni 1–2 tyg. przerwy na kaloryczności podtrzymującej (diet break)."
         return tips
     }

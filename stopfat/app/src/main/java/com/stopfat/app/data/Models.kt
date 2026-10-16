@@ -18,6 +18,7 @@ enum class DietType(val label: String, val proteinPct: Int, val fatPct: Int, val
     LOW_CARB("Niskowęglowodanowa", 30, 45, 25),
     KETO("Ketogeniczna", 25, 70, 5),
     VEGETARIAN("Wegetariańska", 22, 30, 48),
+    LOW_GI("Niski IG (insulinooporność)", 30, 35, 35),
 }
 
 enum class MealType(val label: String, val emoji: String) {
@@ -38,7 +39,19 @@ enum class MealType(val label: String, val emoji: String) {
     }
 }
 
+enum class AiProvider(val label: String, val short: String) {
+    GEMINI("Google Gemini – darmowy klucz", "Gemini"),
+    CLAUDE("Anthropic Claude – płatny", "Claude"),
+}
+
 const val DEFAULT_AI_MODEL = "claude-opus-5-5"
+const val DEFAULT_GEMINI_MODEL = "gemini-flash-latest"
+
+val GEMINI_MODELS = listOf(
+    "gemini-flash-latest" to "Gemini Flash (zawsze najnowszy) – zalecany",
+    "gemini-3.8-flash" to "Gemini 3.8 Flash",
+    "gemini-3.5-flash-lite" to "Gemini 3.5 Flash-Lite – najszybszy, największy darmowy limit",
+)
 
 val AI_MODELS = listOf(
     "claude-opus-5-5" to "Claude Opus 5.5 – najdokładniejszy",
@@ -65,9 +78,16 @@ data class UserProfile(
     val remindersEnabled: Boolean = true,
     val fastingStartMillis: Long = 0L,
     val fastingHours: Int = 16,
+    val aiProvider: AiProvider = AiProvider.GEMINI,
+    val geminiKey: String = "",
+    val geminiModel: String = DEFAULT_GEMINI_MODEL,
+    val insulinResistance: Boolean = false,
 ) {
     val targetDate: LocalDate get() = LocalDate.ofEpochDay(targetDateEpochDay)
-    val hasAi: Boolean get() = apiKey.isNotBlank()
+
+    /** Key of the currently selected AI provider. */
+    val activeKey: String get() = if (aiProvider == AiProvider.GEMINI) geminiKey else apiKey
+    val hasAi: Boolean get() = activeKey.isNotBlank()
 }
 
 data class Food(
@@ -82,6 +102,8 @@ data class Food(
     val unitName: String = "porcja",
     val aliases: List<String> = emptyList(),
     val barcode: String? = null,
+    /** Glycemic index, null when unknown. 0 = practically no carbohydrates. */
+    val gi: Int? = null,
 ) {
     fun scaled(grams: Double) = Nutrients(
         kcal = kcal * grams / 100.0,
@@ -110,6 +132,8 @@ data class FoodGuess(
     val carbs: Double,
     val fat: Double,
     val confidence: String = "",
+    /** Estimated glycemic index, -1 when unknown. */
+    val gi: Int = -1,
 ) {
     fun withGrams(newGrams: Double): FoodGuess {
         if (grams <= 0.0) return copy(grams = newGrams)

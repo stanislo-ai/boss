@@ -25,12 +25,14 @@ import java.time.Duration
 
 class AiException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
-/** Thin wrapper around the official Anthropic Java SDK used by every AI feature in StopFat. */
+/** Anthropic Claude provider – thin wrapper around the official Anthropic Java SDK. */
 class AiClient(
     private val apiKey: String,
     private val model: String,
     private val baseUrl: String? = null,
-) {
+) : AiEngine {
+    override val providerName: String = "Claude"
+
     private val client: AnthropicClient by lazy {
         val builder = AnthropicOkHttpClient.builder()
             .apiKey(apiKey)
@@ -40,17 +42,15 @@ class AiClient(
         builder.build()
     }
 
-    enum class Effort { LOW, MEDIUM, HIGH }
-
     /** Single text request. When [jsonSchema] is given, the answer is constrained to that JSON schema. */
-    suspend fun ask(
+    override suspend fun ask(
         system: String,
         prompt: String,
-        effort: Effort = Effort.LOW,
-        jsonSchema: Map<String, Any>? = null,
-        imageJpegBase64: String? = null,
-        history: List<ChatLine> = emptyList(),
-        maxTokens: Long = 16000L,
+        effort: Effort,
+        jsonSchema: Map<String, Any>?,
+        imageJpegBase64: String?,
+        history: List<ChatLine>,
+        maxTokens: Long,
     ): String = withContext(Dispatchers.IO) {
         try {
             send(system, prompt, effort, jsonSchema, imageJpegBase64, history, maxTokens)

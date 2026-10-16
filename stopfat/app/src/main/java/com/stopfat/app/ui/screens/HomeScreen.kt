@@ -96,7 +96,7 @@ fun HomeScreen(vm: MainViewModel, nav: Nav, onOpenTab: (Int) -> Unit) {
             }
             if (streak > 0) {
                 GlassCard(corner = 18.dp, padding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)) {
-                    Text("🔥 $streak", color = Glass.Amber, fontWeight = FontWeight.Bold)
+                    Text("🔥 $streak", color = Glass.AmberText, fontWeight = FontWeight.Bold)
                 }
                 Spacer(Modifier.width(8.dp))
             }
@@ -108,9 +108,10 @@ fun HomeScreen(vm: MainViewModel, nav: Nav, onOpenTab: (Int) -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 ProgressRing((eaten / max(1, goal + burned)).toFloat(), Modifier.size(150.dp), stroke = 16.dp) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            if (remaining >= 0) remaining.roundToInt().thousands() else "+${(-remaining).roundToInt().thousands()}",
-                            style = MaterialTheme.typography.headlineMedium, color = if (remaining >= 0) Glass.Text else Glass.Red,
+                        com.stopfat.app.ui.components.AnimatedNumber(
+                            kotlin.math.abs(remaining.roundToInt()),
+                            MaterialTheme.typography.headlineMedium, if (remaining >= 0) Glass.Text else Glass.Red,
+                            prefix = if (remaining >= 0) "" else "+",
                         )
                         Text(if (remaining >= 0) "kcal zostało" else "kcal ponad", color = Glass.TextSecondary, style = MaterialTheme.typography.labelMedium)
                     }
@@ -180,10 +181,9 @@ fun HomeScreen(vm: MainViewModel, nav: Nav, onOpenTab: (Int) -> Unit) {
                     Text("Woda", color = Glass.TextSecondary, style = MaterialTheme.typography.labelLarge)
                 }
                 Spacer(Modifier.height(10.dp))
-                ProgressRing(
+                com.stopfat.app.ui.components.WaterWave(
                     water / profile.waterGoalMl.toFloat().coerceAtLeast(1f),
-                    Modifier.size(104.dp).align(Alignment.CenterHorizontally), stroke = 10.dp,
-                    colors = listOf(Glass.Sky, Glass.Violet, Glass.Sky),
+                    Modifier.size(104.dp).align(Alignment.CenterHorizontally),
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("${(water / 1000.0).oneDecimal()} l", color = Glass.Text, style = MaterialTheme.typography.titleLarge)
@@ -197,6 +197,8 @@ fun HomeScreen(vm: MainViewModel, nav: Nav, onOpenTab: (Int) -> Unit) {
                 }
             }
         }
+
+        if (profile.insulinResistance) InsulinMiniCard(entries, nav)
 
         // Fasting
         FastingMiniCard(vm, nav)
@@ -216,7 +218,7 @@ fun HomeScreen(vm: MainViewModel, nav: Nav, onOpenTab: (Int) -> Unit) {
                 Text(plan.safety.label, color = safetyColor(plan.safety), style = MaterialTheme.typography.labelLarge)
             }
             Spacer(Modifier.height(12.dp))
-            MacroBar("Postęp: −${lost.oneDecimal()} kg", (lost / totalToLose * 100).coerceIn(0.0, 100.0), 100, Glass.Teal)
+            MacroBar("Zrzucone: ${lost.oneDecimal()} z ${totalToLose.coerceAtLeast(0.0).oneDecimal()} kg", (lost / totalToLose * 100).coerceIn(0.0, 100.0), 100, Glass.Teal, unit = "%")
         }
 
         // AI coach teaser
@@ -275,7 +277,7 @@ private fun FastingMiniCard(vm: MainViewModel, nav: Nav) {
                     val h = elapsed / 3_600_000
                     val m = (elapsed / 60_000) % 60
                     Text("Trwa post ${profile.fastingHours}:${24 - profile.fastingHours}", color = Glass.Text, style = MaterialTheme.typography.titleMedium)
-                    Text("${h} h ${m} min z ${profile.fastingHours} h", color = Glass.Amber, style = MaterialTheme.typography.bodySmall)
+                    Text("${h} h ${m} min z ${profile.fastingHours} h", color = Glass.AmberText, style = MaterialTheme.typography.bodySmall)
                 } else {
                     Text("Rozpocznij post", color = Glass.Text, style = MaterialTheme.typography.titleMedium)
                     Text("16:8, 18:6, 20:4 lub OMAD z licznikiem", color = Glass.TextSecondary, style = MaterialTheme.typography.bodySmall)
@@ -289,4 +291,29 @@ private fun greeting(): String = when (LocalTime.now().hour) {
     in 5..11 -> "Dzień dobry"
     in 12..17 -> "Cześć"
     else -> "Dobry wieczór"
+}
+
+@Composable
+private fun InsulinMiniCard(entries: List<com.stopfat.app.data.db.FoodEntry>, nav: Nav) {
+    val day = com.stopfat.app.domain.Glycemic.day(entries, true)
+    SectionTitle("Insulinooporność", action = "Więcej", onAction = { nav.go(Routes.INSULIN) })
+    GlassCard(Modifier.fillMaxWidth(), onClick = { nav.go(Routes.INSULIN) }) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            ProgressRing(
+                (day.load / day.target).toFloat(), Modifier.size(78.dp), stroke = 9.dp,
+                colors = listOf(Glass.Teal, Glass.Amber, Glass.Pink, Glass.Teal),
+            ) {
+                Text("${day.load.roundToInt()}", color = Glass.Text, style = MaterialTheme.typography.titleMedium)
+            }
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Ładunek glikemiczny dnia", color = Glass.Text, style = MaterialTheme.typography.titleSmall)
+                Text("${day.load.roundToInt()} / ${day.target} · ${if (day.load <= day.target) "w normie ✅" else "za wysoki ⚠️"}", color = if (day.load <= day.target) Glass.TealText else Glass.Red, style = MaterialTheme.typography.labelLarge)
+                Text(
+                    if (day.highGiItems.isEmpty()) "Brak produktów o wysokim IG – tak trzymaj!" else "Wysoki IG: " + day.highGiItems.joinToString(", ") { it.name }.take(80),
+                    color = Glass.TextSecondary, style = MaterialTheme.typography.bodySmall, maxLines = 2,
+                )
+            }
+        }
+    }
 }

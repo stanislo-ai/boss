@@ -32,14 +32,14 @@ fun MarkdownText(text: String, modifier: Modifier = Modifier, color: Color = Gla
                     Text(
                         inline(line.trimStart('#').trim()),
                         style = if (line.startsWith("###")) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium,
-                        color = Glass.Teal,
+                        color = Glass.Violet,
                     )
                     Spacer(Modifier.height(4.dp))
                 }
                 line.trimStart().startsWith("- ") || line.trimStart().startsWith("* ") || line.trimStart().startsWith("• ") -> {
                     val indent = (line.length - line.trimStart().length).coerceAtMost(8)
                     Row(Modifier.padding(start = (indent * 4).dp, top = 2.dp, bottom = 2.dp)) {
-                        Text("•", color = Glass.Teal, style = MaterialTheme.typography.bodyMedium)
+                        Text("•", color = Glass.TealText, style = MaterialTheme.typography.bodyMedium)
                         Spacer(Modifier.width(8.dp))
                         Text(inline(line.trimStart().drop(2)), color = color, style = MaterialTheme.typography.bodyMedium)
                     }
@@ -47,7 +47,7 @@ fun MarkdownText(text: String, modifier: Modifier = Modifier, color: Color = Gla
                 Regex("^\\s*\\d+[.)] ").containsMatchIn(line) -> {
                     val m = Regex("^\\s*(\\d+)[.)] (.*)$").find(line)
                     Row(Modifier.padding(top = 2.dp, bottom = 2.dp)) {
-                        Text("${m?.groupValues?.get(1) ?: ""}.", color = Glass.Teal, style = MaterialTheme.typography.bodyMedium)
+                        Text("${m?.groupValues?.get(1) ?: ""}.", color = Glass.TealText, style = MaterialTheme.typography.bodyMedium)
                         Spacer(Modifier.width(8.dp))
                         Text(inline(m?.groupValues?.get(2) ?: line), color = color, style = MaterialTheme.typography.bodyMedium)
                     }
@@ -71,7 +71,7 @@ private fun inline(s: String): AnnotatedString = buildAnnotatedString {
             append(s.substring(i)); break
         }
         append(s.substring(i, start))
-        withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Color.White)) { append(s.substring(start + 2, end)) }
+        withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Glass.Text)) { append(s.substring(start + 2, end)) }
         i = end + 2
     }
 }

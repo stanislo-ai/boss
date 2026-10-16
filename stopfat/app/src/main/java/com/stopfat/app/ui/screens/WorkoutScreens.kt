@@ -91,8 +91,8 @@ fun WorkoutScreen(vm: MainViewModel, nav: Nav) {
         // today summary
         GlassCard(Modifier.fillMaxWidth(), strong = true) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                StatChip("${todayLogs.sumOf { it.kcal }}", "kcal spalone dziś", Glass.Amber)
-                StatChip("${todayLogs.sumOf { it.minutes }}", "minut ruchu", Glass.Teal)
+                StatChip("${todayLogs.sumOf { it.kcal }}", "kcal spalone dziś", Glass.AmberText)
+                StatChip("${todayLogs.sumOf { it.minutes }}", "minut ruchu", Glass.TealText)
                 val weekStart = LocalDate.now().toEpochDay() - 6
                 StatChip("${logs.count { it.epochDay >= weekStart }}", "treningi (7 dni)", Glass.Violet)
             }
@@ -119,7 +119,7 @@ fun WorkoutScreen(vm: MainViewModel, nav: Nav) {
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text(p.title, color = Glass.Text, style = MaterialTheme.typography.titleMedium)
-                        Text(p.source, color = Glass.Teal, style = MaterialTheme.typography.labelSmall)
+                        Text(p.source, color = Glass.TealText, style = MaterialTheme.typography.labelSmall)
                     }
                 }
                 if (p.summary.isNotBlank()) {
@@ -127,7 +127,7 @@ fun WorkoutScreen(vm: MainViewModel, nav: Nav) {
                     Text(p.summary, color = Glass.TextSecondary, style = MaterialTheme.typography.bodySmall)
                 }
             }
-            if (busy) Text("Generuję nowy plan…", color = Glass.Teal, modifier = Modifier.padding(top = 8.dp))
+            if (busy) Text("Generuję nowy plan…", color = Glass.TealText, modifier = Modifier.padding(top = 8.dp))
             message?.let { ErrorBanner(it) }
             p.days.forEachIndexed { i, day ->
                 Spacer(Modifier.height(10.dp))
@@ -140,7 +140,7 @@ fun WorkoutScreen(vm: MainViewModel, nav: Nav) {
                         Box(
                             Modifier.size(44.dp).clip(CircleShape).background(Glass.accent),
                             contentAlignment = Alignment.Center,
-                        ) { Icon(Icons.Rounded.PlayArrow, "Start", tint = Color(0xFF07122A)) }
+                        ) { Icon(Icons.Rounded.PlayArrow, "Start", tint = Color.White) }
                     }
                     Spacer(Modifier.height(8.dp))
                     day.exercises.take(4).forEach { e ->
@@ -166,7 +166,7 @@ fun WorkoutScreen(vm: MainViewModel, nav: Nav) {
                             Text(log.name, color = Glass.Text, style = MaterialTheme.typography.bodyMedium, maxLines = 1)
                             Text("${dayLabel(log.epochDay)} · ${log.minutes} min" + if (log.completedSets > 0) " · ${log.completedSets} ${setsWord(log.completedSets)}" else "", color = Glass.TextTertiary, style = MaterialTheme.typography.labelSmall)
                         }
-                        Text("${log.kcal} kcal", color = Glass.Amber, style = MaterialTheme.typography.labelLarge)
+                        Text("${log.kcal} kcal", color = Glass.AmberText, style = MaterialTheme.typography.labelLarge)
                         IconButton(onClick = { vm.deleteWorkout(log.id) }) { Icon(Icons.Rounded.Delete, "Usuń", tint = Glass.TextTertiary, modifier = Modifier.size(18.dp)) }
                     }
                 }
@@ -274,7 +274,7 @@ private fun ActivityDialog(onDismiss: () -> Unit, onSave: (String, Int, Double) 
         confirmButton = {
             val m = minutes.toIntOrNull() ?: 0
             TextButton(onClick = { if (m > 0) onSave(selected.first.drop(2).trim(), m, selected.second) }, enabled = m > 0) {
-                Text("Zapisz", color = Glass.Teal, fontWeight = FontWeight.Bold)
+                Text("Zapisz", color = Glass.TealText, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Anuluj", color = Glass.TextSecondary) } },
@@ -311,7 +311,7 @@ fun WorkoutSessionScreen(vm: MainViewModel, nav: Nav, dayIndex: Int) {
         GlassCard(Modifier.fillMaxWidth(), strong = true) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 val secs = (now - startedAt) / 1000
-                StatChip("%d:%02d".format(secs / 60, secs % 60), "czas", Glass.Teal)
+                StatChip("%d:%02d".format(secs / 60, secs % 60), "czas", Glass.TealText)
                 StatChip("$doneSets/$totalSets", "serie", Glass.Violet)
                 val rest = ((restUntil - now) / 1000).coerceAtLeast(0)
                 StatChip(if (rest > 0) "${rest}s" else "—", "przerwa", if (rest > 0) Glass.Amber else Glass.TextTertiary)
@@ -321,7 +321,7 @@ fun WorkoutSessionScreen(vm: MainViewModel, nav: Nav, dayIndex: Int) {
             Spacer(Modifier.height(10.dp))
             GlassCard(Modifier.fillMaxWidth(), corner = 22.dp) {
                 Text(ex.name, color = Glass.Text, style = MaterialTheme.typography.titleMedium)
-                Text("${ex.sets} × ${ex.reps}" + if (ex.restSec > 0) " · przerwa ${ex.restSec}s" else "", color = Glass.Teal, style = MaterialTheme.typography.labelLarge)
+                Text("${ex.sets} × ${ex.reps}" + if (ex.restSec > 0) " · przerwa ${ex.restSec}s" else "", color = Glass.TealText, style = MaterialTheme.typography.labelLarge)
                 if (ex.tip.isNotBlank()) Text(ex.tip, color = Glass.TextSecondary, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
                 Spacer(Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -333,14 +333,14 @@ fun WorkoutSessionScreen(vm: MainViewModel, nav: Nav, dayIndex: Int) {
                                 .size(40.dp)
                                 .clip(CircleShape)
                                 .background(if (isDone) Glass.accent else Brush.linearGradient(listOf(Glass.Fill, Glass.Fill)))
-                                .border(1.dp, Color.White.copy(alpha = if (isDone) 0.6f else 0.25f), CircleShape)
+                                .border(1.dp, if (isDone) Color.White else Glass.Stroke, CircleShape)
                                 .clickable {
                                     done[key] = !isDone
                                     if (!isDone && ex.restSec > 0) restUntil = System.currentTimeMillis() + ex.restSec * 1000L
                                 },
                             contentAlignment = Alignment.Center,
                         ) {
-                            if (isDone) Icon(Icons.Rounded.Check, null, tint = Color(0xFF07122A), modifier = Modifier.size(20.dp))
+                            if (isDone) Icon(Icons.Rounded.Check, null, tint = Color.White, modifier = Modifier.size(20.dp))
                             else Text("$s", color = Glass.Text, style = MaterialTheme.typography.labelLarge)
                         }
                     }
@@ -350,7 +350,7 @@ fun WorkoutSessionScreen(vm: MainViewModel, nav: Nav, dayIndex: Int) {
         if (day.finisher.isNotBlank()) {
             Spacer(Modifier.height(10.dp))
             GlassCard(Modifier.fillMaxWidth(), corner = 22.dp) {
-                Text("🔥 Finisher", color = Glass.Amber, style = MaterialTheme.typography.titleSmall)
+                Text("🔥 Finisher", color = Glass.AmberText, style = MaterialTheme.typography.titleSmall)
                 Text(day.finisher, color = Glass.Text, style = MaterialTheme.typography.bodyMedium)
             }
         }

@@ -53,10 +53,13 @@ fun RecipesScreen(vm: MainViewModel, nav: Nav, meal: MealType) {
     var category by remember { mutableStateOf(defaultCategory(meal)) }
     var query by remember { mutableStateOf("") }
     var highProtein by remember { mutableStateOf(false) }
+    val profile by vm.profile.collectAsState()
+    var lowGi by remember { mutableStateOf(profile.insulinResistance) }
     val list = (aiRecipes + RecipeCatalog.recipes).filter {
         (category == "Wszystkie" || it.category == category || (category == "AI" && it.category == "AI")) &&
             (query.isBlank() || it.name.contains(query, true) || it.ingredients.any { i -> i.contains(query, true) }) &&
-            (!highProtein || it.protein * 4.0 / it.kcal.coerceAtLeast(1) >= 0.25)
+            (!highProtein || it.protein * 4.0 / it.kcal.coerceAtLeast(1) >= 0.25) &&
+            (!lowGi || RecipeCatalog.isLowGi(it))
     }
     Page {
         ScreenHeader("Przepisy", "${RecipeCatalog.recipes.size} fit przepisów z kaloriami", onBack = nav::back)
@@ -64,6 +67,7 @@ fun RecipesScreen(vm: MainViewModel, nav: Nav, meal: MealType) {
         Spacer(Modifier.height(10.dp))
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             (RecipeCatalog.categories + if (aiRecipes.isNotEmpty()) listOf("AI") else emptyList()).forEach { c -> GlassPill(c, category == c) { category = c } }
+            GlassPill("🩺 Niski IG", lowGi) { lowGi = !lowGi }
             GlassPill("💪 Dużo białka", highProtein) { highProtein = !highProtein }
         }
         Spacer(Modifier.height(12.dp))
@@ -148,7 +152,7 @@ fun RecipeDetailScreen(vm: MainViewModel, nav: Nav, id: String, meal: MealType) 
         GlassCard(Modifier.fillMaxWidth(), corner = 22.dp) {
             recipe.steps.forEachIndexed { i, s ->
                 Row(Modifier.padding(vertical = 5.dp)) {
-                    Text("${i + 1}", color = Glass.Teal, fontWeight = FontWeight.Bold, modifier = Modifier.width(24.dp))
+                    Text("${i + 1}", color = Glass.TealText, fontWeight = FontWeight.Bold, modifier = Modifier.width(24.dp))
                     Text(s, color = Glass.Text)
                 }
             }

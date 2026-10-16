@@ -70,14 +70,14 @@ fun LineChart(
 
         // grid + labels
         val paint = android.graphics.Paint().apply {
-            this.color = android.graphics.Color.argb(150, 255, 255, 255)
+            this.color = android.graphics.Color.argb(120, 17, 22, 51)
             textSize = 10.dp.toPx()
             isAntiAlias = true
         }
         for (i in 0..3) {
             val v = minY + (maxY - minY) * i / 3f
             val y = bottom - (v - minY) / (maxY - minY) * (bottom - top)
-            drawLine(Color.White.copy(alpha = 0.08f), Offset(left, y), Offset(right, y), 1.dp.toPx())
+            drawLine(Glass.Track, Offset(left, y), Offset(right, y), 1.dp.toPx())
             drawContext.canvas.nativeCanvas.drawText(yLabel(v), 0f, y + 4.dp.toPx(), paint)
         }
         if (target != null) {
@@ -133,7 +133,7 @@ fun BarChart(
                 val h = v.value / maxV * size.height
                 val x = i * slot + (slot - barW) / 2
                 val over = goal != null && v.value > goal * 1.05f
-                drawRoundRect(Color.White.copy(alpha = 0.06f), Offset(x, 0f), Size(barW, size.height), CornerRadius(barW / 2))
+                drawRoundRect(Glass.Track, Offset(x, 0f), Size(barW, size.height), CornerRadius(barW / 2))
                 if (h > 0) {
                     drawRoundRect(
                         Brush.verticalGradient(
@@ -152,7 +152,7 @@ fun BarChart(
         Spacer(Modifier.height(6.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
             values.forEach {
-                Text(it.label, color = if (it.highlight) Glass.Teal else Glass.TextTertiary, style = MaterialTheme.typography.labelSmall)
+                Text(it.label, color = if (it.highlight) Glass.TealText else Glass.TextTertiary, style = MaterialTheme.typography.labelSmall)
             }
         }
     }

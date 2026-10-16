@@ -190,14 +190,19 @@ object FoodCatalog {
         f("nuggets", "Nuggetsy z kurczaka", 296.0, 15.0, 18.0, 18.0, "Fast food", 18.0, "szt", "nuggetsy", "nuggets", "nuggetsów"),
         f("zapiekanka", "Zapiekanka", 230.0, 9.0, 28.0, 9.0, "Fast food", 300.0, "szt", "zapiekanka", "zapiekanki"),
         f("falafel", "Falafel", 333.0, 13.3, 31.8, 17.8, "Fast food", 17.0, "szt", "falafel", "falafele"),
-    )
+    ).map { it.copy(gi = com.stopfat.app.domain.Glycemic.giById[it.id]) }
 
     private val byId = foods.associateBy { it.id }
 
     fun byId(id: String): Food? = byId[id]
 
+    /** Lower-case and strip Polish diacritics, so "ryz" finds "ryż" and "maslo" finds "masło". */
+    fun normalize(s: String): String = s.lowercase()
+        .replace('ą', 'a').replace('ć', 'c').replace('ę', 'e').replace('ł', 'l').replace('ń', 'n')
+        .replace('ó', 'o').replace('ś', 's').replace('ź', 'z').replace('ż', 'z')
+
     fun search(query: String, extra: List<Food> = emptyList()): List<Food> {
-        val q = query.trim().lowercase()
+        val q = normalize(query.trim())
         val all = extra + foods
         if (q.isEmpty()) return all
         return all.map { it to score(it, q) }
@@ -207,14 +212,15 @@ object FoodCatalog {
     }
 
     private fun score(food: Food, q: String): Int {
-        val name = food.name.lowercase()
+        val name = normalize(food.name)
+        val aliases = food.aliases.map(::normalize)
         if (name == q) return 100
         if (name.startsWith(q)) return 80
-        if (food.aliases.any { it == q }) return 75
+        if (aliases.any { it == q }) return 75
         if (name.contains(q)) return 60
-        if (food.aliases.any { it.startsWith(q) }) return 50
+        if (aliases.any { it.startsWith(q) }) return 50
         val qWords = q.split(" ").filter { it.length >= 3 }
-        if (qWords.isNotEmpty() && qWords.all { w -> name.contains(w.take(4)) || food.aliases.any { it.contains(w.take(4)) } }) return 30
+        if (qWords.isNotEmpty() && qWords.all { w -> name.contains(w.take(4)) || aliases.any { it.contains(w.take(4)) } }) return 30
         return 0
     }
 }

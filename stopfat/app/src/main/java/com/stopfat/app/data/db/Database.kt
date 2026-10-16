@@ -27,6 +27,8 @@ data class FoodEntry(
     val fat: Double,
     val source: String = "",
     val createdAt: Long = System.currentTimeMillis(),
+    /** Glycemic index of the product, -1 when unknown. */
+    @androidx.room.ColumnInfo(defaultValue = "-1") val gi: Int = -1,
 )
 
 @Entity(tableName = "weights")
@@ -200,7 +202,7 @@ interface ChatDao {
 
 @Database(
     entities = [FoodEntry::class, WeightEntry::class, DayStat::class, WorkoutLog::class, CustomFood::class, FastingLog::class, ChatMessage::class],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -215,7 +217,15 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         fun create(context: Context): AppDatabase =
             Room.databaseBuilder(context, AppDatabase::class.java, "stopfat.db")
+                .addMigrations(MIGRATION_1_2)
                 .fallbackToDestructiveMigration()
                 .build()
+
+        /** v2: glycemic index per food entry (insulin-resistance mode). Keeps all user data. */
+        val MIGRATION_1_2 = object : androidx.room.migration.Migration(1, 2) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE food_entries ADD COLUMN gi INTEGER NOT NULL DEFAULT -1")
+            }
+        }
     }
 }

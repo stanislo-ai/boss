@@ -10,6 +10,14 @@ object RecipeCatalog {
         kcal: Int, p: Int, c: Int, f: Int, ingredients: List<String>, steps: List<String>, vararg tags: String,
     ) = Recipe(id, name, emoji, cat, min, serv, kcal, p, c, f, ingredients, steps, tags.toList())
 
+    /** Recipes suitable for insulin resistance: low-GI carbs combined with protein, fat and fibre. */
+    const val LOW_GI_TAG = "niski IG"
+    private val lowGiIds = setOf(
+        "owsianka_proteinowa", "jajecznica_szpinak", "skyr_bowl", "omlet_twarog", "chili_con_carne", "makaron_bolo_fit",
+        "curry_ciecierzyca", "schab_kasza", "pierogi_fit", "wrap_kurczak", "salatka_tunczyk", "twarozek_rzodkiewka",
+        "dorsz_warzywa", "shakshuka", "hummus_warzywa", "jogurt_orzechy", "sernik_fit", "pudding_chia", "chipsy_jablkowe",
+    )
+
     val recipes: List<Recipe> = listOf(
         r("owsianka_proteinowa", "Owsianka proteinowa z borówkami", "🥣", "Śniadanie", 10, 1, 420, 32, 52, 9,
             listOf("50 g płatków owsianych", "200 ml mleka 2%", "15 g odżywki białkowej (lub 100 g skyru)", "80 g borówek", "1 łyżeczka miodu", "Szczypta cynamonu"),
@@ -123,7 +131,9 @@ object RecipeCatalog {
             listOf("3 zamrożone banany", "2 łyżki mleka", "Opcjonalnie: 1 łyżka kakao"),
             listOf("Zmiksuj zamrożone banany z mlekiem na kremową masę.", "Podawaj od razu lub zamroź na 30 min."),
             "bez cukru", "wegańskie"),
-    )
+    ).map { if (it.id in lowGiIds) it.copy(tags = it.tags + LOW_GI_TAG) else it }
 
     fun byId(id: String) = recipes.firstOrNull { it.id == id }
+
+    fun isLowGi(r: Recipe) = LOW_GI_TAG in r.tags
 }

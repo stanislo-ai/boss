@@ -1,6 +1,17 @@
 package com.stopfat.app.ui
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontWeight
+import com.stopfat.app.ui.components.GlassToast
+import com.stopfat.app.ui.components.glassSurface
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
@@ -90,6 +101,7 @@ object Routes {
     const val ANALYSIS = "analysis"
     const val FASTING = "fasting"
     const val ACHIEVEMENTS = "achievements"
+    const val INSULIN = "insulin"
     fun search(meal: MealType) = "search/${meal.name}"
     fun barcode(meal: MealType) = "barcode/${meal.name}"
     fun photo(meal: MealType) = "photo/${meal.name}"
@@ -111,11 +123,26 @@ class Nav(private val controller: NavHostController) {
 @Composable
 fun StopFatRoot(vm: MainViewModel) {
     val loadedProfile by vm.profileOrNull.collectAsState()
+    val toast by vm.toast.collectAsState()
     LiquidBackground {
+        StopFatNavHost(vm, loadedProfile)
+        GlassToast(
+            toast,
+            Modifier
+                .align(Alignment.TopCenter)
+                .statusBarsPadding()
+                .padding(top = 8.dp),
+        )
+    }
+}
+
+@Composable
+private fun StopFatNavHost(vm: MainViewModel, loadedProfile: com.stopfat.app.data.UserProfile?) {
+    Box(Modifier.fillMaxSize()) {
         val profile = loadedProfile
         if (profile == null) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = Glass.Teal) }
-            return@LiquidBackground
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = Glass.Violet) }
+            return@Box
         }
         val controller = rememberNavController()
         val nav = remember(controller) { Nav(controller) }
@@ -124,10 +151,10 @@ fun StopFatRoot(vm: MainViewModel) {
         NavHost(
             controller,
             startDestination = start,
-            enterTransition = { slideInHorizontally(tween(320)) { it / 3 } + fadeIn(tween(320)) },
-            exitTransition = { fadeOut(tween(200)) },
-            popEnterTransition = { fadeIn(tween(250)) },
-            popExitTransition = { slideOutHorizontally(tween(300)) { it / 3 } + fadeOut(tween(300)) },
+            enterTransition = { slideInHorizontally(spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMediumLow)) { it / 2 } + fadeIn(tween(260)) + scaleIn(tween(320), initialScale = 0.94f) },
+            exitTransition = { fadeOut(tween(200)) + scaleOut(tween(260), targetScale = 0.96f) },
+            popEnterTransition = { fadeIn(tween(260)) + scaleIn(tween(300), initialScale = 0.96f) },
+            popExitTransition = { slideOutHorizontally(tween(300)) { it / 2 } + fadeOut(tween(280)) + scaleOut(tween(300), targetScale = 0.94f) },
         ) {
             composable(Routes.ONBOARDING) { OnboardingScreen(vm, onDone = nav::finishOnboarding) }
             composable(Routes.MAIN) { MainTabs(vm, nav) }
@@ -135,6 +162,7 @@ fun StopFatRoot(vm: MainViewModel) {
             composable(Routes.ANALYSIS) { AnalysisScreen(vm, nav) }
             composable(Routes.FASTING) { FastingScreen(vm, nav) }
             composable(Routes.ACHIEVEMENTS) { AchievementsScreen(vm, nav) }
+            composable(Routes.INSULIN) { com.stopfat.app.ui.screens.InsulinScreen(vm, nav) }
             composable("search/{meal}", mealArg) { FoodSearchScreen(vm, nav, MealType.fromName(it.arguments?.getString("meal"))) }
             composable("barcode/{meal}", mealArg) { BarcodeScreen(vm, nav, MealType.fromName(it.arguments?.getString("meal"))) }
             composable("photo/{meal}", mealArg) { PhotoScanScreen(vm, nav, MealType.fromName(it.arguments?.getString("meal"))) }
@@ -173,10 +201,18 @@ private val tabs = listOf(
 @Composable
 fun MainTabs(vm: MainViewModel, nav: Nav) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
+    val request by vm.openTabRequest.collectAsState()
+    LaunchedEffect(request) {
+        request?.let { tab = it; vm.openTabRequest.value = null }
+    }
     Box(Modifier.fillMaxSize()) {
         AnimatedContent(
             targetState = tab,
-            transitionSpec = { fadeIn(tween(220)) togetherWith fadeOut(tween(160)) },
+            transitionSpec = {
+                val dir = if (targetState > initialState) 1 else -1
+                (slideInHorizontally(spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow)) { it / 4 * dir } + fadeIn(tween(240)) + scaleIn(tween(300), initialScale = 0.96f)) togetherWith
+                    (slideOutHorizontally(tween(260)) { -it / 4 * dir } + fadeOut(tween(180)))
+            },
             label = "tabs",
             modifier = Modifier.fillMaxSize(),
         ) { t ->
@@ -199,38 +235,47 @@ fun MainTabs(vm: MainViewModel, nav: Nav) {
     }
 }
 
-/** Floating glass tab bar with a "liquid" selection bubble that springs between tabs. */
+/**
+ * Floating white glass tab bar. The selection is a liquid drop: its leading edge springs fast and the
+ * trailing edge follows slower, so it stretches while moving between tabs and snaps back into a pill.
+ */
 @Composable
 fun LiquidNavBar(selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
-    val shape = RoundedCornerShape(32.dp)
+    val shape = RoundedCornerShape(34.dp)
+    var previous by remember { mutableIntStateOf(selected) }
+    val movingRight = selected >= previous
+    LaunchedEffect(selected) { previous = selected }
     BoxWithConstraints(
         modifier
             .fillMaxWidth()
-            .height(68.dp)
-            .shadow(24.dp, shape, ambientColor = Color.Black, spotColor = Glass.Violet)
-            .clip(shape)
-            .background(Brush.verticalGradient(listOf(Color(0xFF2E2A6B).copy(alpha = 0.985f), Color(0xFF17143F).copy(alpha = 0.99f))))
-            .border(1.dp, Brush.linearGradient(listOf(Color.White.copy(alpha = 0.5f), Color.White.copy(alpha = 0.06f), Color.White.copy(alpha = 0.25f))), shape),
+            .height(70.dp)
+            .glassSurface(shape, strong = true, opaque = true),
     ) {
         val itemWidth = maxWidth / tabs.size
-        val bubbleX by animateDpAsState(
-            itemWidth * selected,
-            spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
-            label = "bubble",
-        )
+        val fast = spring<androidx.compose.ui.unit.Dp>(dampingRatio = 0.62f, stiffness = Spring.StiffnessMedium)
+        val slow = spring<androidx.compose.ui.unit.Dp>(dampingRatio = 0.7f, stiffness = Spring.StiffnessLow)
+        val left by animateDpAsState(itemWidth * selected + 6.dp, if (movingRight) slow else fast, label = "left")
+        val right by animateDpAsState(itemWidth * (selected + 1) - 6.dp, if (movingRight) fast else slow, label = "right")
         Box(
             Modifier
-                .offset(x = bubbleX + 6.dp, y = 6.dp)
-                .width(itemWidth - 12.dp)
-                .fillMaxHeight()
-                .padding(bottom = 12.dp)
-                .clip(RoundedCornerShape(26.dp))
-                .background(Brush.verticalGradient(listOf(Glass.Teal.copy(alpha = 0.35f), Glass.Violet.copy(alpha = 0.30f))))
-                .border(1.dp, Color.White.copy(alpha = 0.45f), RoundedCornerShape(26.dp)),
+                .offset(x = left, y = 7.dp)
+                .width((right - left).coerceAtLeast(20.dp))
+                .height(56.dp)
+                .shadow(12.dp, RoundedCornerShape(28.dp), ambientColor = Glass.Violet.copy(alpha = 0.5f), spotColor = Glass.Violet.copy(alpha = 0.5f))
+                .clip(RoundedCornerShape(28.dp))
+                .background(Glass.accent)
+                .border(1.dp, Color.White.copy(alpha = 0.7f), RoundedCornerShape(28.dp))
+                .drawWithContent {
+                    drawContent()
+                    drawRect(Brush.verticalGradient(0f to Color.White.copy(alpha = 0.45f), 0.5f to Color.Transparent))
+                },
         )
         Row(Modifier.fillMaxSize()) {
             tabs.forEachIndexed { i, t ->
                 val isSel = i == selected
+                val bounce by animateFloatAsState(if (isSel) 1.18f else 1f, spring(dampingRatio = 0.35f, stiffness = Spring.StiffnessMedium), label = "icon")
+                val lift by animateDpAsState(if (isSel) (-2).dp else 0.dp, spring(dampingRatio = 0.4f), label = "lift")
+                val tint by animateColorAsState(if (isSel) Color.White else Glass.TextTertiary, tween(250), label = "tint")
                 Column(
                     Modifier
                         .weight(1f)
@@ -239,14 +284,14 @@ fun LiquidNavBar(selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Mo
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
                 ) {
-                    Icon(t.icon, t.label, tint = if (isSel) Color.White else Glass.TextTertiary, modifier = Modifier.size(24.dp))
-                    Text(
-                        t.label,
-                        color = if (isSel) Color.White else Glass.TextTertiary,
-                        fontSize = 10.sp,
-                        style = MaterialTheme.typography.labelSmall,
-                        maxLines = 1,
+                    Icon(
+                        t.icon, t.label, tint = tint,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .offset(y = lift)
+                            .graphicsLayer { scaleX = bounce; scaleY = bounce },
                     )
+                    Text(t.label, color = tint, fontSize = 10.sp, style = MaterialTheme.typography.labelSmall, maxLines = 1, fontWeight = if (isSel) FontWeight.Bold else FontWeight.Medium)
                 }
             }
         }

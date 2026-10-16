@@ -1,8 +1,8 @@
 <resources>
-    <style name="Theme.StopFat" parent="android:Theme.Material.NoActionBar">
+    <style name="Theme.StopFat" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@drawable/splash_bg</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 </resources>

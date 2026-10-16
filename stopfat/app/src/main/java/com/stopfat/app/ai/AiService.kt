@@ -16,7 +16,9 @@ import java.time.LocalDate
 import kotlin.math.roundToInt
 
 /** All StopFat AI features: prompts, JSON schemas and response parsing. */
-class AiService(private val client: AiClient) {
+class AiService(private val client: AiEngine, private val insulinResistance: Boolean = false) {
+
+    val providerName: String get() = client.providerName
 
     data class FoodAnalysis(val items: List<FoodGuess>, val notes: String)
 
@@ -25,7 +27,7 @@ class AiService(private val client: AiClient) {
         Odpowiadasz zawsze po polsku, konkretnie i życzliwie. Bazujesz na aktualnej wiedzy naukowej
         (deficyt kaloryczny, odpowiednia podaż białka, trening siłowy, sen, NEAT).
         Nie stawiasz diagnoz medycznych; przy chorobach, ciąży lub zaburzeniach odżywiania zalecasz konsultację z lekarzem.
-    """.trimIndent()
+    """.trimIndent() + if (insulinResistance) "\n" + IR_CONTEXT else ""
 
     // ---------- Food recognition ----------
 
@@ -44,8 +46,9 @@ class AiService(private val client: AiClient) {
                         "carbs" to mapOf("type" to "number"),
                         "fat" to mapOf("type" to "number"),
                         "confidence" to mapOf("type" to "string"),
+                        "gi" to mapOf("type" to "integer"),
                     ),
-                    "required" to listOf("name", "grams", "kcal", "protein", "carbs", "fat", "confidence"),
+                    "required" to listOf("name", "grams", "kcal", "protein", "carbs", "fat", "confidence", "gi"),
                     "additionalProperties" to false,
                 ),
             ),
@@ -57,10 +60,11 @@ class AiService(private val client: AiClient) {
 
     private val foodInstructions = """
         Zwróć WYŁĄCZNIE obiekt JSON w formacie:
-        {"items":[{"name":"nazwa po polsku","grams":liczba,"kcal":liczba,"protein":liczba,"carbs":liczba,"fat":liczba,"confidence":"wysoka|średnia|niska"}],"notes":"krótka uwaga"}
+        {"items":[{"name":"nazwa po polsku","grams":liczba,"kcal":liczba,"protein":liczba,"carbs":liczba,"fat":liczba,"confidence":"wysoka|średnia|niska","gi":liczba}],"notes":"krótka uwaga"}
         Wartości kcal i makroskładników podawaj dla CAŁEJ porcji (nie na 100 g). Rozbij posiłek na osobne składniki
         (np. ryż, kurczak, sos, olej użyty do smażenia). Szacuj realistycznie wielkości porcji. Jeśli to nie jest jedzenie, zwróć pustą listę i wyjaśnij w notes.
-    """.trimIndent()
+        "gi" to szacowany indeks glikemiczny produktu (0 gdy produkt praktycznie nie ma węglowodanów, np. mięso, jajka, olej).
+    """.trimIndent() + if (insulinResistance) "\nW \"notes\" oceń wpływ posiłku na glikemię (insulinooporność) i zaproponuj zamiennik o niższym IG, jeśli to potrzebne." else ""
 
     suspend fun analyzePhoto(jpegBase64: String, hint: String): FoodAnalysis {
         val prompt = buildString {
@@ -68,13 +72,13 @@ class AiService(private val client: AiClient) {
             if (hint.isNotBlank()) append("Dodatkowy opis od użytkownika: \"$hint\"\n")
             append(foodInstructions)
         }
-        val answer = client.ask(baseSystem, prompt, AiClient.Effort.MEDIUM, foodSchema, imageJpegBase64 = jpegBase64)
+        val answer = client.ask(baseSystem, prompt, Effort.MEDIUM, foodSchema, imageJpegBase64 = jpegBase64)
         return parseFood(answer)
     }
 
     suspend fun analyzeText(description: String): FoodAnalysis {
         val prompt = "Użytkownik opisał co zjadł: \"$description\"\nOblicz kaloryczność i makroskładniki każdego produktu.\n$foodInstructions"
-        val answer = client.ask(baseSystem, prompt, AiClient.Effort.LOW, foodSchema)
+        val answer = client.ask(baseSystem, prompt, Effort.LOW, foodSchema)
         return parseFood(answer)
     }
 
@@ -127,12 +131,13 @@ class AiService(private val client: AiClient) {
             Poziom: ${prefs.level.label}. Cel treningowy: ${prefs.goal.label}.
             Dni treningowe w tygodniu: ${prefs.daysPerWeek}. Czas jednej sesji: ${prefs.minutes} min.
             ${if (prefs.notes.isNotBlank()) "Uwagi / kontuzje / preferencje: ${prefs.notes}" else ""}
+            ${if (insulinResistance) "Użytkownik ma insulinooporność: każdy dzień oprzyj na treningu siłowym dużych grup mięśniowych, dodaj wskazówkę o 10–15 min spaceru po posiłkach." else ""}
             Każdy dzień: 5–8 ćwiczeń z rozgrzewką ujętą jako pierwsze ćwiczenie, serie, powtórzenia (np. "8-12" albo "40 s"),
             przerwa w sekundach i krótka wskazówka techniczna. "finisher" to krótkie cardio/interwały na koniec (lub pusty tekst).
             "tips" – 4–6 wskazówek dot. progresji, regeneracji i diety. Nazwy ćwiczeń po polsku.
             Zwróć WYŁĄCZNIE JSON: {"title":"","summary":"","days":[{"name":"","focus":"","exercises":[{"name":"","sets":3,"reps":"","restSec":60,"tip":""}],"finisher":""}],"tips":[""]}
         """.trimIndent()
-        val answer = client.ask(baseSystem, prompt, AiClient.Effort.MEDIUM, workoutSchema)
+        val answer = client.ask(baseSystem, prompt, Effort.MEDIUM, workoutSchema)
         val o = JSONObject(extractJson(answer))
         val days = o.optJSONArray("days") ?: JSONArray()
         return WorkoutPlan(
@@ -158,7 +163,7 @@ class AiService(private val client: AiClient) {
                 )
             }.filter { it.exercises.isNotEmpty() },
             tips = o.optJSONArray("tips").toStringList(),
-            source = "AI Claude",
+            source = "AI ${client.providerName}",
             location = prefs.location,
         ).also { if (it.days.isEmpty()) throw AiException("AI nie zwróciło żadnego dnia treningowego.") }
     }
@@ -184,9 +189,10 @@ class AiService(private val client: AiClient) {
             ## Przykładowy dzień jedzenia – 4 posiłki z kaloriami
             ## Najczęstsze pułapki i jak ich uniknąć
             ## Co zrobić, gdy waga stoi
+            ${if (insulinResistance) "## Insulinooporność – indeks glikemiczny, rozkład węglowodanów w posiłkach, kolejność jedzenia, ruch po posiłkach" else ""}
             Pisz zwięźle, w punktach zaczynających się od "- ". Używaj **pogrubień** dla kluczowych liczb.
         """.trimIndent()
-        return client.ask(baseSystem, prompt, AiClient.Effort.MEDIUM)
+        return client.ask(baseSystem, prompt, Effort.MEDIUM)
     }
 
     // ---------- Recipes ----------
@@ -214,10 +220,11 @@ class AiService(private val client: AiClient) {
             Wymyśl jeden zdrowy, smaczny przepis wykorzystujący głównie te składniki: $ingredients.
             Można dodać podstawowe przyprawy, olej, sól, pieprz. Dieta użytkownika: ${profile.diet.label}.
             Jedna porcja powinna mieć maksymalnie ok. $maxKcal kcal. Podaj kalorie i makro NA PORCJĘ.
+            ${if (insulinResistance) "Przepis musi być odpowiedni przy insulinooporności: niski indeks glikemiczny, maks. 45 g węglowodanów na porcję, dużo białka i błonnika." else ""}
             Składniki z gramaturą, kroki krótko i konkretnie.
             Zwróć WYŁĄCZNIE JSON: {"name":"","emoji":"🍳","minutes":20,"servings":2,"kcal":450,"protein":30,"carbs":40,"fat":15,"ingredients":[""],"steps":[""]}
         """.trimIndent()
-        val answer = client.ask(baseSystem, prompt, AiClient.Effort.LOW, recipeSchema)
+        val answer = client.ask(baseSystem, prompt, Effort.LOW, recipeSchema)
         val o = JSONObject(extractJson(answer))
         return Recipe(
             id = "ai_" + System.currentTimeMillis(),
@@ -232,7 +239,7 @@ class AiService(private val client: AiClient) {
             fat = o.optInt("fat"),
             ingredients = o.optJSONArray("ingredients").toStringList(),
             steps = o.optJSONArray("steps").toStringList(),
-            tags = listOf("AI"),
+            tags = if (insulinResistance) listOf("AI", com.stopfat.app.data.RecipeCatalog.LOW_GI_TAG) else listOf("AI"),
         )
     }
 
@@ -252,7 +259,7 @@ class AiService(private val client: AiClient) {
             Odpowiadaj krótko (maks. ~150 słów, chyba że użytkownik prosi o więcej), praktycznie i motywująco.
             Używaj prostych list z "- " i **pogrubień** dla liczb.
         """.trimIndent()
-        return client.ask(system, question, AiClient.Effort.LOW, history = history.takeLast(16), maxTokens = 8000L)
+        return client.ask(system, question, Effort.LOW, history = history.takeLast(16), maxTokens = 8000L)
     }
 
     // ---------- helpers ----------
@@ -276,6 +283,7 @@ class AiService(private val client: AiClient) {
                 carbs = it.optDouble("carbs", 0.0).nonNeg(),
                 fat = it.optDouble("fat", 0.0).nonNeg(),
                 confidence = it.optString("confidence"),
+                gi = it.optInt("gi", -1).let { g -> if (g in 0..110) g else -1 },
             )
         }
         return FoodAnalysis(items, o.optString("notes"))
@@ -284,6 +292,13 @@ class AiService(private val client: AiClient) {
     private fun Double.nonNeg(): Double = if (isNaN() || this < 0) 0.0 else (this * 10).roundToInt() / 10.0
 
     companion object {
+        val IR_CONTEXT = """
+            WAŻNE: użytkownik ma insulinooporność. Preferuj produkty o niskim indeksie glikemicznym (IG ≤ 55) i niskim ładunku glikemicznym,
+            ogranicz cukry proste, słodkie napoje i białe pieczywo. W każdym posiłku łącz węglowodany z białkiem, tłuszczem i błonnikiem,
+            celuj w maks. ok. 45 g węglowodanów na posiłek, 3–4 posiłki dziennie bez podjadania. Zalecaj spacer po posiłkach i trening siłowy.
+            Podawaj zamienniki o niższym IG. Przypominaj o konsultacji z lekarzem/diabetologiem przy lekach (np. metforminie).
+        """.trimIndent()
+
         /** Extracts the first JSON object from a model answer (tolerates ``` fences and prose around it). */
         fun extractJson(text: String): String {
             val start = text.indexOf('{')
