@@ -135,7 +135,7 @@ fun WorkoutScreen(vm: MainViewModel, nav: Nav) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(day.name, color = Glass.Text, style = MaterialTheme.typography.titleMedium)
-                            Text("${day.exercises.size} ćwiczeń · ${day.focus}", color = Glass.TextSecondary, style = MaterialTheme.typography.labelSmall)
+                            Text("${day.exercises.size} ${exercisesWord(day.exercises.size)} · ${day.focus}", color = Glass.TextSecondary, style = MaterialTheme.typography.labelSmall)
                         }
                         Box(
                             Modifier.size(44.dp).clip(CircleShape).background(Glass.accent),
@@ -164,7 +164,7 @@ fun WorkoutScreen(vm: MainViewModel, nav: Nav) {
                     Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(log.name, color = Glass.Text, style = MaterialTheme.typography.bodyMedium, maxLines = 1)
-                            Text("${dayLabel(log.epochDay)} · ${log.minutes} min" + if (log.completedSets > 0) " · ${log.completedSets} serii" else "", color = Glass.TextTertiary, style = MaterialTheme.typography.labelSmall)
+                            Text("${dayLabel(log.epochDay)} · ${log.minutes} min" + if (log.completedSets > 0) " · ${log.completedSets} ${setsWord(log.completedSets)}" else "", color = Glass.TextTertiary, style = MaterialTheme.typography.labelSmall)
                         }
                         Text("${log.kcal} kcal", color = Glass.Amber, style = MaterialTheme.typography.labelLarge)
                         IconButton(onClick = { vm.deleteWorkout(log.id) }) { Icon(Icons.Rounded.Delete, "Usuń", tint = Glass.TextTertiary, modifier = Modifier.size(18.dp)) }
@@ -370,4 +370,16 @@ fun WorkoutSessionScreen(vm: MainViewModel, nav: Nav, dayIndex: Int) {
             }
         }
     }
+}
+
+fun exercisesWord(n: Int): String = when {
+    n == 1 -> "ćwiczenie"
+    n % 10 in 2..4 && n % 100 !in 12..14 -> "ćwiczenia"
+    else -> "ćwiczeń"
+}
+
+fun setsWord(n: Int): String = when {
+    n == 1 -> "seria"
+    n % 10 in 2..4 && n % 100 !in 12..14 -> "serie"
+    else -> "serii"
 }

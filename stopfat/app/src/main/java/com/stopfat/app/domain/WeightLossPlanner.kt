@@ -212,7 +212,7 @@ object WeightLossPlanner {
         safeDate: LocalDate,
     ): List<String> {
         val tips = ArrayList<String>()
-        val protein = (p.weightKg * 1.8).roundToInt()
+        val protein = Nutrition.macroTargets(p, intake).proteinG
         tips += "Jedz ok. $intake kcal dziennie i min. $protein g białka, żeby chronić mięśnie."
         when (safety) {
             PlanSafety.TOO_FAST -> {
@@ -228,7 +228,7 @@ object WeightLossPlanner {
             PlanSafety.MAINTAIN -> Unit
         }
         tips += "Waż się rano, na czczo, 2–3 razy w tygodniu i patrz na średnią – waga waha się o 0,5–1,5 kg dziennie."
-        tips += "Pij min. ${p.waterGoalMl / 1000.0} l wody i śpij 7–9 h – niewyspanie zwiększa apetyt nawet o 300 kcal."
+        tips += "Pij min. ${"%.1f".format(p.waterGoalMl / 1000.0)} l wody i śpij 7–9 h – niewyspanie zwiększa apetyt nawet o 300 kcal."
         if (kgToLose > 10) tips += "Przy dużym celu rób co 8–12 tygodni 1–2 tyg. przerwy na kaloryczności podtrzymującej (diet break)."
         return tips
     }

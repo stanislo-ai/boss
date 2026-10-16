@@ -100,7 +100,11 @@ fun ProgressScreen(vm: MainViewModel, nav: Nav) {
                     Text("Aktualna waga", color = Glass.TextSecondary, style = MaterialTheme.typography.labelMedium)
                     Text("${profile.weightKg.oneDecimal()} kg", color = Glass.Text, style = MaterialTheme.typography.headlineLarge)
                     Text(
-                        (if (change <= 0) "▼ ${(-change).oneDecimal()} kg" else "▲ ${change.oneDecimal()} kg") + " od startu",
+                        when {
+                            kotlin.math.abs(change) < 0.05 -> "Bez zmian od startu"
+                            change < 0 -> "▼ ${(-change).oneDecimal()} kg od startu"
+                            else -> "▲ ${change.oneDecimal()} kg od startu"
+                        },
                         color = if (change <= 0) Glass.Teal else Glass.Pink, style = MaterialTheme.typography.labelLarge,
                     )
                 }

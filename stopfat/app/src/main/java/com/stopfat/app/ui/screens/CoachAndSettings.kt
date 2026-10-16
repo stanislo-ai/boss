@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
@@ -106,6 +107,7 @@ fun CoachScreen(vm: MainViewModel, nav: Nav) {
         Modifier
             .fillMaxSize()
             .statusBarsPadding()
+            .navigationBarsPadding()
             .imePadding()
             .padding(horizontal = 18.dp),
     ) {
@@ -141,7 +143,7 @@ fun CoachScreen(vm: MainViewModel, nav: Nav) {
                 suggestions.forEach { s -> GlassPill(s, false) { vm.sendChat(s) } }
             }
         }
-        Row(Modifier.padding(top = 6.dp, bottom = 100.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(top = 6.dp, bottom = 92.dp), verticalAlignment = Alignment.CenterVertically) {
             GlassTextField(input, { input = it }, "Napisz wiadomość", Modifier.weight(1f), singleLine = false)
             Spacer(Modifier.padding(4.dp))
             Box(

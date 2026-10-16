@@ -89,7 +89,7 @@ fun FoodSearchScreen(vm: MainViewModel, nav: Nav, meal: MealType) {
             SectionTitle("Ostatnio dodawane")
             GlassCard(Modifier.fillMaxWidth(), corner = 22.dp, padding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)) {
                 recent.take(8).forEach { e ->
-                    FoodRow(e.name, "${e.grams.roundToInt()} g · ${e.kcal.roundToInt()} kcal") {
+                    FoodRow(e.name, "${amountLabel(e)} · ${e.kcal.roundToInt()} kcal") {
                         vm.addFood(meal, e.name, e.grams, e.kcal, e.protein, e.carbs, e.fat, e.source.ifBlank { "ostatnie" })
                         added = e.name
                     }

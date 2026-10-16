@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.stopfat.app.data.MealType
@@ -94,15 +95,17 @@ fun MealSelector(selected: MealType, onSelect: (MealType) -> Unit) {
 
 @Composable
 fun MacroLine(kcal: Double, p: Double, c: Double, f: Double, modifier: Modifier = Modifier) {
-    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
-        Text(kcal.kcal(), color = Glass.Text, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-        Spacer(Modifier.width(10.dp))
-        Text("B ${p.g()}", color = Glass.protein, style = MaterialTheme.typography.labelMedium)
-        Spacer(Modifier.width(8.dp))
-        Text("W ${c.g()}", color = Glass.carbs, style = MaterialTheme.typography.labelMedium)
-        Spacer(Modifier.width(8.dp))
-        Text("T ${f.g()}", color = Glass.fat, style = MaterialTheme.typography.labelMedium)
+    // One Text with coloured spans, so it wraps between items instead of inside them in narrow rows.
+    val text = androidx.compose.ui.text.buildAnnotatedString {
+        withStyle(androidx.compose.ui.text.SpanStyle(color = Glass.Text, fontWeight = FontWeight.Bold)) { append(kcal.kcal().replace(' ', '\u00A0')) }
+        append("   ")
+        withStyle(androidx.compose.ui.text.SpanStyle(color = Glass.protein)) { append("B\u00A0${p.g().replace(' ', '\u00A0')}") }
+        append("  ")
+        withStyle(androidx.compose.ui.text.SpanStyle(color = Glass.carbs)) { append("W\u00A0${c.g().replace(' ', '\u00A0')}") }
+        append("  ")
+        withStyle(androidx.compose.ui.text.SpanStyle(color = Glass.fat)) { append("T\u00A0${f.g().replace(' ', '\u00A0')}") }
     }
+    Text(text, modifier = modifier, style = MaterialTheme.typography.bodyMedium)
 }
 
 /** Dialog asking for an amount in grams (with quick unit buttons) and the meal. */
