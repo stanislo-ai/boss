@@ -209,7 +209,7 @@ fun LiquidNavBar(selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Mo
             .height(68.dp)
             .shadow(24.dp, shape, ambientColor = Color.Black, spotColor = Glass.Violet)
             .clip(shape)
-            .background(Brush.verticalGradient(listOf(Color(0xFF2B2763).copy(alpha = 0.92f), Color(0xFF15123A).copy(alpha = 0.94f))))
+            .background(Brush.verticalGradient(listOf(Color(0xFF2E2A6B).copy(alpha = 0.985f), Color(0xFF17143F).copy(alpha = 0.99f))))
             .border(1.dp, Brush.linearGradient(listOf(Color.White.copy(alpha = 0.5f), Color.White.copy(alpha = 0.06f), Color.White.copy(alpha = 0.25f))), shape),
     ) {
         val itemWidth = maxWidth / tabs.size

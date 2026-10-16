@@ -87,8 +87,9 @@ object WeightLossPlanner {
 
         val maxDeficit = current * MAX_WEEKLY_FRACTION * KCAL_PER_KG_FAT / 7.0
         val safety = when {
-            requiredIntake < minIntake && requiredDeficit > maxDeficit -> PlanSafety.TOO_FAST
             weeklyPct > 1.5 -> PlanSafety.TOO_FAST
+            // would need eating far below the safe minimum, even with a large deficit
+            requiredIntake < minIntake - 300 && requiredDeficit > maxDeficit -> PlanSafety.TOO_FAST
             weeklyPct > 1.0 || requiredIntake < minIntake -> PlanSafety.AMBITIOUS
             weeklyPct >= 0.5 -> PlanSafety.OPTIMAL
             else -> PlanSafety.GENTLE

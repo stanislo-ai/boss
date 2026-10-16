@@ -145,7 +145,12 @@ class AiClient(
     private fun supportsFallbacks(): Boolean =
         baseUrl.isNullOrBlank() && (model == "claude-opus-5-5" || model == "claude-sonnet-5-5")
 
-    private fun translate(e: Throwable): Exception = when (e) {
+    private fun translate(e: Throwable): Exception {
+        if (e !is AiException) android.util.Log.w("StopFat", "AI request failed", e)
+        return translateInner(e)
+    }
+
+    private fun translateInner(e: Throwable): Exception = when (e) {
         is AiException -> e
         is UnauthorizedException -> AiException("Nieprawidłowy klucz API. Sprawdź go w Ustawieniach.", e)
         is PermissionDeniedException -> AiException("Brak uprawnień dla tego klucza API lub modelu.", e)

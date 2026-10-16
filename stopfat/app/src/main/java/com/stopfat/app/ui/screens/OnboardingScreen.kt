@@ -15,7 +15,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -97,7 +103,19 @@ fun OnboardingScreen(vm: MainViewModel, onDone: () -> Unit) {
     val basicsValid = (age.toIntOrNull() ?: 0) in 12..100 && (height.toIntOrNull() ?: 0) in 120..230 && (parseNumber(weight) ?: 0.0) in 30.0..350.0
     val goalValid = (parseNumber(target) ?: 0.0) in 30.0..350.0 && targetDate > LocalDate.now().toEpochDay()
 
-    Page {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .imePadding(),
+    ) {
+      Column(
+        Modifier
+            .weight(1f)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 18.dp),
+      ) {
         Spacer(Modifier.height(18.dp))
         // progress dots
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
@@ -236,8 +254,9 @@ fun OnboardingScreen(vm: MainViewModel, onDone: () -> Unit) {
             }
         }
 
-        Spacer(Modifier.height(24.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Spacer(Modifier.height(16.dp))
+      }
+        Row(Modifier.padding(horizontal = 18.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             if (step > 0) GlassButton("Wstecz", Modifier.weight(1f), secondary = true) { step-- }
             val canNext = when (step) {
                 1 -> basicsValid
