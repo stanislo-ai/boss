@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <!-- glass disc -->
+    <path android:pathData="M54,54m-26,0a26,26 0,1 1,52 0a26,26 0,1 1,-52 0" android:fillColor="#33FFFFFF" android:strokeColor="#99FFFFFF" android:strokeWidth="1.5" />
+    <!-- flame -->
+    <path android:pathData="M54,32C54,32 66,43 66,56C66,63.2 60.6,69 54,69C47.4,69 42,63.2 42,56C42,50 45,46 48,43C48,48 50,51 53,52C51,45 54,38 54,32Z">
+        <aapt:attr xmlns:aapt="http://schemas.android.com/aapt" name="android:fillColor">
+            <gradient android:type="linear" android:startX="42" android:startY="32" android:endX="66" android:endY="69">
+                <item android:offset="0" android:color="#FF3EF0C8" />
+                <item android:offset="0.5" android:color="#FF4FC3FF" />
+                <item android:offset="1" android:color="#FF8C6CFF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- stop slash -->
+    <path android:pathData="M37,71L71,37" android:strokeColor="#FFFFFFFF" android:strokeWidth="4" android:strokeLineCap="round" />
+    <!-- sheen -->
+    <path android:pathData="M36,44C40,35 47,30 56,29" android:strokeColor="#88FFFFFF" android:strokeWidth="2" android:strokeLineCap="round" />
+</vector>
