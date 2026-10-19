@@ -1,0 +1,6 @@
+@font-face{font-family:Lilita;src:url(lilita.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;overflow:hidden}
+.title{font-family:Lilita;color:#fff;letter-spacing:2px;
+ -webkit-text-stroke:0;paint-order:stroke fill;
+ text-shadow:0 6px 0 #5a0b0b,0 10px 0 #2a0505,0 0 40px rgba(255,90,0,.6)}

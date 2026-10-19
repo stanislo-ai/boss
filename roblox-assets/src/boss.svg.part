@@ -1,0 +1,27 @@
+<defs>
+ <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b1020"/><stop offset="1" stop-color="#14040b"/></linearGradient>
+ <linearGradient id="horn" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#cfc3a8"/><stop offset="1" stop-color="#6b5a40"/></linearGradient>
+ <radialGradient id="eye"><stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="#ffe14a"/><stop offset="1" stop-color="#ff5a00" stop-opacity="0"/></radialGradient>
+ <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<g id="bosshead">
+ <!-- horns -->
+ <path d="M95 140 L40 40 L70 30 L130 115 Z" fill="url(#horn)" stroke="#1a0a05" stroke-width="6" stroke-linejoin="round"/>
+ <path d="M305 140 L360 40 L330 30 L270 115 Z" fill="url(#horn)" stroke="#1a0a05" stroke-width="6" stroke-linejoin="round"/>
+ <!-- head block -->
+ <rect x="80" y="100" width="240" height="230" rx="22" fill="url(#skin)" stroke="#0a0205" stroke-width="8"/>
+ <rect x="92" y="110" width="216" height="40" rx="14" fill="#5a1a30" opacity=".55"/>
+ <!-- brow -->
+ <path d="M105 185 L195 215 L195 230 L105 205 Z" fill="#0a0205"/>
+ <path d="M295 185 L205 215 L205 230 L295 205 Z" fill="#0a0205"/>
+ <!-- eyes -->
+ <circle cx="150" cy="232" r="44" fill="url(#eye)"/>
+ <circle cx="250" cy="232" r="44" fill="url(#eye)"/>
+ <path d="M120 222 L180 236 L172 250 L126 240 Z" fill="#fff6c0" filter="url(#glow)"/>
+ <path d="M280 222 L220 236 L228 250 L274 240 Z" fill="#fff6c0" filter="url(#glow)"/>
+ <!-- mouth -->
+ <path d="M125 275 L275 275 L262 312 L138 312 Z" fill="#0a0205"/>
+ <path d="M135 275 L150 298 L165 275 L180 298 L195 275 L210 298 L225 275 L240 298 L255 275 L265 275 L265 280 L135 280Z" fill="#f2ead2"/>
+ <path d="M145 312 L160 293 L175 312 Z M225 312 L240 293 L255 312 Z" fill="#f2ead2"/>
+ <path d="M150 288 Q200 300 250 288" stroke="#ff3a00" stroke-width="5" fill="none" opacity=".7" filter="url(#glow)"/>
+</g>

@@ -1,0 +1,75 @@
+<!doctype html><html><head><meta charset=utf-8><link rel=stylesheet href=common.css>
+<style>
+#c{width:1920px;height:1080px;position:relative;overflow:hidden;
+ background:radial-gradient(ellipse at 72% 40%,#ff5a1f 0%,#a3141e 25%,#3d0820 52%,#0d0312 100%)}
+.rays{position:absolute;left:1380px;top:430px;width:3000px;height:3000px;margin:-1500px;background:repeating-conic-gradient(rgba(255,200,100,.12) 0 6deg,transparent 6deg 18deg)}
+.floor{position:absolute;left:0;right:0;bottom:0;height:260px;background:linear-gradient(#2a0610,#0a0206)}
+.lava{position:absolute;left:-5%;right:-5%;bottom:200px;height:70px;background:linear-gradient(90deg,#ff3d00,#ffb300,#ff3d00,#ffcf3a,#ff3d00);filter:blur(10px);opacity:.85}
+.crack{position:absolute;inset:auto 0 0 0;height:260px}
+.t{position:absolute;left:90px;top:70px;font-size:250px;line-height:.85;-webkit-text-stroke:18px #2a0505}
+.t2{position:absolute;left:90px;top:70px;font-size:250px;line-height:.85;text-shadow:none;background:linear-gradient(#fff3b0,#ffb020 55%,#ff6a00);-webkit-background-clip:text;color:transparent}
+.sub{position:absolute;left:100px;top:540px;font-family:Lilita;font-size:72px;color:#fff;background:#ff2d2d;padding:8px 34px 14px;border-radius:18px;transform:rotate(-3deg);box-shadow:0 10px 0 #6a0a0a;border:6px solid #2a0505}
+.ember{position:absolute;border-radius:50%;background:#ffcf5a;box-shadow:0 0 14px 4px #ff7a00}
+</style></head><body><div id=c><div class=rays></div>
+<div class=floor></div><div class=lava></div>
+<svg class=crack viewBox="0 0 1920 260" preserveAspectRatio="none"><g stroke="#ff7a00" stroke-width="6" fill="none" opacity=".8" filter="url(#glow2)"><path d="M300 60 L420 120 L380 200 L470 260"/><path d="M900 40 L860 130 L960 190 L920 260"/><path d="M1500 70 L1600 140 L1560 260"/></g><defs><filter id="glow2"><feGaussianBlur stdDeviation="3"/></filter></defs></svg>
+<!-- boss body -->
+<svg viewBox="0 0 900 1000" width="1080" height="1200" style="position:absolute;left:880px;top:-40px">
+ <defs><linearGradient id="arm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b1020"/><stop offset="1" stop-color="#14040b"/></linearGradient></defs>
+ <path d="M120 470 L250 390 L650 390 L780 470 L760 1000 L140 1000 Z" fill="url(#arm)" stroke="#0a0205" stroke-width="10"/>
+ <path d="M300 520 L450 600 L600 520 L580 700 L450 760 L320 700Z" fill="#ff4a10" opacity=".5"/>
+ <path d="M330 540 L450 610 L570 540" stroke="#ffb020" stroke-width="10" fill="none"/>
+ <path d="M150 470 L60 360 L210 420Z M750 470 L840 360 L690 420Z" fill="#cfc3a8" stroke="#1a0a05" stroke-width="8"/>
+ <rect x="10" y="470" width="140" height="380" rx="24" fill="url(#arm)" stroke="#0a0205" stroke-width="10" transform="rotate(12 80 470)"/>
+ <rect x="750" y="460" width="140" height="380" rx="24" fill="url(#arm)" stroke="#0a0205" stroke-width="10" transform="rotate(-20 820 460)"/>
+ <path d="M840 780 L900 700 L900 840 Z M870 800 L940 760 L900 870Z" fill="#cfc3a8" stroke="#1a0a05" stroke-width="6"/>
+</svg>
+<svg viewBox="0 0 400 400" width="760" height="760" style="position:absolute;left:1040px;top:20px"><defs>
+ <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b1020"/><stop offset="1" stop-color="#14040b"/></linearGradient>
+ <linearGradient id="horn" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#cfc3a8"/><stop offset="1" stop-color="#6b5a40"/></linearGradient>
+ <radialGradient id="eye"><stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="#ffe14a"/><stop offset="1" stop-color="#ff5a00" stop-opacity="0"/></radialGradient>
+ <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<g id="bosshead">
+ <!-- horns -->
+ <path d="M95 140 L40 40 L70 30 L130 115 Z" fill="url(#horn)" stroke="#1a0a05" stroke-width="6" stroke-linejoin="round"/>
+ <path d="M305 140 L360 40 L330 30 L270 115 Z" fill="url(#horn)" stroke="#1a0a05" stroke-width="6" stroke-linejoin="round"/>
+ <!-- head block -->
+ <rect x="80" y="100" width="240" height="230" rx="22" fill="url(#skin)" stroke="#0a0205" stroke-width="8"/>
+ <rect x="92" y="110" width="216" height="40" rx="14" fill="#5a1a30" opacity=".55"/>
+ <!-- brow -->
+ <path d="M105 185 L195 215 L195 230 L105 205 Z" fill="#0a0205"/>
+ <path d="M295 185 L205 215 L205 230 L295 205 Z" fill="#0a0205"/>
+ <!-- eyes -->
+ <circle cx="150" cy="232" r="44" fill="url(#eye)"/>
+ <circle cx="250" cy="232" r="44" fill="url(#eye)"/>
+ <path d="M120 222 L180 236 L172 250 L126 240 Z" fill="#fff6c0" filter="url(#glow)"/>
+ <path d="M280 222 L220 236 L228 250 L274 240 Z" fill="#fff6c0" filter="url(#glow)"/>
+ <!-- mouth -->
+ <path d="M125 275 L275 275 L262 312 L138 312 Z" fill="#0a0205"/>
+ <path d="M135 275 L150 298 L165 275 L180 298 L195 275 L210 298 L225 275 L240 298 L255 275 L265 275 L265 280 L135 280Z" fill="#f2ead2"/>
+ <path d="M145 312 L160 293 L175 312 Z M225 312 L240 293 L255 312 Z" fill="#f2ead2"/>
+ <path d="M150 288 Q200 300 250 288" stroke="#ff3a00" stroke-width="5" fill="none" opacity=".7" filter="url(#glow)"/>
+</g>
+</svg>
+<svg viewBox="0 0 220 420" width="420" height="800" style="position:absolute;left:640px;top:300px">
+ <defs><filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g>
+ <!-- sword glow -->
+ <g filter="url(#glow)"><path d="M118 40 L132 30 L150 210 L136 214 Z" fill="#7fe8ff"/></g>
+ <path d="M122 42 L132 34 L146 205 L138 207 Z" fill="#eaffff"/>
+ <rect x="118" y="205" width="44" height="12" rx="4" fill="#ffcc33" stroke="#3a2600" stroke-width="3" transform="rotate(-5 140 211)"/>
+ <rect x="136" y="215" width="12" height="30" rx="3" fill="#6b3a12" transform="rotate(-5 142 230)"/>
+ <!-- body (blocky avatar) -->
+ <rect x="40" y="230" width="34" height="80" rx="6" fill="#1f6fd1" stroke="#0a1a33" stroke-width="5" transform="rotate(-25 57 230)"/>
+ <rect x="68" y="230" width="72" height="90" rx="8" fill="#2a8cff" stroke="#0a1a33" stroke-width="5"/>
+ <rect x="128" y="224" width="34" height="70" rx="6" fill="#1f6fd1" stroke="#0a1a33" stroke-width="5" transform="rotate(-40 145 230)"/>
+ <rect x="70" y="318" width="32" height="80" rx="6" fill="#273246" stroke="#0a1a33" stroke-width="5"/>
+ <rect x="106" y="318" width="32" height="80" rx="6" fill="#273246" stroke="#0a1a33" stroke-width="5" transform="rotate(12 122 318)"/>
+ <rect x="74" y="160" width="62" height="64" rx="12" fill="#ffd28a" stroke="#0a1a33" stroke-width="5"/>
+ <rect x="92" y="184" width="8" height="12" rx="2" fill="#0a1a33"/><rect x="112" y="184" width="8" height="12" rx="2" fill="#0a1a33"/>
+ <path d="M96 206 L116 206" stroke="#0a1a33" stroke-width="4" stroke-linecap="round"/>
+</g></svg>
+<div class="title t">BOSS<br>RUSH</div><div class="title t2">BOSS<br>RUSH</div>
+<div class=sub>DEFEAT EVERY BOSS!</div>
+<div class=ember style="left:820px;top:180px;width:8px;height:8px;opacity:0.8"></div><div class=ember style="left:1000px;top:700px;width:6px;height:6px;opacity:0.7"></div><div class=ember style="left:1700px;top:820px;width:10px;height:10px;opacity:0.9"></div><div class=ember style="left:1850px;top:300px;width:7px;height:7px;opacity:0.6"></div><div class=ember style="left:600px;top:820px;width:6px;height:6px;opacity:0.7"></div><div class=ember style="left:1250px;top:950px;width:9px;height:9px;opacity:0.8"></div><div class=ember style="left:760px;top:90px;width:5px;height:5px;opacity:0.5"></div><div class=ember style="left:1800px;top:600px;width:6px;height:6px;opacity:0.7"></div><div class=ember style="left:940px;top:420px;width:5px;height:5px;opacity:0.6"></div>
+</div></body></html>
