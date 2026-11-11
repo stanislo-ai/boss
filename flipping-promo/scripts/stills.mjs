@@ -5,7 +5,7 @@ import path from "node:path";
 
 const [outDir, ...frames] = process.argv.slice(2);
 const serveUrl = await bundle({ entryPoint: path.resolve("src/index.ts") });
-const composition = await selectComposition({ serveUrl, id: "FlippingPromo" });
+const composition = await selectComposition({ serveUrl, id: process.env.COMP ?? "FlippingPromo" });
 for (const frame of frames.map(Number)) {
   await renderStill({
     serveUrl,

@@ -5,6 +5,16 @@
 - `render/flipping-now-tiktok-music.mp4` – with music + SFX
 - `render/flipping-now-tiktok-nomusic.mp4` – SFX only (add "Cold" from TikTok's sound library)
 
+## Versions
+
+| Composition | Concept |
+|---|---|
+| `FlippingPromo` / `FlippingPromoNoMusic` | v0 – liquid-glass cards, bento grid, glass orb logo |
+| `V1Keynote` / `V1KeynoteNoMusic` | Apple-keynote style: giant type with footage inside the letters, zoom-through into a letter, liquid-glass magnifier lens, light-mode "product page" flip for AirPods, beat-cut strip montage, rolling-digit counters, logo born from a light streak |
+| `V2iOS` / `V2iOSNoMusic` | iOS-interface story: Spotlight search typed live with Apple Intelligence edge glow, "top hit" tap → app-open animation, Cover Flow carousel with reflections and segmented control, lock-screen notification stack with real profile facts, Dynamic Island expanding into the CTA |
+
+Final renders live in `render/`.
+
 ## Edit / re-render
 
 ```bash

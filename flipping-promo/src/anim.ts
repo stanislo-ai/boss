@@ -29,3 +29,11 @@ export const exitP = (f: number, len: number, lead = 4) =>
   });
 
 export const mix = (a: number, b: number, t: number) => a + (b - a) * t;
+
+/** Decaying camera shake after a hit at local frame `at` (returns px). */
+export const shake = (f: number, at: number, amp = 14) => {
+  const d = f - at;
+  if (d < 0) return { x: 0, y: 0 };
+  const e = Math.exp(-d / 3.5) * amp;
+  return { x: Math.sin(d * 2.7) * e, y: Math.cos(d * 3.3) * e * 0.7 };
+};
