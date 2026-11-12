@@ -224,7 +224,7 @@ export const I1Search: React.FC<{ len: number }> = ({ len }) => {
           SUGESTIE
         </div>
         {SUGGEST.map((sg, i) => {
-          const p = sp(f, -10 + i * 3, { damping: 15, stiffness: 150 });
+          const p = sp(f, -18 + i * 3, { damping: 15, stiffness: 150 });
           return (
             <div
               key={i}
