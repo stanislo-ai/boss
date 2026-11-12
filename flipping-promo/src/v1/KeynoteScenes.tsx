@@ -29,7 +29,7 @@ const b = (i: number) => s(BEATS[i]);
 /* ------------------------------------------------------------------ */
 /* Masked line reveal (text slides up from behind a hard mask)         */
 /* ------------------------------------------------------------------ */
-const MaskLine: React.FC<{
+export const MaskLine: React.FC<{
   at: number;
   children: React.ReactNode;
   style?: React.CSSProperties;
@@ -52,7 +52,7 @@ const MaskLine: React.FC<{
   );
 };
 
-const H: React.CSSProperties = {
+export const H: React.CSSProperties = {
   fontFamily: FONT_DISPLAY,
   fontWeight: 700,
   letterSpacing: "-0.045em",

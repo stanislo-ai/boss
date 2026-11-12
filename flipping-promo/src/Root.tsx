@@ -4,6 +4,7 @@ import { Promo, PromoProps } from "./Promo";
 import { DURATION, FPS, HEIGHT, WIDTH } from "./timing";
 import { Keynote } from "./v1/Keynote";
 import { IOS } from "./v2/IOS";
+import { BIO_OUTRO_FRAMES, BioOutro } from "./outro/BioOutro";
 
 export const RemotionRoot: React.FC = () => (
   <>
@@ -62,6 +63,24 @@ export const RemotionRoot: React.FC = () => (
       width={WIDTH}
       height={HEIGHT}
       defaultProps={{ music: false }}
+    />
+    <Composition
+      id="BioOutro"
+      component={BioOutro}
+      durationInFrames={BIO_OUTRO_FRAMES}
+      fps={FPS}
+      width={WIDTH}
+      height={HEIGHT}
+      defaultProps={{ sfx: true }}
+    />
+    <Composition
+      id="BioOutroSilent"
+      component={BioOutro}
+      durationInFrames={BIO_OUTRO_FRAMES}
+      fps={FPS}
+      width={WIDTH}
+      height={HEIGHT}
+      defaultProps={{ sfx: false }}
     />
   </>
 );
