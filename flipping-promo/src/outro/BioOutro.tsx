@@ -24,6 +24,53 @@ const SFX = [
   { at: 36, sfx: "tick", vol: 0.3 },
 ];
 
+/** Topographic contour lines: revealed from the light streak, slowly drifting,
+ *  with an accent-coloured light passing across them. Stays mostly black. */
+const Topo: React.FC<{ f: number }> = ({ f }) => {
+  const r = interpolate(f, [0, 20], [0, 95], { ...clamp, easing: EASE_OUT });
+  const reveal = `radial-gradient(ellipse 80% 60% at 50% 36%, #000 ${r}%, transparent ${r + 25}%)`;
+  const drift = {
+    position: "absolute" as const,
+    left: -160,
+    top: -190,
+    width: 1400,
+    height: 2300,
+    translate: `${f * 0.5}px ${-f * 0.7}px`,
+    scale: String(1 + f * 0.0012),
+    rotate: `${f * 0.02}deg`,
+  };
+  const lx = interpolate(f, [0, 60], [-10, 110]);
+  return (
+    <AbsoluteFill
+      style={{
+        WebkitMaskImage: reveal,
+        maskImage: reveal,
+      }}
+    >
+      <div style={{ ...drift, opacity: 0.17 }}>
+        <Img src={staticFile("img/topo-white.svg")} style={{ width: 1400, height: 2300 }} />
+      </div>
+      <div
+        style={{
+          ...drift,
+          opacity: 0.55,
+          WebkitMaskImage: `radial-gradient(circle 420px at ${lx}% 45%, #000 0%, transparent 100%)`,
+          maskImage: `radial-gradient(circle 420px at ${lx}% 45%, #000 0%, transparent 100%)`,
+        }}
+      >
+        <Img src={staticFile("img/topo-accent.svg")} style={{ width: 1400, height: 2300 }} />
+      </div>
+      {/* keep the type area clean and the edges dark */}
+      <AbsoluteFill
+        style={{
+          background:
+            "radial-gradient(ellipse 55% 30% at 50% 55%, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0) 100%), radial-gradient(130% 90% at 50% 45%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.85) 100%)",
+        }}
+      />
+    </AbsoluteFill>
+  );
+};
+
 /** 2-second end card: black, logo from a light streak, "Dostawca w bio." */
 export const BioOutro: React.FC<{ sfx: boolean }> = ({ sfx }) => {
   const f = useCurrentFrame();
@@ -40,6 +87,7 @@ export const BioOutro: React.FC<{ sfx: boolean }> = ({ sfx }) => {
 
   return (
     <AbsoluteFill style={{ background: "#000" }}>
+      <Topo f={f} />
       <AbsoluteFill style={{ translate: `${sh.x}px ${sh.y}px` }}>
         {/* light streak */}
         <div
