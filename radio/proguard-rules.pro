@@ -1,0 +1,4 @@
+-keepattributes *Annotation*
+-keep class pl.boss.drive.**.*Service { *; }
+-keep class pl.boss.drive.**.*Receiver { *; }
+-assumenosideeffects class android.util.Log { public static *** d(...); public static *** v(...); }
