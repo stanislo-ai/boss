@@ -148,7 +148,7 @@ class MusicPage(a: MainActivity) : Page(a) {
             XItem.SENDING -> {
                 val sp = tr.speed()
                 val pct = if (x.size > 0) x.sent * 100 / x.size else 0
-                "Wysyłanie $pct%" + (if (sp > 0) " • ${mb(sp)}/s • zostało ${fmtTime((x.size - x.sent) * 1000 / sp)}" else "")
+                "Wysyłanie $pct%" + (if (CarLink.link?.isWifi == false) " przez Bluetooth (hotspot = szybciej)" else "") + (if (sp > 0) " • ${mb(sp)}/s • zostało ${fmtTime((x.size - x.sent) * 1000 / sp)}" else "")
             }
             XItem.DONE -> "W aucie ✓"
             XItem.FAILED -> "Błąd: ${x.err}"

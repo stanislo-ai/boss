@@ -92,15 +92,18 @@ class LinkService : Service() {
         while (running) {
             try {
                 val ad = BluetoothAdapter.getDefaultAdapter()
-                if (ad == null || !ad.isEnabled) { sleep(15_000); continue }
+                if (ad == null) { RadioBt.state = "none"; Store.emit(Topic.LINK); sleep(60_000); continue }
+                if (!ad.isEnabled) { RadioBt.state = "off"; Store.emit(Topic.LINK); sleep(10_000); continue }
                 val ss = ad.listenUsingInsecureRfcommWithServiceRecord(Proto.BT_NAME, Proto.BT_UUID)
                 btServer = ss
+                RadioBt.state = "listening"; Store.emit(Topic.LINK)
                 while (running) {
                     val s = ss.accept()
                     Hub.attach(Link("bt", s.remoteDevice?.name ?: "", s.inputStream, s.outputStream, s, Hub))
                 }
             } catch (e: Throwable) {
                 // Many head units route BT through a vendor module without a standard stack: just retry slowly
+                if (RadioBt.state != "none") { RadioBt.state = "error"; Store.emit(Topic.LINK) }
                 sleep(20_000)
             }
         }

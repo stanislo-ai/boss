@@ -34,7 +34,9 @@ data class Message(val key: String, val app: String, val appName: String, val ti
 data class CallState(val state: String = "idle", val number: String = "", val name: String = "", val photo: String = "", val since: Long = 0) {
     val active get() = state != "idle"
 }
-data class PhoneStatus(val battery: Int = -1, val charging: Boolean = false, val signal: Int = 0, val net: String = "", val carrier: String = "")
+data class PhoneStatus(val battery: Int = -1, val charging: Boolean = false, val signal: Int = 0, val net: String = "", val carrier: String = "",
+                       /** false = phone audio is NOT going to the car over Bluetooth (plays on the phone speaker). */
+                       val a2dp: Boolean = true, val a2dpName: String = "")
 data class Weather(val temp: Int, val code: Int, val hi: Int, val lo: Int, val place: String, val isDay: Boolean, val lat: Double, val lon: Double)
 data class Transfer(val id: String, val title: String, val artist: String, val size: Long, val done: Long, val queued: Int)
 
@@ -65,6 +67,8 @@ object Store {
     @Volatile var appBackdrop: Bitmap? = null
     @Volatile var appTint: Int = 0xFF3A3A3C.toInt()
     @Volatile var radioSources: List<Source> = emptyList()
+    /** Phone music is playing but its sound isn't reaching the car. */
+    val audioOnPhone get() = connected && !status.a2dp && !localActive && !appActive && phoneNp.playing
     val np get() = when { localActive -> localNp; appActive -> appNp; else -> phoneNp }
     @Volatile var phoneArt: Bitmap? = null
     @Volatile var phoneBackdrop: Bitmap? = null

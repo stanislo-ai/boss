@@ -36,6 +36,8 @@ object Audio {
     var subtitle = ""; private set
     var art: Bitmap? = null; private set
     var key = ""; private set
+    /** Which add-on started the current audio (e.g. "pl.boss.drive.addon.podcasts"). */
+    var owner = ""
     private var pausedByFocus = false
     private val listeners = ArrayList<() -> Unit>()
     var onComplete: ((String) -> Unit)? = null

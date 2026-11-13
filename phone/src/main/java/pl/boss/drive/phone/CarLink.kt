@@ -103,7 +103,7 @@ object CarLink : Link.Listener {
             val l = link
             if (l == null || !l.isOpen) {
                 prefs.getString("manualIp", "")?.takeIf { it.isNotBlank() }?.let { connectTcp(it.trim(), Proto.PORT_TCP) }
-                if (SystemClock.elapsedRealtime() - searchingSince > 6000) connectBt()
+                if (SystemClock.elapsedRealtime() - searchingSince > 2500) connectBt()
             } else if (!l.isWifi && SystemClock.elapsedRealtime() - lastWifiTry > 20_000) {
                 prefs.getString("lastIp", "")?.takeIf { it.isNotBlank() }?.let { lastWifiTry = SystemClock.elapsedRealtime(); connectTcp(it, Proto.PORT_TCP) }
             }
@@ -135,24 +135,42 @@ object CarLink : Link.Listener {
         }, "tcp-connect").start()
     }
 
+    /**
+     * Hotspot once, Bluetooth afterwards: the first Wi-Fi session teaches us the radio's Bluetooth
+     * name, then every later drive connects straight over Bluetooth (no hotspot needed).
+     * Candidates: the device that worked before, devices named like the radio, car-audio devices.
+     */
     @SuppressLint("MissingPermission")
     private fun connectBt() {
         if (btConnecting || !running || !Perms.has(ctx, Perms.BT)) return
-        val addr = prefs.getString("carBt", "") ?: ""
-        if (addr.isEmpty()) return
         val ad: BluetoothAdapter = (ctx.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter ?: return
         if (!ad.isEnabled) return
+        val bonded = try { ad.bondedDevices?.toList() ?: emptyList() } catch (_: Throwable) { emptyList() }
+        val saved = prefs.getString("carBt", "") ?: ""
+        val radioBtName = prefs.getString("radioBtName", "") ?: ""
+        val candidates = (bonded.filter { it.address == saved } +
+            bonded.filter { radioBtName.isNotEmpty() && it.name.equals(radioBtName, ignoreCase = true) } +
+            bonded.filter { it.address == prefs.getString("carBtCandidate", "") } +
+            bonded.filter { d -> try { d.bluetoothClass?.deviceClass.let { it == android.bluetooth.BluetoothClass.Device.AUDIO_VIDEO_CAR_AUDIO || it == android.bluetooth.BluetoothClass.Device.AUDIO_VIDEO_HANDSFREE } } catch (_: Throwable) { false } })
+            .distinctBy { it.address }.take(4)
+        if (candidates.isEmpty()) return
         btConnecting = true
         Thread({
             try {
-                val dev = ad.getRemoteDevice(addr)
-                val s = dev.createInsecureRfcommSocketToServiceRecord(Proto.BT_UUID)
-                try { ad.cancelDiscovery() } catch (_: Throwable) {}
-                s.connect()
-                attach(Link("bt", dev.name ?: addr, s.inputStream, s.outputStream, s, this))
-            } catch (e: Throwable) {
-                Log.i(TAG, "bt: ${e.message}")
-                try { Thread.sleep(15_000) } catch (_: InterruptedException) {}
+                for (dev in candidates) {
+                    if (!running || (link?.isOpen == true)) break
+                    for (secure in listOf(false, true)) {
+                        try {
+                            try { ad.cancelDiscovery() } catch (_: Throwable) {}
+                            val s = if (secure) dev.createRfcommSocketToServiceRecord(Proto.BT_UUID) else dev.createInsecureRfcommSocketToServiceRecord(Proto.BT_UUID)
+                            s.connect()
+                            prefs.edit().putString("carBt", dev.address).putString("carBtName", dev.name ?: "").apply()
+                            attach(Link("bt", dev.name ?: dev.address, s.inputStream, s.outputStream, s, this))
+                            return@Thread
+                        } catch (e: Throwable) { Log.i(TAG, "bt ${dev.name} secure=$secure: ${e.message}") }
+                    }
+                }
+                try { Thread.sleep(12_000) } catch (_: InterruptedException) {}
             } finally { btConnecting = false }
         }, "bt-connect").start()
     }
@@ -188,6 +206,8 @@ object CarLink : Link.Listener {
     override fun onPacket(link: Link, p: Packet) {
         if (p.type == Proto.HELLO) {
             radioName = p.s("name", "Radio")
+            // remember how to reach the radio without the hotspot next time
+            p.s("btName").takeIf { it.isNotEmpty() }?.let { prefs.edit().putString("radioBtName", it).putBoolean("radioBt", p.b("bt")).apply() }
             if (p.b("paired")) {
                 link.authed = true; connected = true; waitingApproval = false
                 if (prefs.getString("carBt", "").isNullOrEmpty()) prefs.getString("carBtCandidate", null)?.let { prefs.edit().putString("carBt", it).apply() }
@@ -210,8 +230,6 @@ object CarLink : Link.Listener {
             Proto.LOCAL_PLAYING -> if (p.b("on")) media.pauseAll()
             Proto.X_ACK, Proto.X_DONE, Proto.X_FAIL -> transfers.onRadio(p)
             Proto.R_LIB -> { transfers.onRadioLibrary(p); Events.emit(Ev.RADIO_LIB) }
-            Proto.STORE_REQ -> handler.post { AddonServer.catalog(ctx) }
-            Proto.APP_GET -> handler.post { AddonServer.send(ctx, p.s("pkg")) }
             Proto.BYE -> link.close()
         }
     }

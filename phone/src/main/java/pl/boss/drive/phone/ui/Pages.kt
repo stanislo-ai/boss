@@ -105,9 +105,10 @@ class AutoPage(a: MainActivity) : Page(a) {
             else -> "Rozłączono"
         }
         val sub = when {
-            connected -> CarLink.radioName + " • " + (if (CarLink.link?.isWifi == true) "Wi-Fi" else "Bluetooth")
+            connected -> CarLink.radioName + " • " + (if (CarLink.link?.isWifi == true) "Wi-Fi (hotspot)" else "Bluetooth — bez hotspotu")
             CarLink.waitingApproval -> "Na ekranie radia dotknij „Połącz”"
-            CarLink.running -> "Włącz hotspot w telefonie — radio połączy się z nim samo"
+            CarLink.running -> if (CarLink.prefs.getString("carBt", "").isNullOrEmpty()) "Pierwszy raz: włącz hotspot w telefonie — potem wystarczy sam Bluetooth"
+                else "Łączę przez Bluetooth z „${CarLink.prefs.getString("carBtName", "radiem")}”…"
             else -> "Połączy się samo, gdy wsiądziesz do auta"
         }
         tc.addView(ctx.text(title, 20f, W.BOLD, pal.label))
@@ -129,6 +130,20 @@ class AutoPage(a: MainActivity) : Page(a) {
         }
         card.addView(btns, ctx.lp(MATCH, WRAP).apply { topMargin = ctx.dpi(16f) })
         body.addView(card, ctx.lp(MATCH, WRAP).apply { setMargins(ctx.dpi(16f), ctx.dpi(10f), ctx.dpi(16f), 0) })
+
+        // ---- sound isn't reaching the car
+        if (connected && !CarLink.status.a2dp) {
+            val warn = ctx.vstack()
+            warn.background = RoundDrawable(if (pal.dark) 0xFF3A2A12.toInt() else 0xFFFFF3E0.toInt(), ctx.dp(14f))
+            warn.pad(16f, 14f, 16f, 14f)
+            warn.addView(ctx.text("Dźwięk gra z głośnika telefonu", 17f, W.SEMIBOLD, pal.orange))
+            warn.addView(ctx.text("Połącz telefon z radiem przez Bluetooth i włącz w nim „Dźwięk multimediów” (Ustawienia Bluetooth → ⚙ przy radiu). " +
+                "Jeśli dalej cicho — na radiu dotknij przycisku Bluetooth w „Teraz gra”.", 14f, W.REGULAR, pal.label, lines = 5), ctx.lp(MATCH, WRAP).apply { topMargin = ctx.dpi(4f) })
+            warn.addView(ctx.text("Ustawienia Bluetooth", 16f, W.SEMIBOLD, pal.blue).apply {
+                pad(0f, 10f, 0f, 0f); onTap { try { a.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) } catch (_: Throwable) {} }
+            })
+            body.addView(warn, ctx.lp(MATCH, WRAP).apply { setMargins(ctx.dpi(16f), ctx.dpi(12f), ctx.dpi(16f), 0) })
+        }
 
         // ---- now playing
         if (CarLink.running && CarLink.media.lastTitle.isNotEmpty()) {

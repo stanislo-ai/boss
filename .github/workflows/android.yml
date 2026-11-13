@@ -19,5 +19,4 @@ jobs:
           name: boss-drive-apks
           path: |
             phone/build/outputs/apk/release/*.apk
-            addons/*/build/outputs/apk/release/*.apk
             radio/build/outputs/apk/release/*.apk

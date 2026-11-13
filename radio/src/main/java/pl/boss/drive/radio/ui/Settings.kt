@@ -23,7 +23,9 @@ import pl.boss.drive.core.ui.vstack
 import pl.boss.drive.core.util.Bg
 import pl.boss.drive.radio.BuildConfigCompat
 import pl.boss.drive.radio.AppMedia
+import pl.boss.drive.radio.BtAudio
 import pl.boss.drive.radio.Hub
+import pl.boss.drive.radio.RadioBt
 import pl.boss.drive.radio.MainActivity
 import pl.boss.drive.radio.Store
 import pl.boss.drive.radio.Theme
@@ -73,6 +75,25 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         s1.addRows(p, rows)
         body.addView(s1)
         body.addView(a.sectionFooter(p, "Dźwięk z telefonu gra przez Bluetooth radia jak dotąd — Boss Drive dodaje sterowanie, okładki, połączenia i wiadomości. Wi-Fi (hotspot telefonu) przyspiesza wysyłanie piosenek do auta."))
+
+        // ---- bluetooth: link without hotspot + audio source
+        body.addView(a.sectionHeader(p, "Bluetooth"))
+        val sBt = a.section(p)
+        val btLink = Row(a, p, "Połączenie bez hotspotu", RadioBt.label(), icon = CR.drawable.ic_bluetooth, iconColor = p.blue, minHeightDp = 60f)
+        if (RadioBt.state == "off") btLink.onTap(Press.HIGHLIGHT, p.cellPressed) { if (RadioBt.enable()) a.hud("Włączam Bluetooth", CR.drawable.ic_bluetooth) }
+        val btApp = BtAudio.chosen(a)
+        val appRow = Row(a, p, "Aplikacja muzyki BT radia", "Przełącza dźwięk radia na Bluetooth z telefonu", value = btApp?.label ?: "Wybierz",
+            icon = CR.drawable.ic_music, iconColor = 0xFFFA2D48.toInt(), chevron = true)
+        appRow.onTap(Press.HIGHLIGHT, p.cellPressed) {
+            val c = BtAudio.candidates(a).take(5)
+            if (c.isEmpty()) a.hud("Nie znalazłem aplikacji Bluetooth na tym radiu", CR.drawable.ic_info)
+            else a.alert("Która aplikacja odtwarza muzykę BT?", "Boss Drive otworzy ją na chwilę, aby radio przełączyło się na dźwięk z telefonu.",
+                c.mapIndexed { i, app -> app.label to (10 + i) } + ("Anuluj" to 0)) { k -> if (k >= 10) { BtAudio.choose(c[k - 10].pkg); rebuild() } }
+        }
+        val auto = Row(a, p, "Przełączaj automatycznie", "Gdy zaczyna grać muzyka z telefonu", icon = CR.drawable.ic_speaker, iconColor = p.green, accessory = toggle("btAuto", false))
+        sBt.addRows(p, listOf(btLink, appRow, auto))
+        body.addView(sBt)
+        body.addView(a.sectionFooter(p, "Po pierwszym połączeniu przez hotspot telefon zapamiętuje radio i dalej łączy się sam przez Bluetooth. Hotspot przydaje się już tylko do szybkiego wysyłania piosenek do auta."))
 
         // ---- apps on the radio
         body.addView(a.sectionHeader(p, "Aplikacje na radiu"))

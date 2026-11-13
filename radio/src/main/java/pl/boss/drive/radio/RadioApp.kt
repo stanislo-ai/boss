@@ -11,7 +11,10 @@ class RadioApp : Application() {
         Fonts.init(this)
         Hub.init(this)
         LinkService.start(this)
+        AppMedia.hookInApp(this)
         AppMedia.start(this)
+        pl.boss.drive.addon.podcasts.Library.init(this)
+        pl.boss.drive.addon.podcasts.PodcastsActivity.hook(this)
         // add-ons installed / removed -> refresh grid, store and sources
         registerReceiver(object : android.content.BroadcastReceiver() {
             override fun onReceive(c: android.content.Context, i: android.content.Intent) { AppMedia.publishSources(); Store.emit(Topic.STORE) }

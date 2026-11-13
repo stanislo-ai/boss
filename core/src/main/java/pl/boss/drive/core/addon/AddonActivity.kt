@@ -79,6 +79,8 @@ abstract class AddonActivity : Activity() {
 
     abstract fun buildContent(): View
 
+    fun contentFrame(): FrameLayout = content
+
     private fun buildDock(): View {
         val d = vstack(Gravity.CENTER_HORIZONTAL)
         d.setBackgroundColor(pal.dock)
@@ -94,13 +96,14 @@ abstract class AddonActivity : Activity() {
         home.background = RoundDrawable(pal.fill3, dp(14f))
         home.onTap(Press.SCALE) { goHome() }
         d.addView(home, lp(dpi(58f), dpi(58f)))
+        d.addView(View(this), lp(1, dpi(52f)))   // same Home position as in Boss Drive's dock
         return d
     }
 
+    /** Add-ons live inside Boss Drive: Home simply returns to it. */
     fun goHome() {
-        val i = Intent().setClassName(Addons.RADIO_PKG, "${Addons.RADIO_PKG}.MainActivity")
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-        try { startActivity(i) } catch (_: Throwable) { moveTaskToBack(true) }
+        finish()
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
     }
 
     /** Return true if the add-on handled back itself (e.g. closed a sub-page). */

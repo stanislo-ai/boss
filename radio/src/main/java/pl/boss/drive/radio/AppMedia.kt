@@ -14,10 +14,17 @@ import android.os.SystemClock
 import android.provider.Settings
 import android.service.notification.NotificationListenerService
 import pl.boss.drive.core.addon.Addons
+import pl.boss.drive.core.addon.Audio
 import pl.boss.drive.core.net.Proto
 import pl.boss.drive.core.net.pkt
 import pl.boss.drive.core.util.Bg
 import pl.boss.drive.core.util.Img
+
+/** Built-in audio add-ons (Podcasts, Radio online) play through the shared [Audio] engine in this process. */
+object InApp {
+    fun key(pkg: String) = Audio.owner == pkg && Audio.key.isNotEmpty()
+    fun playing(pkg: String) = Audio.owner == pkg && Audio.playing
+}
 
 /** Only needed so Android lets Boss Drive see and control media apps installed on the radio. */
 class RadioNotifListener : NotificationListenerService() {
@@ -36,6 +43,44 @@ object AppMedia {
     private var primary: MediaController? = null
     private var started = false
     private var lastArtKey = ""
+    private var inApp = false
+    private var inAppHooked = false
+
+    /** Follow our own built-in audio add-ons (no special permission needed — same app). */
+    fun hookInApp(c: Context) {
+        if (inAppHooked) return
+        inAppHooked = true
+        ctx = c.applicationContext
+        Audio.init(ctx)
+        Audio.listen { onInApp() }
+    }
+
+    private fun onInApp() {
+        if (Audio.key.isEmpty()) {
+            if (inApp) { inApp = false; Store.appActive = false; Store.emit(Topic.NP, Topic.ART) }
+            publishSources(); return
+        }
+        if (Audio.playing && !inApp) {
+            inApp = true; primary = null
+            Store.appActive = true
+            if (Store.localActive) Hub.player.deactivate()
+            Hub.send(pkt(Proto.LOCAL_PLAYING, "on" to true))
+        }
+        if (!inApp) return
+        val name = Addons.byPkg(Audio.owner)?.name ?: "Boss Drive"
+        val key = "inapp|" + Audio.key
+        Store.appNp = NowPlaying(title = Audio.title, artist = Audio.subtitle, duration = Audio.duration, position = Audio.position,
+            posAt = SystemClock.elapsedRealtime(), playing = Audio.playing, pkg = Audio.owner, appName = name, artKey = key,
+            canSeek = !Audio.live, canSkip = true)
+        if (key != lastArtKey) {
+            lastArtKey = key
+            val bmp = Audio.art
+            if (bmp == null) { Store.appArt = null; Store.appBackdrop = null; Store.appTint = 0xFF3A3A3C.toInt(); Store.emit(Topic.ART) }
+            else Bg.run { val back = Img.backdrop(bmp); val tint = Img.dominant(bmp); Store.ui { Store.appArt = bmp; Store.appBackdrop = back; Store.appTint = tint; Store.emit(Topic.ART) } }
+        }
+        Store.emit(Topic.NP)
+        publishSources()
+    }
 
     fun hasAccess(c: Context): Boolean {
         val flat = Settings.Secure.getString(c.contentResolver, "enabled_notification_listeners") ?: return false
@@ -71,7 +116,8 @@ object AppMedia {
 
     private fun pick() {
         val playing = controllers.firstOrNull { isPlaying(it) }
-        if (playing != null && (playing !== primary || !Store.appActive)) {
+        if (playing != null && (playing !== primary || !Store.appActive || inApp)) {
+            if (inApp) { inApp = false; if (Audio.playing) Audio.pause() }
             if (playing !== primary) lastArtKey = ""
             primary = playing
             // a radio app started playing: it becomes the active source
@@ -117,7 +163,7 @@ object AppMedia {
     fun publishSources() {
         val out = LinkedHashMap<String, Source>()
         for (c in controllers) out[c.packageName] = Source(c.packageName, label(c.packageName), true, isPlaying(c))
-        for (a in Addons.ALL.filter { it.audio }) if (AddonStore.installedVersion(ctx, a.pkg) > 0 && a.pkg !in out) out[a.pkg] = Source(a.pkg, a.name, false, false)
+        for (a in Addons.ALL.filter { it.audio }) if (AddonStore.isInstalled(ctx, a) && a.pkg !in out) out[a.pkg] = Source(a.pkg, a.name, InApp.key(a.pkg), InApp.playing(a.pkg))
         for (pkg in out.keys) if (Store.icons.get(pkg) == null) icon(pkg)?.let { Store.icons.put(pkg, it) }
         Store.radioSources = out.values.toList()
         Store.emit(Topic.SOURCES)
@@ -129,6 +175,14 @@ object AppMedia {
     } catch (_: Throwable) { null }
 
     fun command(a: String, pos: Long) {
+        if (inApp) {
+            when (a) {
+                "play" -> Audio.resume(); "pause" -> Audio.pause(); "toggle" -> Audio.toggle(); "seek" -> Audio.seekTo(pos)
+                "next" -> if (Audio.live) Audio.onSkip?.invoke(1) else Audio.seekBy(30_000)
+                "prev" -> if (Audio.live) Audio.onSkip?.invoke(-1) else Audio.seekBy(-15_000)
+            }
+            return
+        }
         val tc = primary?.transportControls ?: return
         when (a) {
             "play" -> tc.play(); "pause" -> tc.pause(); "toggle" -> if (isPlaying(primary)) tc.pause() else tc.play()
@@ -139,6 +193,7 @@ object AppMedia {
     /** Make a radio app the source: resume its session, or open it so the user can pick something. */
     fun select(a: android.app.Activity, pkg: String, dark: Boolean) {
         if (Store.localActive) Hub.player.deactivate()
+        if (InApp.key(pkg)) { Audio.resume(); return }
         val c = controllers.firstOrNull { it.packageName == pkg }
         if (c != null) { primary = c; Store.appActive = true; c.transportControls.play(); Hub.send(pkt(Proto.LOCAL_PLAYING, "on" to true)); publish(); return }
         AddonStore.open(a, pkg, dark)
@@ -146,6 +201,7 @@ object AppMedia {
 
     fun deactivate() {
         if (!Store.appActive) return
+        if (inApp) { inApp = false; if (Audio.playing) Audio.pause() }
         primary?.let { if (isPlaying(it)) it.transportControls.pause() }
         Store.appActive = false
         Store.emit(Topic.NP, Topic.ART)

@@ -14,7 +14,7 @@ data class Addon(
     val color: Int,
     val color2: Int,
     val audio: Boolean = false,
-    /** Third-party app installed from Google Play, not shipped by us. */
+    /** Third-party app installed from Google Play (everything else is built into Boss Drive). */
     val external: Boolean = false,
     val version: Int = 1,
 )
@@ -56,6 +56,27 @@ object Addons {
                 "Kolorowe ostrzeżenia, zanim minie termin.",
             listOf("Przegląd, OC, olej, opony", "Ostrzega 30 dni / 1000 km wcześniej", "Liczy dni i kilometry do terminu", "Działa w pełni offline"),
             R.drawable.ic_wrench, 0xFF8E8E93.toInt(), 0xFF5A5A5F.toInt()),
+        Addon("pl.boss.drive.addon.parking", "Parkomat", "Ile zostało z opłaconego postoju", "Auto",
+            "Ustaw opłacony czas postoju jednym dotknięciem (15 min, 30 min, 1 h…). Boss Drive odlicza czas, ostrzega 10 i 5 minut przed końcem " +
+                "i zapamiętuje, gdzie stoisz.",
+            listOf("Duże przyciski szybkiego wyboru czasu", "Ostrzeżenie 10 i 5 minut przed końcem", "Działa także przy zgaszonym ekranie", "Przedłużanie jednym dotknięciem"),
+            R.drawable.ic_timer, 0xFF30B0C7.toInt(), 0xFF0A7D94.toInt()),
+        Addon("pl.boss.drive.addon.recorder", "Dyktafon", "Notatki głosowe w trasie", "Narzędzia",
+            "Jeden duży przycisk nagrywania — zapisz pomysł, adres czy listę zakupów bez odrywania wzroku od drogi. Nagrania odtworzysz później w aucie.",
+            listOf("Nagrywanie jednym dotknięciem", "Mikrofon radia", "Lista nagrań z długością i datą", "Odtwarzanie i usuwanie"),
+            R.drawable.ic_waveform_mic, 0xFFFF453A.toInt(), 0xFFC4001D.toInt()),
+        Addon("pl.boss.drive.addon.tripcost", "Koszt podróży", "Ile kosztuje trasa i ile na osobę", "Auto",
+            "Podaj kilometry i liczbę osób — Boss Drive policzy koszt paliwa i podział na osoby. Spalanie i cenę paliwa bierze z dodatku Paliwo.",
+            listOf("Koszt trasy w złotówkach", "Podział na osoby", "Dane spalania z dodatku Paliwo", "Trasa w jedną stronę lub tam i z powrotem"),
+            R.drawable.ic_wallet, 0xFF34C759.toInt(), 0xFF1E8E3E.toInt()),
+        Addon("pl.boss.drive.addon.pairs", "Pary", "Gra pamięciowa — na postoju", "Gry",
+            "Klasyczne memory: odkrywaj karty i szukaj par. Trzy rozmiary planszy, licznik ruchów i najlepsze wyniki. Tylko na postoju.",
+            listOf("3 poziomy trudności", "Licznik ruchów i czasu", "Rekordy dla każdego poziomu", "Blokada w trakcie jazdy"),
+            R.drawable.ic_cards, 0xFFFF9F0A.toInt(), 0xFFFF375F.toInt()),
+        Addon("pl.boss.drive.addon.tictactoe", "Kółko i krzyżyk", "Z komputerem albo we dwoje", "Gry",
+            "Szybka partia w kółko i krzyżyk z komputerem (łatwy, średni, nie do pokonania) albo z pasażerem. Tylko na postoju.",
+            listOf("3 poziomy komputera", "Gra we dwoje", "Licznik wygranych", "Blokada w trakcie jazdy"),
+            R.drawable.ic_tictactoe, 0xFF5E5CE6.toInt(), 0xFFBF5AF2.toInt()),
     )
 
     fun byPkg(pkg: String) = ALL.firstOrNull { it.pkg == pkg }

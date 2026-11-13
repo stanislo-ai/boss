@@ -41,54 +41,21 @@ import pl.boss.drive.radio.Tab
 import pl.boss.drive.radio.Theme
 import pl.boss.drive.radio.Topic
 
-/** App Store style download ring with a stop square. */
-class ProgressRing(ctx: Context, private val color: Int, private val track: Int) : View(ctx) {
-    var pct = 0; set(v) { field = v; invalidate() }
-    private val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND }
-    private val r = RectF()
-    override fun onDraw(c: Canvas) {
-        val s = minOf(width, height).toFloat(); val sw = s * 0.09f
-        r.set(sw, sw, s - sw, s - sw)
-        p.style = Paint.Style.STROKE; p.strokeWidth = sw
-        p.color = track; c.drawArc(r, 0f, 360f, false, p)
-        p.color = color; c.drawArc(r, -90f, 360f * pct / 100f, false, p)
-        p.style = Paint.Style.FILL; val q = s * 0.16f
-        c.drawRoundRect(s / 2 - q, s / 2 - q, s / 2 + q, s / 2 + q, q * 0.3f, q * 0.3f, p)
-    }
-}
-
-/** GET / OPEN / UPDATE capsule, or a progress ring, depending on the add-on state. */
+/** GET / OPEN capsule. Built-in add-ons appear in the app grid instantly — no install dialogs. */
 fun MainActivity.storeButton(addon: Addon, big: Boolean = false, onAfter: () -> Unit = {}): View {
     val st = AddonStore.state(this, addon)
     val h = if (big) 40f else 32f
-    return when (st) {
-        State.DOWNLOADING -> FrameLayout(this).apply {
-            addView(ProgressRing(this@storeButton, pal.blue, pal.fill3).also { it.pct = AddonStore.progress[addon.pkg] ?: 0 }, FrameLayout.LayoutParams(dpi(h), dpi(h), Gravity.CENTER))
-            minimumWidth = dpi(if (big) 120f else 92f)
-        }
-        State.INSTALLING -> FrameLayout(this).apply {
-            addView(Spinner(this@storeButton, pal.gray), FrameLayout.LayoutParams(dpi(h * 0.8f), dpi(h * 0.8f), Gravity.CENTER)); minimumWidth = dpi(if (big) 120f else 92f)
-        }
-        else -> {
-            val label = when (st) { State.OPEN -> "OTWÓRZ"; State.UPDATE -> "AKTUALIZUJ"; else -> "POBIERZ" }
-            val filled = big && st != State.UNAVAILABLE
-            text(label, if (big) 17f else 15f, W.BOLD, if (filled) Color.WHITE else if (st == State.UNAVAILABLE) pal.gray else pal.blue, gravity = Gravity.CENTER).apply {
-                background = RoundDrawable(if (filled) pal.blue else pal.fill3, dp(h / 2))
-                minWidth = dpi(if (big) 120f else 92f); setPadding(dpi(16f), 0, dpi(16f), 0); height = dpi(h)
-                letterSpacing = 0.02f
-                onTap(Press.SCALE) {
-                    when (st) {
-                        State.OPEN -> if (addon.audio) AppMedia.select(this@storeButton, addon.pkg, Theme.isDark()) else AddonStore.open(this@storeButton, addon.pkg, Theme.isDark())
-                        State.GET, State.UPDATE -> AddonStore.get(this@storeButton, addon) {
-                            alert("Pozwól na instalację", "Radio musi pozwolić Boss Drive instalować dodatki. Za chwilę otworzą się ustawienia — włącz przełącznik i wróć.",
-                                listOf("Anuluj" to 0, "Ustawienia" to 1)) { if (it == 1) AddonStore.openInstallSettings(this@storeButton) }
-                        }
-                        State.UNAVAILABLE -> hud("Połącz telefon z Boss Drive — dodatki pobierają się z niego", CR.drawable.ic_iphone)
-                        else -> {}
-                    }
-                    onAfter()
-                }
-            }
+    val label = if (st == State.OPEN) "OTWÓRZ" else "POBIERZ"
+    return text(label, if (big) 17f else 15f, W.BOLD, if (big) Color.WHITE else pal.blue, gravity = Gravity.CENTER).apply {
+        background = RoundDrawable(if (big) pal.blue else pal.fill3, dp(h / 2))
+        minWidth = dpi(if (big) 120f else 92f); setPadding(dpi(16f), 0, dpi(16f), 0); height = dpi(h)
+        letterSpacing = 0.02f
+        onTap(Press.SCALE) {
+            if (st == State.OPEN) {
+                if (addon.audio && addon.external) AppMedia.select(this@storeButton, addon.pkg, Theme.isDark())
+                else AddonStore.open(this@storeButton, addon.pkg, Theme.isDark())
+            } else AddonStore.get(this@storeButton, addon)
+            onAfter()
         }
     }
 }
@@ -114,8 +81,14 @@ class StoreScreen(a: MainActivity) : Screen(a) {
         body.removeAllViews()
         val featured = Addons.ALL.first()
         body.addView(featuredCard(featured), a.lp(MATCH, a.dpi(214f)).apply { topMargin = a.dpi(16f) })
-        body.addView(a.text("Wszystkie dodatki", 24f, W.BOLD, pal.label), a.lp(WRAP, WRAP).apply { topMargin = a.dpi(26f); bottomMargin = a.dpi(6f) })
-        val items = Addons.ALL.drop(1)
+        section("Dodatki", Addons.ALL.drop(1).filter { it.category != "Gry" })
+        section("Gry na postój", Addons.ALL.filter { it.category == "Gry" })
+        body.addView(a.text("Dodatki są częścią Boss Drive: „Pobierz” dodaje je do ekranu aplikacji, bez instalowania czegokolwiek. " +
+            "Zajmują pamięć tylko wtedy, gdy są otwarte. YouTube Music to oficjalna aplikacja Google — instaluje się ze Sklepu Play na radiu.", 14f, W.REGULAR, pal.label3, lines = 4), a.lp(MATCH, WRAP).apply { topMargin = a.dpi(22f) })
+    }
+
+    private fun section(title: String, items: List<Addon>) {
+        body.addView(a.text(title, 24f, W.BOLD, pal.label), a.lp(WRAP, WRAP).apply { topMargin = a.dpi(26f); bottomMargin = a.dpi(6f) })
         val cols = a.hstack(Gravity.TOP)
         listOf(items.filterIndexed { i, _ -> i % 2 == 0 }, items.filterIndexed { i, _ -> i % 2 == 1 }).forEachIndexed { ci, list ->
             val c = a.vstack()
@@ -123,8 +96,6 @@ class StoreScreen(a: MainActivity) : Screen(a) {
             cols.addView(c, a.lp(0, WRAP, 1f).apply { if (ci == 0) marginEnd = a.dpi(30f) })
         }
         body.addView(cols, a.lp(MATCH, WRAP))
-        body.addView(a.text("Dodatki pobierają się z telefonu przez Boss Drive — bez internetu. Każdy waży ok. 100 KB i zajmuje pamięć tylko wtedy, gdy jest otwarty. " +
-            "YouTube Music instaluje się ze Sklepu Google Play na radiu.", 14f, W.REGULAR, pal.label3, lines = 4), a.lp(MATCH, WRAP).apply { topMargin = a.dpi(22f) })
     }
 
     private fun featuredCard(ad: Addon): View {
@@ -197,16 +168,15 @@ class StoreDetail(a: MainActivity, private val ad: Addon) : Screen(a) {
         c.addView(View(a), a.lp(1, a.dpi(22f)))
         val btns = a.hstack()
         btns.addView(a.storeButton(ad, big = true) { rebuild() })
-        if (AddonStore.installedVersion(a, ad.pkg) > 0) btns.addView(a.text("Usuń", 17f, W.REGULAR, pal.red).apply { pad(18f, 8f, 8f, 8f); onTap { AddonStore.uninstall(a, ad.pkg) } })
+        if (AddonStore.isInstalled(a, ad)) btns.addView(a.text("Usuń", 17f, W.REGULAR, pal.red).apply { pad(18f, 8f, 8f, 8f); onTap { AddonStore.remove(a, ad); rebuild() } })
         c.addView(btns)
         top.addView(c, a.lp(0, WRAP, 1f).apply { marginStart = a.dpi(24f) })
         body.addView(top)
         body.addView(a.hairline(pal.separator), a.lp(MATCH, maxOf(1, a.dpi(0.5f))).apply { topMargin = a.dpi(22f) })
         // info strip like the App Store
         val info = a.hstack()
-        val size = AddonStore.available[ad.pkg]?.first
         listOf("KATEGORIA" to ad.category, "ŹRÓDŁO" to (if (ad.external) "Google Play" else "Boss Drive"),
-            "ROZMIAR" to (if (size != null) "${size / 1024} KB" else "—"), "WERSJA" to "${ad.version}.0").forEachIndexed { i, (k, v) ->
+            "PAMIĘĆ" to (if (ad.external) "osobna aplikacja" else "tylko gdy otwarte"), "WERSJA" to "${ad.version}.0").forEachIndexed { i, (k, v) ->
             if (i > 0) info.addView(View(a).apply { setBackgroundColor(pal.separator) }, a.lp(maxOf(1, a.dpi(0.5f)), a.dpi(40f)))
             info.addView(a.vstack(Gravity.CENTER_HORIZONTAL).apply {
                 addView(a.text(k, 12f, W.SEMIBOLD, pal.label3), a.lp(WRAP, WRAP)); addView(a.text(v, 18f, W.BOLD, pal.label2), a.lp(WRAP, WRAP).apply { topMargin = a.dpi(4f) })
@@ -250,11 +220,10 @@ class AppsScreen(a: MainActivity) : Screen(a) {
         items += Item("Muzyka", CR.drawable.ic_music, 0xFFFA2D48.toInt()) { a.select(Tab.MUSIC) }
         items += Item("Telefon", CR.drawable.ic_phone, 0xFF34C759.toInt()) { a.select(Tab.PHONE) }
         items += Item("Wiadomości", CR.drawable.ic_message, 0xFF2FD158.toInt()) { a.select(Tab.MESSAGES) }
-        for (ad in Addons.ALL) if (AddonStore.installedVersion(a, ad.pkg) > 0) items += Item(ad.name, ad.glyph, ad.color) {
-            if (ad.audio) AppMedia.select(a, ad.pkg, Theme.isDark()) else AddonStore.open(a, ad.pkg, Theme.isDark())
+        for (ad in AddonStore.installed(a)) items += Item(ad.name, ad.glyph, ad.color) {
+            if (ad.external) AppMedia.select(a, ad.pkg, Theme.isDark()) else AddonStore.open(a, ad.pkg, Theme.isDark())
         }
-        val updates = Addons.ALL.any { AddonStore.state(a, it) == State.UPDATE }
-        items += Item("Sklep", CR.drawable.ic_bag, 0xFF0A84FF.toInt(), badge = updates) { a.select(Tab.STORE) }
+        items += Item("Sklep", CR.drawable.ic_bag, 0xFF0A84FF.toInt()) { a.select(Tab.STORE) }
         items += Item("Ustawienia", CR.drawable.ic_gear, 0xFF8E8E93.toInt()) { a.select(Tab.SETTINGS) }
         items.chunked(5).forEach { rowItems ->
             val row = a.hstack(Gravity.TOP)

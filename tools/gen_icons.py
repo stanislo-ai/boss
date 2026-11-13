@@ -165,4 +165,10 @@ write("bag", stroke(rrect(4, 7.5, 16, 13.5, 3), 2), stroke("M8.5,10.5V7a3.5,3.5 
 write("play_circle", stroke(circle(12, 12, 9.3), 2), fill(poly(tri_right(9.6, 8, 6.4, 8)), 1.4))
 write("calendar", stroke(rrect(3.5, 5, 17, 15.5, 3), 2), stroke("M3.5,10h17M8,3v4M16,3v4", 2))
 write("gauge_reset", stroke("M4.5,12a7.5,7.5 0 1 0 2.2,-5.3", 2.2), stroke("M4,3.5v4h4", 2.2))
+write("timer", stroke(circle(12, 13.5, 8), 2.1), stroke("M12,13.5V9.5M9.5,2.8h5M18.5,6.5l1.3,-1.3", 2.1))
+write("wallet", stroke(rrect(3, 6, 18, 14, 3.2), 2), stroke("M3,10h18", 2), fill(circle(16.5, 15, 1.5)))
+write("cards", stroke(rrect(3, 6.5, 10.5, 14, 2.4), 2), stroke("M8.5,4.8l1,-0.6c1.1,-0.6 2.5,-0.2 3.1,0.9l6,10.4c0.6,1.1 0.2,2.5 -0.9,3.1l-1.9,1.1", 2),
+      fill(poly(star(8.25, 13.6, 2.6, 1.15)), 0.8))
+write("tictactoe", stroke("M9,3.5v17M15,3.5v17M3.5,9h17M3.5,15h17", 1.9))
+write("waveform_mic", fill(rrect(9, 3, 6, 11, 3)), stroke("M5.5,11.5a6.5,6.5 0 0 0 13,0M12,18v3", 2))
 print("icons written to", OUT)

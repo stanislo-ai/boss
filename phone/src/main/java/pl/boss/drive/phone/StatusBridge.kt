@@ -43,9 +43,27 @@ class StatusBridge(private val ctx: Context) {
         }
     }
 
+    /** Is the phone's media audio actually going to a Bluetooth device (the car)? */
+    @Volatile var a2dp = true; private set
+    @Volatile var a2dpName = ""; private set
+    private val am by lazy { ctx.getSystemService(android.media.AudioManager::class.java) }
+    private val devCb = object : android.media.AudioDeviceCallback() {
+        override fun onAudioDevicesAdded(d: Array<out android.media.AudioDeviceInfo>?) { h.post { checkA2dp(); sendStatus() } }
+        override fun onAudioDevicesRemoved(d: Array<out android.media.AudioDeviceInfo>?) { h.post { checkA2dp(); sendStatus() } }
+    }
+
+    private fun checkA2dp() {
+        val dev = try { am.getDevices(android.media.AudioManager.GET_DEVICES_OUTPUTS).firstOrNull { it.type == android.media.AudioDeviceInfo.TYPE_BLUETOOTH_A2DP } } catch (_: Throwable) { null }
+        val now = dev != null
+        a2dpName = dev?.productName?.toString() ?: ""
+        if (now != a2dp) { a2dp = now; Events.emit(Ev.LINK) }
+    }
+
     fun start() {
         if (started) return
         started = true
+        checkA2dp()
+        try { am.registerAudioDeviceCallback(devCb, h) } catch (_: Throwable) {}
         registerSystem(ctx, batRx, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         h.post(tick)
     }
@@ -54,6 +72,7 @@ class StatusBridge(private val ctx: Context) {
         if (!started) return
         started = false
         try { ctx.unregisterReceiver(batRx) } catch (_: Throwable) {}
+        try { am.unregisterAudioDeviceCallback(devCb) } catch (_: Throwable) {}
         h.removeCallbacks(tick)
     }
 
@@ -78,7 +97,7 @@ class StatusBridge(private val ctx: Context) {
                 }
             }
         } catch (_: Throwable) {}
-        CarLink.send(pkt(Proto.STATUS, "bat" to bat, "chg" to charging, "sig" to sig, "net" to net, "carrier" to carrier))
+        CarLink.send(pkt(Proto.STATUS, "bat" to bat, "chg" to charging, "sig" to sig, "net" to net, "carrier" to carrier, "a2dp" to a2dp, "a2dpName" to a2dpName))
     }
 
     @SuppressLint("MissingPermission")

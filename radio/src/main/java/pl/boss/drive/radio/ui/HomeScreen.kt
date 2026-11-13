@@ -140,7 +140,8 @@ class HomeScreen(a: MainActivity) : Screen(a) {
         npEmpty.visibility = if (has) View.GONE else View.VISIBLE
         npTitle.text = np.title
         npArtist.text = listOf(np.artist, np.album).filter { it.isNotEmpty() }.joinToString(" — ")
-        npApp.text = (if (np.offline) "W AUCIE" else np.appName.uppercase()).ifEmpty { "TELEFON" }
+        npApp.text = if (Store.audioOnPhone) "DŹWIĘK GRA Z TELEFONU — POŁĄCZ BLUETOOTH" else (if (np.offline) "W AUCIE" else np.appName.uppercase()).ifEmpty { "TELEFON" }
+        npApp.setTextColor(if (Store.audioOnPhone) 0xFFFFB340.toInt() else 0x99FFFFFF.toInt())
         npPlay.setImageResource(if (np.playing) CR.drawable.ic_pause else CR.drawable.ic_play)
         npScrub.enabledSeek = np.canSeek
         npScrub.update(np.livePosition(), np.duration)
@@ -312,7 +313,7 @@ class HomeScreen(a: MainActivity) : Screen(a) {
 
     override fun onShow() {
         bindNp(); lastArtKey = null; bindArt(); bindClock(); bindFavs(); bindTransfer()
-        on(Topic.NP) { bindNp() }
+        on(Topic.NP, Topic.STATUS) { bindNp() }
         on(Topic.ART) { bindArt() }
         on(Topic.WEATHER) { bindClock() }
         on(Topic.LINK, Topic.CONTACTS, Topic.RECENTS, Topic.MESSAGES) { bindFavs() }

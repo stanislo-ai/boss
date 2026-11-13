@@ -63,29 +63,42 @@ i łączy się sam. Nic nie trzeba klikać.
 
 ## Sklep z dodatkami (opcjonalne)
 
-Przycisk Home w docku przełącza Dashboard ↔ ekran aplikacji (jak w CarPlay). Tam jest **Sklep**:
+Przycisk Home w docku przełącza Dashboard ↔ ekran aplikacji (jak w CarPlay). Tam jest **Sklep**.
+Dodatki są **częścią Boss Drive** — „Pobierz” dodaje je do ekranu aplikacji, bez instalowania osobnych aplikacji,
+bez okien instalatora i ikon w systemie radia. Kod dodatku ładuje się do pamięci dopiero, gdy go otworzysz.
 
 | Dodatek | Co robi |
 |---|---|
-| **YouTube Music** | oficjalna aplikacja ze Sklepu Google Play na radiu; z Premium playlisty offline, które same się aktualizują; sterowanie z „Teraz gra” i z kierownicy |
+| **YouTube Music** | jedyny zewnętrzny: oficjalna aplikacja Google ze Sklepu Play na radiu; Boss Drive nią steruje („Teraz gra”, kierownica) |
 | **Trasa** | prędkościomierz z GPS, dystans, czas jazdy, średnia, maksimum, wysokość, kierunek |
 | **Paliwo** | tankowania wpisywane dużą klawiaturą, realne spalanie (do pełna), koszt 100 km, wydatki w miesiącu |
 | **Podcasty** | subskrypcje, nowe odcinki pobierają się same w tle, słuchanie offline, pamięta miejsce |
-| **Radio online** | polskie stacje internetowe (katalog radio-browser.info), ulubione, przełączanie stacji z kierownicy |
-| **Serwis** | przegląd, OC/AC, olej (data + km), opony sezonowe — kolorowe ostrzeżenia przed terminem |
+| **Radio online** | polskie stacje internetowe (radio-browser.info), ulubione, przełączanie stacji z kierownicy |
+| **Serwis** | przegląd, OC/AC, olej (data + km), opony sezonowe — ostrzeżenia przed terminem |
+| **Parkomat** | odliczanie opłaconego postoju, powiadomienia 10 i 5 min przed końcem, przedłużanie |
+| **Dyktafon** | notatki głosowe jednym dużym przyciskiem (mikrofon radia), odsłuch w aucie |
+| **Koszt podróży** | koszt paliwa trasy i podział na osoby; spalanie i cena z dodatku Paliwo |
+| **Pary** (gra) | memory, 3 poziomy, ruchy, czas, rekordy |
+| **Kółko i krzyżyk** (gra) | z komputerem (łatwy / średni / nie do pokonania) albo we dwoje |
 
-- dodatki przychodzą **z telefonu** przez połączenie z autem (bez internetu) i instalują się systemowym instalatorem
-  (Android pyta raz o zgodę „Instaluj nieznane aplikacje” dla Boss Drive),
-- każdy dodatek waży 50–85 KB — nie ma w sobie fontów, pożycza je z Boss Drive — i zajmuje RAM tylko gdy jest otwarty,
-- dodatki audio i YouTube Music pojawiają się w „Teraz gra” jako źródło „Radio • …”
-  (wymaga jednorazowo: Ustawienia Boss Drive → Aplikacje na radiu → Sterowanie aplikacjami).
-
+Gry blokują się automatycznie w trakcie jazdy (GPS > 8 km/h) i wracają po zatrzymaniu.
 Nieoficjalnych klientów YouTube (jak OpenTune) ani pobierania z YouTube do MP3 Boss Drive celowo nie zawiera.
+
+## Połączenie: hotspot tylko raz, potem Bluetooth
+
+Przy pierwszym połączeniu przez hotspot radio przekazuje telefonowi swoją nazwę Bluetooth — kolejne
+połączenia idą już same przez Bluetooth. Hotspot przydaje się tylko do szybkiego wysyłania piosenek.
+(Działa, jeśli radio ma standardowy Bluetooth Androida — status widać w Ustawienia → Bluetooth na radiu.)
+
+**Dźwięk gra z telefonu zamiast z radia?** Telefon musi być połączony z radiem przez Bluetooth z włączonym
+„Dźwiękiem multimediów”. Boss Drive to wykrywa i podpowiada na obu ekranach. W wielu radiach trzeba też
+przełączyć źródło na „Muzykę BT” — przycisk Bluetooth w „Teraz gra” robi to jednym dotknięciem
+(albo automatycznie: Ustawienia → Bluetooth → Przełączaj automatycznie).
 
 ## Optymalizacja pod 1 GB RAM
 
 - bez AppCompat, bez Compose, bez zewnętrznych bibliotek — czyste Android Views rysowane ręcznie,
-- APK radia ~370 KB, w działaniu ~16–22 MB RAM (zmierzone na emulatorze Android 9),
+- APK radia ~460 KB razem z 10 dodatkami, w działaniu ~16–22 MB RAM (zmierzone na emulatorze Android 9),
 - jeden wątek tła o niskim priorytecie, okładki zmniejszane do 400 px, rozmycie liczone na miniaturce 40×40,
 - listy na `ListView` z recyklingiem widoków, cache okładek z limitem 3 MB oddawany przy `onTrimMemory`,
 - animacje i odliczanie czasu działają tylko na widocznym ekranie,

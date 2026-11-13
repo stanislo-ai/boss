@@ -61,6 +61,7 @@ object Hub : Link.Listener {
             Store.connected = false
             Store.transport = ""
             Store.transfer = null
+            BtAudio.onLinkChanged()
             if (Store.call.active) { Store.call = CallState(); Store.ui { player.onCallState(false) } }
             Store.phoneNp = Store.phoneNp.copy(playing = false)
             Store.emit(Topic.LINK, Topic.TRANSFER, Topic.CALL, Topic.NP)
@@ -93,9 +94,9 @@ object Hub : Link.Listener {
         Store.connected = true
         Store.transport = l.transport
         Store.phoneName = l.remoteName
-        l.send(pkt(Proto.HELLO, "id" to deviceId, "name" to deviceName, "ver" to Proto.VERSION, "paired" to true))
+        l.send(pkt(Proto.HELLO, "id" to deviceId, "name" to deviceName, "ver" to Proto.VERSION, "paired" to true,
+            "btName" to RadioBt.name(), "bt" to (RadioBt.state == "listening")))
         l.send(pkt(Proto.REFRESH))
-        l.send(pkt(Proto.STORE_REQ))
         sendLibrary()
         if (Store.localActive) l.send(pkt(Proto.LOCAL_PLAYING, "on" to true))
         Store.emit(Topic.LINK)
@@ -121,6 +122,7 @@ object Hub : Link.Listener {
         if (!link.authed) return
         when (p.type) {
             Proto.NOW_PLAYING -> {
+                val wasPlaying = Store.phoneNp.playing
                 Store.phoneNp = NowPlaying(
                     title = p.s("title"), artist = p.s("artist"), album = p.s("album"),
                     duration = p.l("dur"), position = p.l("pos"), posAt = SystemClock.elapsedRealtime(),
@@ -130,6 +132,7 @@ object Hub : Link.Listener {
                 if (Store.phoneNp.artKey.isEmpty() && Store.phoneArt != null) {
                     Store.phoneArt = null; Store.phoneBackdrop = null; Store.phoneTint = 0xFF3A3A3C.toInt(); Store.emit(Topic.ART)
                 }
+                if (Store.phoneNp.playing && !wasPlaying && !Store.localActive && !Store.appActive) Store.ui { BtAudio.onPhonePlaying(app) }
                 // phone started playing something itself -> step aside
                 if (Store.phoneNp.playing && p.b("user")) Store.ui { if (Store.localActive) player.deactivate(); AppMedia.deactivate() }
                 Store.emit(Topic.NP)
@@ -181,7 +184,7 @@ object Hub : Link.Listener {
                 Store.recents = out; Store.emit(Topic.RECENTS)
             }
             Proto.STATUS -> {
-                Store.status = PhoneStatus(p.i("bat", -1), p.b("chg"), p.i("sig"), p.s("net"), p.s("carrier")); Store.emit(Topic.STATUS)
+                Store.status = PhoneStatus(p.i("bat", -1), p.b("chg"), p.i("sig"), p.s("net"), p.s("carrier"), p.b("a2dp", true), p.s("a2dpName")); Store.emit(Topic.STATUS)
             }
             Proto.WEATHER -> {
                 Store.weather = Weather(p.i("temp"), p.i("code"), p.i("hi"), p.i("lo"), p.s("place"), p.b("day", true), p.d("lat"), p.d("lon"))
@@ -213,9 +216,6 @@ object Hub : Link.Listener {
                 }
                 sendLibrary(); Store.emit(Topic.OFFLINE)
             }
-            Proto.STORE -> AddonStore.onCatalog(p)
-            Proto.APP_CHUNK -> AddonStore.onChunk(p)
-            Proto.APP_END -> AddonStore.onEnd(p)
             Proto.BYE -> link.close()
         }
     }

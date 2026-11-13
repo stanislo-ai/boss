@@ -59,6 +59,7 @@ class NowPlayingScreen(a: MainActivity) : Screen(a) {
     private lateinit var shuffle: ImageView
     private lateinit var repeat: ImageView
     private lateinit var scrub: ScrubBar
+    private lateinit var warn: TextView
     private var lastArt: Any? = null
     private var lastPlaying: Boolean? = null
 
@@ -87,6 +88,10 @@ class NowPlayingScreen(a: MainActivity) : Screen(a) {
         bar.addView(src, a.lp(WRAP, a.dpi(44f)))
         bar.addView(View(a), a.lp(0, 1, 1f))
         fun topBtn(res: Int, fn: () -> Unit) = bar.addView(a.circleGlyph(res, 0x26FFFFFF, Color.WHITE, 48f, fn), a.lp(a.dpi(48f), a.dpi(48f)).apply { marginStart = a.dpi(12f) })
+        topBtn(CR.drawable.ic_bluetooth) {
+            if (pl.boss.drive.radio.BtAudio.switchNow(a)) a.hud("Przełączam radio na muzykę Bluetooth", CR.drawable.ic_bluetooth)
+            else a.hud("Ustaw aplikację Bluetooth radia w Ustawieniach", CR.drawable.ic_bluetooth)
+        }
         topBtn(CR.drawable.ic_list) { if (Store.localActive) a.push(OfflineScreen(a)) else a.push(QueueScreen(a)) }
         topBtn(CR.drawable.ic_album) { a.push(LibraryScreen(a)) }
         col.addView(bar, a.lp(MATCH, WRAP))
@@ -109,6 +114,10 @@ class NowPlayingScreen(a: MainActivity) : Screen(a) {
         info.addView(tTitle)
         info.addView(tArtist, a.lp(MATCH, WRAP).apply { topMargin = a.dpi(6f) })
         info.addView(tAlbum, a.lp(MATCH, WRAP).apply { topMargin = a.dpi(4f) })
+        warn = a.text("Dźwięk gra z głośnika telefonu — w telefonie połącz Bluetooth z radiem (dźwięk multimediów)", 15f, W.SEMIBOLD, Color.WHITE, lines = 2)
+        warn.background = RoundDrawable(0xE6FF9500.toInt(), a.dp(12f)); warn.pad(14f, 8f, 14f, 8f)
+        warn.onTap(Press.SCALE) { pl.boss.drive.radio.BtAudio.switchNow(a) }
+        info.addView(warn, a.lp(MATCH, WRAP).apply { topMargin = a.dpi(14f) })
         info.addView(View(a), a.lp(1, a.dpi(30f)))
         scrub = ScrubBar(a)
         scrub.onSeek = { Hub.cmd("seek", it) }
@@ -139,6 +148,7 @@ class NowPlayingScreen(a: MainActivity) : Screen(a) {
         tTitle.text = np.title.ifEmpty { "Nic nie gra" }
         tArtist.text = np.artist.ifEmpty { if (np.isEmpty) "Włącz muzykę w telefonie lub wybierz źródło" else "" }
         tAlbum.text = np.album
+        warn.visibility = if (Store.audioOnPhone) View.VISIBLE else View.GONE
         play.setImageResource(if (np.playing) CR.drawable.ic_pause else CR.drawable.ic_play)
         scrub.enabledSeek = np.canSeek
         scrub.update(np.livePosition(), np.duration)
@@ -187,7 +197,7 @@ class NowPlayingScreen(a: MainActivity) : Screen(a) {
     override fun onShow() {
         lastArt = null; lastPlaying = null
         bind(); bindArt()
-        on(Topic.NP, Topic.SOURCES) { bind() }
+        on(Topic.NP, Topic.SOURCES, Topic.STATUS) { bind() }
         on(Topic.ART) { bindArt() }
         every(500) { val np = Store.np; if (np.playing) scrub.update(np.livePosition(), np.duration) }
     }
