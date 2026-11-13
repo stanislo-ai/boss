@@ -9,6 +9,10 @@ oraz aplikacja na telefon, która nim steruje.
 | **Radio – Biblioteka offline** | **Radio – Wiadomość** | **Telefon – Do auta** |
 | ![](docs/radio_offline.png) | ![](docs/radio_message.png) | ![](docs/phone_send.png) |
 
+| **Radio – Aplikacje** | **Radio – Sklep** | **Dodatek: Trasa** |
+|---|---|---|
+| ![](docs/radio_apps.png) | ![](docs/radio_store.png) | ![](docs/addon_trip.png) |
+
 ## Instalacja (5 minut)
 
 1. **Radio:** skopiuj `dist/BossDrive-Radio.apk` na pendrive albo pobierz go w przeglądarce radia
@@ -57,6 +61,27 @@ i łączy się sam. Nic nie trzeba klikać.
 - **parking:** telefon zapamiętuje, gdzie zostawiłeś auto (po rozłączeniu Bluetooth),
 - ochrona przed obcym telefonem: radio pyta, zanim połączy się z nowym urządzeniem.
 
+## Sklep z dodatkami (opcjonalne)
+
+Przycisk Home w docku przełącza Dashboard ↔ ekran aplikacji (jak w CarPlay). Tam jest **Sklep**:
+
+| Dodatek | Co robi |
+|---|---|
+| **YouTube Music** | oficjalna aplikacja ze Sklepu Google Play na radiu; z Premium playlisty offline, które same się aktualizują; sterowanie z „Teraz gra” i z kierownicy |
+| **Trasa** | prędkościomierz z GPS, dystans, czas jazdy, średnia, maksimum, wysokość, kierunek |
+| **Paliwo** | tankowania wpisywane dużą klawiaturą, realne spalanie (do pełna), koszt 100 km, wydatki w miesiącu |
+| **Podcasty** | subskrypcje, nowe odcinki pobierają się same w tle, słuchanie offline, pamięta miejsce |
+| **Radio online** | polskie stacje internetowe (katalog radio-browser.info), ulubione, przełączanie stacji z kierownicy |
+| **Serwis** | przegląd, OC/AC, olej (data + km), opony sezonowe — kolorowe ostrzeżenia przed terminem |
+
+- dodatki przychodzą **z telefonu** przez połączenie z autem (bez internetu) i instalują się systemowym instalatorem
+  (Android pyta raz o zgodę „Instaluj nieznane aplikacje” dla Boss Drive),
+- każdy dodatek waży 50–85 KB — nie ma w sobie fontów, pożycza je z Boss Drive — i zajmuje RAM tylko gdy jest otwarty,
+- dodatki audio i YouTube Music pojawiają się w „Teraz gra” jako źródło „Radio • …”
+  (wymaga jednorazowo: Ustawienia Boss Drive → Aplikacje na radiu → Sterowanie aplikacjami).
+
+Nieoficjalnych klientów YouTube (jak OpenTune) ani pobierania z YouTube do MP3 Boss Drive celowo nie zawiera.
+
 ## Optymalizacja pod 1 GB RAM
 
 - bez AppCompat, bez Compose, bez zewnętrznych bibliotek — czyste Android Views rysowane ręcznie,
@@ -89,8 +114,9 @@ Telefon (Boss Drive)                                   Radio (Boss Drive Car)
 
 ```bash
 ./gradlew assembleRelease
-# phone/build/outputs/apk/release/phone-release.apk
+# phone/build/outputs/apk/release/phone-release.apk   (zawiera APK dodatków)
 # radio/build/outputs/apk/release/radio-release.apk
+# addons/*/build/outputs/apk/release/*.apk
 ```
 
 `tools/fake_phone.py` — atrapa telefonu do testowania radia bez telefonu

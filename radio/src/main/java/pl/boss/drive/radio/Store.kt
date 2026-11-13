@@ -7,7 +7,7 @@ import android.os.SystemClock
 import android.util.LruCache
 import java.util.EnumMap
 
-enum class Topic { LINK, NP, ART, SOURCES, QUEUE, LIBRARY, CALL, CONTACTS, RECENTS, STATUS, WEATHER, MESSAGES, TRANSFER, OFFLINE, THEME, PAIRING }
+enum class Topic { LINK, NP, ART, SOURCES, QUEUE, LIBRARY, CALL, CONTACTS, RECENTS, STATUS, WEATHER, MESSAGES, TRANSFER, OFFLINE, THEME, PAIRING, STORE }
 
 data class NowPlaying(
     val title: String = "", val artist: String = "", val album: String = "",
@@ -58,16 +58,23 @@ object Store {
     @Volatile var phoneNp = NowPlaying()
     @Volatile var localNp = NowPlaying(offline = true)
     @Volatile var localActive = false
-    val np get() = if (localActive) localNp else phoneNp
+    // media apps on the radio itself (YouTube Music, audio add-ons)
+    @Volatile var appNp = NowPlaying()
+    @Volatile var appActive = false
+    @Volatile var appArt: Bitmap? = null
+    @Volatile var appBackdrop: Bitmap? = null
+    @Volatile var appTint: Int = 0xFF3A3A3C.toInt()
+    @Volatile var radioSources: List<Source> = emptyList()
+    val np get() = when { localActive -> localNp; appActive -> appNp; else -> phoneNp }
     @Volatile var phoneArt: Bitmap? = null
     @Volatile var phoneBackdrop: Bitmap? = null
     @Volatile var phoneTint: Int = 0xFF3A3A3C.toInt()
     @Volatile var localArt: Bitmap? = null
     @Volatile var localBackdrop: Bitmap? = null
     @Volatile var localTint: Int = 0xFF3A3A3C.toInt()
-    val art get() = if (localActive) localArt else phoneArt
-    val backdrop get() = if (localActive) localBackdrop else phoneBackdrop
-    val tint get() = if (localActive) localTint else phoneTint
+    val art get() = when { localActive -> localArt; appActive -> appArt; else -> phoneArt }
+    val backdrop get() = when { localActive -> localBackdrop; appActive -> appBackdrop; else -> phoneBackdrop }
+    val tint get() = when { localActive -> localTint; appActive -> appTint; else -> phoneTint }
 
     @Volatile var sources: List<Source> = emptyList()
     val icons = LruCache<String, Bitmap>(24)

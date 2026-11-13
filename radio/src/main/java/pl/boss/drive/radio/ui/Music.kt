@@ -32,6 +32,7 @@ import pl.boss.drive.core.ui.tint
 import pl.boss.drive.core.ui.vstack
 import pl.boss.drive.core.ui.withAlpha
 import pl.boss.drive.core.util.Bg
+import pl.boss.drive.radio.AppMedia
 import pl.boss.drive.radio.Hub
 import pl.boss.drive.radio.LibItem
 import pl.boss.drive.radio.MainActivity
@@ -153,7 +154,7 @@ class NowPlayingScreen(a: MainActivity) : Screen(a) {
             srcIcon.setImageResource(CR.drawable.ic_drive); srcIcon.tint(Color.WHITE)
             srcIcon.background = RoundDrawable(0xFF0A84FF.toInt(), a.dp(6f)); srcIcon.pad(5f)
         } else {
-            srcName.text = np.appName.ifEmpty { if (Store.connected) "Telefon" else "Brak telefonu" }
+            srcName.text = (if (Store.appActive) "Radio • " else "") + np.appName.ifEmpty { if (Store.connected) "Telefon" else "Brak telefonu" }
             val icon = Store.icons.get(np.pkg)
             if (icon != null) { srcIcon.setImageBitmap(icon); srcIcon.imageTintList = null; srcIcon.background = null; srcIcon.setPadding(0, 0, 0, 0) }
             else { srcIcon.setImageResource(CR.drawable.ic_iphone); srcIcon.tint(Color.WHITE); srcIcon.background = RoundDrawable(0xFF8E8E93.toInt(), a.dp(6f)); srcIcon.pad(5f) }
@@ -232,6 +233,23 @@ class SourcesScreen(a: MainActivity) : Screen(a) {
                 r.art.background = RoundDrawable(0xFFFA2D48.toInt(), a.dp(10f)); r.art.pad(12f)
                 r.onClick = { a.push(LibraryScreen(a)) }
             }
+            "access" -> {
+                r.title.text = "Aplikacje na radiu"
+                r.sub.text = "Zezwól Boss Drive sterować YouTube Music i dodatkami audio"
+                r.art.setImageResource(CR.drawable.ic_apps); r.art.tint(Color.WHITE)
+                r.art.background = RoundDrawable(a.pal.indigo, a.dp(10f)); r.art.pad(12f)
+                r.onClick = { try { a.startActivity(android.content.Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")) } catch (_: Throwable) { a.hud("Brak ustawień dostępu do powiadomień na tym radiu", CR.drawable.ic_info) } }
+            }
+            is RadioSrc -> {
+                val s = item.s
+                r.title.text = s.name
+                r.sub.text = when { s.playing -> "Na radiu • odtwarzanie"; s.active -> "Na radiu • wstrzymane"; else -> "Na radiu • dotknij, aby otworzyć" }
+                val icon = Store.icons.get(s.pkg)
+                if (icon != null) { r.art.setImageBitmap(icon); r.art.imageTintList = null; r.art.background = null; r.art.setPadding(0, 0, 0, 0) }
+                else { r.art.setImageResource(CR.drawable.ic_music); r.art.tint(Color.WHITE); r.art.background = RoundDrawable(a.pal.gray, a.dp(10f)); r.art.pad(12f) }
+                r.eq.visibility = if (s.playing && Store.appActive) View.VISIBLE else View.GONE
+                r.onClick = { AppMedia.select(a, s.pkg, pl.boss.drive.radio.Theme.isDark()); a.back() }
+            }
             is Source -> {
                 r.title.text = item.name
                 r.sub.text = when { item.playing -> "Odtwarzanie"; item.active -> "Wstrzymane"; else -> "Dotknij, aby uruchomić" }
@@ -249,11 +267,15 @@ class SourcesScreen(a: MainActivity) : Screen(a) {
         items.addAll(Store.sources)
         items.add("library")
         items.add("offline")
+        Store.radioSources.forEach { items.add(RadioSrc(it)) }
+        if (!AppMedia.hasAccess(a)) items.add("access")
         adapter.items = items
     }
 
     override fun onShow() { refresh(); on(Topic.SOURCES, Topic.NP, Topic.OFFLINE) { refresh() } }
 }
+
+private class RadioSrc(val s: Source)
 
 /** Up Next for the phone's current app (when the app exposes its queue). */
 class QueueScreen(a: MainActivity) : Screen(a) {

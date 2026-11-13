@@ -11,6 +11,14 @@ class RadioApp : Application() {
         Fonts.init(this)
         Hub.init(this)
         LinkService.start(this)
+        AppMedia.start(this)
+        // add-ons installed / removed -> refresh grid, store and sources
+        registerReceiver(object : android.content.BroadcastReceiver() {
+            override fun onReceive(c: android.content.Context, i: android.content.Intent) { AppMedia.publishSources(); Store.emit(Topic.STORE) }
+        }, android.content.IntentFilter().apply {
+            addAction(android.content.Intent.ACTION_PACKAGE_ADDED); addAction(android.content.Intent.ACTION_PACKAGE_REMOVED)
+            addAction(android.content.Intent.ACTION_PACKAGE_REPLACED); addDataScheme("package")
+        })
     }
 
     override fun onTrimMemory(level: Int) {

@@ -37,4 +37,4 @@ android {
     lint { checkReleaseBuilds = false; abortOnError = false }
     dependenciesInfo { includeInApk = false; includeInBundle = false }
 }
-dependencies { implementation(project(":core")) }
+dependencies { implementation(project(":core")); implementation(project(":fonts")) }

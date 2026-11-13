@@ -58,6 +58,13 @@ object Proto {
     const val LOCAL_PLAYING = "localPlaying"
     const val REFRESH = "refresh"
 
+    // ---- add-on store ----
+    const val STORE_REQ = "storeReq"     // radio -> phone
+    const val STORE = "store"            // phone -> radio: which add-on APKs the phone carries
+    const val APP_GET = "appGet"         // radio -> phone
+    const val APP_CHUNK = "appChunk"     // phone -> radio
+    const val APP_END = "appEnd"         // phone -> radio
+
     // ---- both ----
     const val PING = "ping"
     const val BYE = "bye"

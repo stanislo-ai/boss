@@ -13,4 +13,5 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "BossDrive"
-include(":core", ":phone", ":radio")
+include(":core", ":fonts", ":phone", ":radio")
+include(":addons:trip", ":addons:fuel", ":addons:podcasts", ":addons:webradio", ":addons:service")

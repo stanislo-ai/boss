@@ -195,6 +195,7 @@ class OfflinePlayer(private val ctx: Context, private val db: TrackDb, private v
     }
 
     private fun setActive(a: Boolean) {
+        if (a) Store.appActive = false
         if (Store.localActive != a) { Store.localActive = a; onActiveChanged(a); Store.emit(Topic.NP, Topic.ART) }
         if (!a) session.isActive = false
     }

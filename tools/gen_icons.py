@@ -154,4 +154,15 @@ write("back15", stroke("M12,4.5a7.5,7.5 0 1 1 -7.3,9.3", 2), stroke("M4,6.5l1.2,
 write("info", stroke(circle(12, 12, 9.2), 2), stroke("M12,11v5.5", 2.4), fill(circle(12, 7.6, 1.4)))
 write("parking", stroke("M9,18V6.5h4a3.6,3.6 0 0 1 0,7.2H9", 2.6))
 write("drive", stroke(rrect(2.5, 6.5, 19, 11, 3), 1.9), fill(circle(17, 12, 1.4)))
+write("speedometer", stroke("M4.3,17.5A9,9 0 1 1 19.7,17.5", 2.2), stroke("M12,14L16.2,8.6", 2.4), fill(circle(12, 14, 1.9)))
+write("fuel", stroke(rrect(4.5, 3.5, 9, 17, 2), 2), stroke("M7,7.5h4", 2),
+      stroke("M13.5,9.5h2.3c0.9,0 1.5,0.6 1.5,1.5v6c0,0.9 0.7,1.5 1.5,1.5s1.5,-0.6 1.5,-1.5V8.2l-2.6,-3", 1.9))
+write("podcast", fill(circle(12, 9.8, 2.7)), stroke("M8.1,14.6a5.6,5.6 0 1 1 7.8,0", 2), stroke("M5.4,17.3a9.3,9.3 0 1 1 13.2,0", 2),
+      fill(rrect(10.6, 14.2, 2.8, 7.6, 1.4)))
+write("radio", stroke(rrect(3, 8.5, 18, 12, 3), 2), stroke("M7,8.5L17,3.5", 2), fill(circle(15.5, 14.5, 2.7)), stroke("M6.5,12.8h4M6.5,16.2h4", 1.9))
+write("wrench", stroke("M14.6,4.3a4.6,4.6 0 0 0 -4.9,6.1L3.9,16.2a1.9,1.9 0 0 0 2.7,2.7l5.8,-5.8a4.6,4.6 0 0 0 6.1,-4.9l-2.6,2.6l-2.4,-0.4l-0.4,-2.4z", 1.9))
+write("bag", stroke(rrect(4, 7.5, 16, 13.5, 3), 2), stroke("M8.5,10.5V7a3.5,3.5 0 0 1 7,0v3.5", 2))
+write("play_circle", stroke(circle(12, 12, 9.3), 2), fill(poly(tri_right(9.6, 8, 6.4, 8)), 1.4))
+write("calendar", stroke(rrect(3.5, 5, 17, 15.5, 3), 2), stroke("M3.5,10h17M8,3v4M16,3v4", 2))
+write("gauge_reset", stroke("M4.5,12a7.5,7.5 0 1 0 2.2,-5.3", 2.2), stroke("M4,3.5v4h4", 2.2))
 print("icons written to", OUT)

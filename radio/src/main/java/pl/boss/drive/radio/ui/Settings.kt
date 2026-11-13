@@ -22,6 +22,7 @@ import pl.boss.drive.core.ui.sectionHeader
 import pl.boss.drive.core.ui.vstack
 import pl.boss.drive.core.util.Bg
 import pl.boss.drive.radio.BuildConfigCompat
+import pl.boss.drive.radio.AppMedia
 import pl.boss.drive.radio.Hub
 import pl.boss.drive.radio.MainActivity
 import pl.boss.drive.radio.Store
@@ -72,6 +73,19 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         s1.addRows(p, rows)
         body.addView(s1)
         body.addView(a.sectionFooter(p, "Dźwięk z telefonu gra przez Bluetooth radia jak dotąd — Boss Drive dodaje sterowanie, okładki, połączenia i wiadomości. Wi-Fi (hotspot telefonu) przyspiesza wysyłanie piosenek do auta."))
+
+        // ---- apps on the radio
+        body.addView(a.sectionHeader(p, "Aplikacje na radiu"))
+        val sApps = a.section(p)
+        val access = AppMedia.hasAccess(a)
+        val accRow = Row(a, p, "Sterowanie aplikacjami", if (access) "YouTube Music i dodatki audio w „Teraz gra”" else "Wymaga dostępu do powiadomień",
+            value = if (access) "Włączone" else "Włącz", icon = CR.drawable.ic_apps, iconColor = p.indigo, chevron = !access)
+        if (!access) { accRow.valueView?.setTextColor(p.blue); accRow.onTap(Press.HIGHLIGHT, p.cellPressed) {
+            try { a.startActivity(android.content.Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")) } catch (_: Throwable) { a.hud("To radio ukrywa te ustawienia", CR.drawable.ic_info) } } }
+        val store = Row(a, p, "Sklep z dodatkami", icon = CR.drawable.ic_bag, iconColor = p.blue, chevron = true)
+        store.onTap(Press.HIGHLIGHT, p.cellPressed) { a.select(pl.boss.drive.radio.Tab.STORE) }
+        sApps.addRows(p, listOf(accRow, store))
+        body.addView(sApps)
 
         // ---- appearance
         body.addView(a.sectionHeader(p, "Wygląd"))

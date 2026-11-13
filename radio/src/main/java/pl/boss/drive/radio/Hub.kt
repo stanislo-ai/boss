@@ -95,6 +95,7 @@ object Hub : Link.Listener {
         Store.phoneName = l.remoteName
         l.send(pkt(Proto.HELLO, "id" to deviceId, "name" to deviceName, "ver" to Proto.VERSION, "paired" to true))
         l.send(pkt(Proto.REFRESH))
+        l.send(pkt(Proto.STORE_REQ))
         sendLibrary()
         if (Store.localActive) l.send(pkt(Proto.LOCAL_PLAYING, "on" to true))
         Store.emit(Topic.LINK)
@@ -130,7 +131,7 @@ object Hub : Link.Listener {
                     Store.phoneArt = null; Store.phoneBackdrop = null; Store.phoneTint = 0xFF3A3A3C.toInt(); Store.emit(Topic.ART)
                 }
                 // phone started playing something itself -> step aside
-                if (Store.phoneNp.playing && Store.localActive && p.b("user")) Store.ui { player.deactivate() }
+                if (Store.phoneNp.playing && p.b("user")) Store.ui { if (Store.localActive) player.deactivate(); AppMedia.deactivate() }
                 Store.emit(Topic.NP)
             }
             Proto.ART -> p.body?.let { bytes ->
@@ -212,6 +213,9 @@ object Hub : Link.Listener {
                 }
                 sendLibrary(); Store.emit(Topic.OFFLINE)
             }
+            Proto.STORE -> AddonStore.onCatalog(p)
+            Proto.APP_CHUNK -> AddonStore.onChunk(p)
+            Proto.APP_END -> AddonStore.onEnd(p)
             Proto.BYE -> link.close()
         }
     }
@@ -226,6 +230,7 @@ object Hub : Link.Listener {
             }
             return
         }
+        if (Store.appActive) { AppMedia.command(action, pos); return }
         // optimistic UI: flip play state immediately, phone confirms a moment later
         val np = Store.phoneNp
         when (action) {
@@ -241,6 +246,7 @@ object Hub : Link.Listener {
 
     fun usePhone(pkg: String) {
         if (Store.localActive) player.deactivate()
+        AppMedia.deactivate()
         send(pkt(Proto.SELECT_SOURCE, "pkg" to pkg))
     }
 
@@ -249,7 +255,7 @@ object Hub : Link.Listener {
     }
 
     fun requestLibrary(req: String) = send(pkt(Proto.LIB_REQ, "req" to req))
-    fun playLibrary(req: String, index: Int) { if (Store.localActive) player.deactivate(); send(pkt(Proto.LIB_PLAY, "req" to req, "index" to index)) }
+    fun playLibrary(req: String, index: Int) { if (Store.localActive) player.deactivate(); AppMedia.deactivate(); send(pkt(Proto.LIB_PLAY, "req" to req, "index" to index)) }
     fun playQueue(id: Long) = send(pkt(Proto.QUEUE_PLAY, "id" to id))
     fun call(a: String, num: String = "", text: String = "") = send(pkt(Proto.CALL_CMD, "a" to a, "num" to num, "text" to text))
     fun message(key: String, a: String, text: String = "") = send(pkt(Proto.MSG_CMD, "key" to key, "a" to a, "text" to text))

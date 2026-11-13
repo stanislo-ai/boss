@@ -210,6 +210,8 @@ object CarLink : Link.Listener {
             Proto.LOCAL_PLAYING -> if (p.b("on")) media.pauseAll()
             Proto.X_ACK, Proto.X_DONE, Proto.X_FAIL -> transfers.onRadio(p)
             Proto.R_LIB -> { transfers.onRadioLibrary(p); Events.emit(Ev.RADIO_LIB) }
+            Proto.STORE_REQ -> handler.post { AddonServer.catalog(ctx) }
+            Proto.APP_GET -> handler.post { AddonServer.send(ctx, p.s("pkg")) }
             Proto.BYE -> link.close()
         }
     }

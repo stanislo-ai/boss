@@ -51,7 +51,7 @@ import java.lang.ref.WeakReference
 import kotlin.math.max
 import kotlin.math.min
 
-enum class Tab { HOME, MUSIC, PHONE, MESSAGES, SETTINGS }
+enum class Tab { HOME, APPS, STORE, MUSIC, PHONE, MESSAGES, SETTINGS }
 
 /**
  * CarPlay-style shell: dock on the left, one navigation stack per app, overlays for calls,
@@ -148,7 +148,8 @@ class MainActivity : Activity() {
         val home = FrameLayout(this)
         home.addView(glyph(CR.drawable.ic_grid, pal.label), FrameLayout.LayoutParams(dpi(30f), dpi(30f), Gravity.CENTER))
         home.background = RoundDrawable(pal.fill3, dp(14f))
-        home.onTap(Press.SCALE) { if (tab == Tab.HOME) stacks[Tab.HOME]?.popToRoot() else select(Tab.HOME) }
+        // like CarPlay: Home toggles between the Dashboard and the app grid
+        home.onTap(Press.SCALE) { if (tab == Tab.HOME) select(Tab.APPS) else select(Tab.HOME) }
         dockMarks[Tab.HOME] = home
         d.addView(home, lp(dpi(58f), dpi(58f)))
         // leave to the radio's own launcher without killing us
@@ -196,7 +197,7 @@ class MainActivity : Activity() {
             NavStack(this, rootFor(t)).also { content.addView(it, FrameLayout.LayoutParams(MATCH, MATCH)); it.visibility = View.GONE }
         }
         if (t == Tab.MESSAGES) { Store.unread = 0; refreshDock() }
-        for ((k, m) in dockMarks) if (k != Tab.HOME) m.animate().alpha(if (k == t) 1f else 0f).setDuration(200).start()
+        for ((k, m) in dockMarks) if (k != Tab.HOME && k != Tab.APPS) m.animate().alpha(if (k == t) 1f else 0f).setDuration(200).start()
         if (old === st && st.visibility == View.VISIBLE) return
         tab = t
         old?.setActive(false)
@@ -213,6 +214,8 @@ class MainActivity : Activity() {
 
     private fun rootFor(t: Tab): Screen = when (t) {
         Tab.HOME -> HomeScreen(this)
+        Tab.APPS -> pl.boss.drive.radio.ui.AppsScreen(this)
+        Tab.STORE -> pl.boss.drive.radio.ui.StoreScreen(this)
         Tab.MUSIC -> NowPlayingScreen(this)
         Tab.PHONE -> PhoneScreen(this)
         Tab.MESSAGES -> MessagesScreen(this)

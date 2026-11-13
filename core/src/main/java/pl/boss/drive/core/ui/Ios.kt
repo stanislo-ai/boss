@@ -5,7 +5,6 @@ import android.graphics.Typeface
 import android.util.TypedValue
 import android.view.animation.PathInterpolator
 import android.widget.TextView
-import pl.boss.drive.core.R
 import kotlin.math.exp
 
 /** iOS system colours (UIKit semantic colours), light + dark variants. */
@@ -69,16 +68,32 @@ object Fonts {
     lateinit var displaySemibold: Typeface; private set
     private var loaded = false
 
+    /**
+     * Fonts ship once, inside Boss Drive (phone/radio). Add-on apps borrow them from the
+     * Boss Drive package by name, so each add-on stays ~100 KB. Falls back to system sans.
+     */
     fun init(ctx: Context) {
         if (loaded) return
-        val r = ctx.applicationContext.resources
-        fun load(id: Int, fb: Int) = try { r.getFont(id) } catch (_: Throwable) { Typeface.create(Typeface.SANS_SERIF, fb) }
-        regular = load(R.font.inter_regular, Typeface.NORMAL)
-        medium = load(R.font.inter_medium, Typeface.NORMAL)
-        semibold = load(R.font.inter_semibold, Typeface.BOLD)
-        bold = load(R.font.inter_bold, Typeface.BOLD)
-        displayBold = load(R.font.interdisplay_bold, Typeface.BOLD)
-        displaySemibold = load(R.font.interdisplay_semibold, Typeface.BOLD)
+        val app = ctx.applicationContext
+        val sources = ArrayList<Pair<android.content.res.Resources, String>>()
+        sources.add(app.resources to app.packageName)
+        for (pkg in arrayOf("pl.boss.drive.radio", "pl.boss.drive.phone")) {
+            if (pkg == app.packageName) continue
+            try { sources.add(app.createPackageContext(pkg, 0).resources to pkg) } catch (_: Throwable) {}
+        }
+        fun load(name: String, fb: Int): Typeface {
+            for ((r, pkg) in sources) {
+                val id = r.getIdentifier(name, "font", pkg)
+                if (id != 0) try { return r.getFont(id) } catch (_: Throwable) {}
+            }
+            return Typeface.create(Typeface.SANS_SERIF, fb)
+        }
+        regular = load("inter_regular", Typeface.NORMAL)
+        medium = load("inter_medium", Typeface.NORMAL)
+        semibold = load("inter_semibold", Typeface.BOLD)
+        bold = load("inter_bold", Typeface.BOLD)
+        displayBold = load("interdisplay_bold", Typeface.BOLD)
+        displaySemibold = load("interdisplay_semibold", Typeface.BOLD)
         loaded = true
     }
 
