@@ -64,8 +64,8 @@ const S = (g) => g.userData.spin;
 // --- product 2: perfume
 {
   const g = new THREE.Group();
-  const glass = new THREE.MeshPhysicalMaterial({ color: '#9c4f0e', roughness: 0.05, metalness: 0.0, clearcoat: 1, clearcoatRoughness: 0.03, emissive: '#5c2a00', emissiveIntensity: 0.55, envMapIntensity: 2.2 });
-  const liquid = new THREE.MeshPhysicalMaterial({ color: '#e7891c', roughness: 0.1, transmission: 0.55, thickness: 0.3, emissive: '#5a2600', emissiveIntensity: 0.4 });
+  const glass = new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: 0.03, transmission: 1, thickness: 0.35, ior: 1.5, clearcoat: 1, envMapIntensity: 2.0 });
+  const liquid = new THREE.MeshStandardMaterial({ color: '#d9781a', roughness: 0.15, emissive: '#8a3a00', emissiveIntensity: 0.9 });
   const gold = new THREE.MeshStandardMaterial({ color: '#e2b65a', metalness: 1, roughness: 0.22, envMapIntensity: 1.8 });
   const body = new THREE.Mesh(new RoundedBoxGeometry(0.52, 0.6, 0.3, 6, 0.06), glass); body.position.y = 0.3;
   const liq = new THREE.Mesh(new RoundedBoxGeometry(0.44, 0.44, 0.22, 4, 0.04), liquid); liq.position.y = 0.26;
@@ -74,7 +74,7 @@ const S = (g) => g.userData.spin;
   for (let i = 0; i < 6; i++) { const rib = new THREE.Mesh(new THREE.TorusGeometry(0.132, 0.006, 8, 48), gold); rib.rotation.x = Math.PI / 2; rib.position.y = 0.7 + i * 0.04; g.add(rib); }
   const lab = C.canvasTex(256, 128); lab.ctx.fillStyle = 'rgba(0,0,0,0)'; lab.ctx.clearRect(0, 0, 256, 128); lab.ctx.fillStyle = '#f3e3c0'; lab.ctx.font = '800 30px Inter'; lab.ctx.letterSpacing = '8px'; lab.ctx.textAlign = 'center'; lab.ctx.fillText('ÉLIXIR', 132, 60); lab.ctx.font = '600 16px Inter'; lab.ctx.fillText('EAU DE PARFUM', 132, 92);
   const label = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.18), new THREE.MeshStandardMaterial({ map: lab.tex, transparent: true, roughness: 0.4, metalness: 0.6 })); label.position.set(0, 0.3, 0.152);
-  g.add(body, neck, cap, label); g.scale.setScalar(0.86); [body, cap].forEach(m => m.castShadow = true);
+  g.add(body, liq, neck, cap, label); g.scale.setScalar(0.86); [body, cap].forEach(m => m.castShadow = true);
   S(slots[1]).add(g); slots[1].userData.prod = g;
 }
 // --- product 3: stack of folded clothes + cap
@@ -140,14 +140,14 @@ function drawOverlay(t) {
     if (sub) word(x, sub, cx, 430, 40, { p: pIn(t, beatT(b0 + 0.5)), alpha: o, weight: 600, color: '#d0d0d0', tracking: 0 });
     if (price) {
       const v = counter(t, price[0], price[1], b0 + 1, b0 + 2);
-      word(x, `OD ${v} ZŁ`, cx, 1560, 150, { p: pIn(t, beatT(b0 + 1)), alpha: o, color: '#0a0a0a', box: LIME, tracking: -4 });
-      word(x, `1 szt. = ${price[0]} zł  →  hurt od ${price[1]} zł`, cx, 1720, 34, { p: pIn(t, beatT(b0 + 2)), alpha: o * 0.9, weight: 600, color: '#cfcfcf', tracking: 0 });
+      word(x, `OD ${v} ZŁ`, cx, 1390, 150, { p: pIn(t, beatT(b0 + 1)), alpha: o, color: '#0a0a0a', box: LIME, tracking: -4 });
+      word(x, `1 szt. = ${price[0]} zł  →  hurt od ${price[1]} zł`, cx, 1525, 36, { p: pIn(t, beatT(b0 + 2)), alpha: o * 0.9, weight: 600, color: '#cfcfcf', tracking: 0 });
     }
   };
   sec(0, 4, '01 / 03', 'AIRPODS PRO', 'Pro 2 · Pro 3', [200, 45]);
   sec(4, 8, '02 / 03', 'PERFUMY', 'premium, top zapachy', [130, 70]);
   sec(8, 12, '03 / 03', 'UBRANIA', 'pełny cennik u dostawcy', null);
-  if (t >= beatT(9) - 0.05 && t < beatT(12)) { const o = pOut(t, beatT(12)); word(x, 'TANIEJ', cx, 1560, 170, { p: pIn(t, beatT(9)), alpha: o, color: '#0a0a0a', box: LIME, tracking: -5 }); }
+  if (t >= beatT(9) - 0.05 && t < beatT(12)) { const o = pOut(t, beatT(12)); word(x, 'TANIEJ', cx, 1390, 170, { p: pIn(t, beatT(9)), alpha: o, color: '#0a0a0a', box: LIME, tracking: -5 }); }
   // all-in-one
   if (t >= beatT(12) - 0.05 && t < beatT(16)) {
     const o = pOut(t, beatT(16));
@@ -160,10 +160,10 @@ function drawOverlay(t) {
     word(x, 'FLIPPING NOW', cx, 280, 112, { p: pIn(t, beatT(16)), tracking: 2 });
     word(x, 'prywatny dostawca', cx, 385, 72, { p: pIn(t, beatT(17)), weight: 400, font: 'Instrument Serif', italic: true, tracking: 0, color: '#e6e6e6' });
     const pulse = 1 + 0.06 * beatPulse(t, 18, 40, 0.16);
-    x.save(); x.translate(cx, 1500); x.scale(pulse, pulse);
+    x.save(); x.translate(cx, 1330); x.scale(pulse, pulse);
     word(x, 'LINK W BIO ↓', 0, 0, 120, { p: pIn(t, beatT(18)), color: '#0a0a0a', box: LIME, tracking: -3 });
     x.restore();
-    word(x, '@flippingnow999', cx, 1660, 50, { p: pIn(t, beatT(19)), weight: 800, tracking: 1, color: '#ffffff' });
+    word(x, '@flippingnow999', cx, 1475, 54, { p: pIn(t, beatT(19)), weight: 800, tracking: 1, color: '#ffffff' });
   }
   ov.tex.needsUpdate = true;
 }
@@ -194,7 +194,7 @@ function frame(t) {
   const rise = easeOutBack(prog(t, beatT(12) - 0.1, beatT(13)), 1.3);
   if (!on) { Fg.visible = true; Fg.position.set(0, 1.25, 0.6); Fg.scale.setScalar(1.0); Fg.rotation.set(0, -0.6 + t * 0.35, 0); key.intensity = 0; }
   else if (t < beatT(12) - 0.1) { Fg.visible = false; }
-  else { Fg.visible = true; Fg.position.set(0, lerp(-1.5, 1.62, rise) - 0.32 * easeInOut(prog(t, beatT(15.6), beatT(16.8))) + Math.sin(t * 1.5) * 0.04, 0.2 - 0.2 * easeInOut(prog(t, beatT(15.6), beatT(16.8)))); Fg.scale.setScalar(lerp(0.5, 1.08, rise)); const orb = (t - beatT(12)) * 0.18; Fg.rotation.set(Math.sin(t) * 0.05, orb + easeInOut(prog(t, beatT(12), beatT(14.5))) * Math.PI * 2 + Math.sin((t - beatT(14.5)) * 1.3) * 0.32 * smooth(prog(t, beatT(14.5), beatT(16))) + 0.12 * bp, 0); }
+  else { Fg.visible = true; Fg.position.set(0, lerp(-1.5, 1.62, rise) - 0.12 * easeInOut(prog(t, beatT(15.6), beatT(16.8))) + Math.sin(t * 1.5) * 0.04, 0.2 - 0.2 * easeInOut(prog(t, beatT(15.6), beatT(16.8)))); Fg.scale.setScalar(lerp(0.5, 1.08, rise)); const orb = (t - beatT(12)) * 0.18; Fg.rotation.set(Math.sin(t) * 0.05, orb + easeInOut(prog(t, beatT(12), beatT(14.5))) * Math.PI * 2 + Math.sin((t - beatT(14.5)) * 1.3) * 0.32 * smooth(prog(t, beatT(14.5), beatT(16))) + 0.12 * bp, 0); }
   key.target.position.copy(on && t < beatT(12) ? new THREE.Vector3(0, 0.4, R) : new THREE.Vector3(0, 1, 0));
   rimL.target.position.set(0, 0.6, R * 0.5); rimR.target.position.set(0, 0.6, R * 0.5);
   // camera
@@ -203,7 +203,7 @@ function frame(t) {
   else if (t < beatT(12) - 0.1) {
     const lb = (C.beatOf(t) % 4) / 4; // push-in within each product bar
     const whip = beatPulse(t, 4, 12, 0.18, 4);
-    pos = V(Math.sin(t * 0.7) * 0.25 + whip * 0.4, lerp(1.12, 1.02, lb), R + lerp(3.0, 2.55, easeOut(lb))); look = V(0, 0.8, R);
+    pos = V(Math.sin(t * 0.7) * 0.25 + whip * 0.4, lerp(1.12, 1.02, lb), R + lerp(3.0, 2.55, easeOut(lb))); look = V(0, 0.7, R);
   } else {
     const p = easeInOut(prog(t, beatT(12) - 0.1, beatT(14)));
     const orbit = (t - beatT(12)) * 0.18;

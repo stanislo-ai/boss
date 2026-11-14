@@ -9,5 +9,5 @@ else
   INS=(); MIX="[1:a]afade=t=in:d=0.03,afade=t=out:st=$FO:d=0.7,loudnorm=I=-12:TP=-1:LRA=9[a]"
 fi
 ffmpeg -v error -y -framerate $FPS -i "$F/f_%04d.jpg" -ss $OFF -t $DUR -i "$A" "${INS[@]}" \
-  -filter_complex "$MIX" -map 0:v -map "[a]" \
+  -filter_complex "[0:v]${VF:-null}[v];$MIX" -map "[v]" -map "[a]" \
   -c:v libx264 -preset slow -crf 20 -maxrate 18M -bufsize 36M -pix_fmt yuv420p -profile:v high -movflags +faststart -c:a aac -b:a 192k -ar 44100 -t $DUR "$O"
