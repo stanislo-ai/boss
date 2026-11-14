@@ -223,8 +223,8 @@ const keys = [
   [beatT(12.3), V(0.0, 0.2, 7.4), V(0, 0.2, 0)],
   [beatT(16), V(-0.3, 0.0, 6.6), V(0, 0.1, 0)],
   [beatT(17), V(0.3, rowY(3) - 0.2, 5.6), V(0, rowY(4), 0)],
-  [beatT(19.2), V(0.0, rowY(6) - 0.3, 5.7), V(0, rowY(6.5), 0)],
-  [15.3, V(-0.15, rowY(6) - 0.45, 7.2), V(0, rowY(5.6), 0)],
+  [beatT(19.2), V(-0.08, rowY(6) - 0.3, 6.9), V(-0.08, rowY(6.5), 0)],
+  [15.3, V(-0.12, rowY(6) - 0.45, 8.3), V(-0.12, rowY(5.8), 0)],
 ];
 // hard cuts happen where two keys are 0.1s apart (drop) — we just interpolate fast there
 function path(t) {

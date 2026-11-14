@@ -18,6 +18,12 @@ node tools/render.cjs v1.html <katalog_klatek> 30 15.2
 ```
 Podgląd na żywo: serwer statyczny w tym folderze i `v1.html?t=5` (stała klatka) lub `v1.html` (pętla).
 
+Kolor: V1 i V2 dostają lekką korektę kontrastu przy kodowaniu (zmienna `VF` w `encode.sh`, np.
+`VF="curves=master='0/0 0.25/0.2 0.6/0.66 1/1',eq=saturation=1.08" ./tools/encode.sh ...`).
+Efekty dźwiękowe: `tools/flap_sfx.py` (klapki V2, czasy eksportowane z `tools/export_flaps.cjs`) i `tools/sfx.py` (V1/V3).
+
+Bezpieczne strefy TikToka (górne ~140 px, dolne ~420 px, prawa kolumna przycisków) zostały sprawdzone na końcowych planszach.
+
 ## Zdjęcia
 Zdjęcia produktów w V1 pochodzą z Unsplash (licencja Unsplash) — patrz `assets/CREDITS.md`.
 Muzyka (plik użytkownika) nie jest dołączona do repozytorium.
