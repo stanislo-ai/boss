@@ -62,6 +62,7 @@ object Hub : Link.Listener {
             Store.transport = ""
             Store.transfer = null
             BtAudio.onLinkChanged()
+            if (Store.nav.active) { Store.nav = NavState(); Store.emit(Topic.NAV) }
             if (Store.call.active) { Store.call = CallState(); Store.ui { player.onCallState(false) } }
             Store.phoneNp = Store.phoneNp.copy(playing = false)
             Store.emit(Topic.LINK, Topic.TRANSFER, Topic.CALL, Topic.NP)
@@ -203,6 +204,17 @@ object Hub : Link.Listener {
             }
             Proto.MESSAGE_GONE -> { synchronized(Store.messages) { Store.messages.removeAll { it.key == p.s("key") } }; Store.emit(Topic.MESSAGES) }
             Proto.TOAST -> MainActivity.toast(p.s("text"))
+            Proto.NAV -> {
+                val was = Store.nav.active
+                if (!p.b("active")) Store.nav = NavState()
+                else {
+                    val acts = ArrayList<String>(); val a = p.arr("actions"); for (i in 0 until a.length()) acts.add(a.optString(i))
+                    Store.nav = NavState(true, p.s("app"), p.s("pkg"), p.s("dist"), p.s("text"), p.s("eta"), p.i("icon"), acts)
+                    p.body?.let { b -> Store.navIcon = Img.decode(b, 256) }
+                }
+                Store.emit(Topic.NAV)
+                if (!was && Store.nav.active && prefs.getBoolean("navAuto", true)) Store.ui { MainActivity.openNav() }
+            }
             Proto.X_OFFER -> onOffer(p)
             Proto.X_CHUNK -> onChunk(p)
             Proto.X_END -> onEnd(p)
@@ -254,6 +266,7 @@ object Hub : Link.Listener {
         player.playList(tracks, start, shuffle)
     }
 
+    fun navCommand(i: Int) = send(pkt(Proto.NAV_CMD, "i" to i))
     fun requestLibrary(req: String) = send(pkt(Proto.LIB_REQ, "req" to req))
     fun playLibrary(req: String, index: Int) { if (Store.localActive) player.deactivate(); AppMedia.deactivate(); send(pkt(Proto.LIB_PLAY, "req" to req, "index" to index)) }
     fun playQueue(id: Long) = send(pkt(Proto.QUEUE_PLAY, "id" to id))

@@ -42,6 +42,7 @@ object Proto {
     const val R_LIB_REQ = "rlibReq"
     const val R_DELETE = "rdel"
     const val TOAST = "toast"
+    const val NAV = "nav"                 // turn-by-turn from the phone's navigation app
 
     // ---- radio -> phone ----
     const val CMD = "cmd"
@@ -57,6 +58,7 @@ object Proto {
     const val R_LIB = "rlib"
     const val LOCAL_PLAYING = "localPlaying"
     const val REFRESH = "refresh"
+    const val NAV_CMD = "navCmd"          // press a navigation notification button
 
     // ---- both ----
     const val PING = "ping"

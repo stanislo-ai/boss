@@ -275,10 +275,11 @@ class SettingsPage(a: MainActivity) : Page(a) {
         s2.addRows(p, listOf(hs, ip))
         body.addView(s2)
 
-        body.addView(ctx.sectionHeader(p, "Wiadomości i parking"))
+        body.addView(ctx.sectionHeader(p, "Wiadomości, nawigacja i parking"))
         val s3 = ctx.section(p)
         s3.addRows(p, listOf(
             Row(ctx, p, "Pokazuj wiadomości w aucie", "SMS, WhatsApp, Messenger, Telegram…", icon = CR.drawable.ic_message, iconColor = 0xFF2FD158.toInt(), accessory = toggle("forwardMessages", true)),
+            Row(ctx, p, "Pokazuj nawigację w aucie", "Wskazówki z Map Google, Waze itp. na ekranie radia", icon = CR.drawable.ic_location, iconColor = 0xFF1F7A4D.toInt(), accessory = toggle("forwardNav", true)),
             Row(ctx, p, "Zapamiętuj miejsce parkowania", icon = CR.drawable.ic_parking, iconColor = p.blue, accessory = toggle("parking", true)),
         ))
         body.addView(s3)

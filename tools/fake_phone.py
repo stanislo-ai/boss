@@ -63,6 +63,18 @@ def main():
         time.sleep(1)
         s.sendall(frame("msg", key="m1", pkg="com.whatsapp", app="WhatsApp", title="Kasia Nowak", text="Kupisz po drodze chleb i mleko? 🙂",
                         time=int(time.time() * 1000), canReply=True))
+    if "nav" in sc:
+        try:
+            from PIL import Image, ImageDraw
+            im = Image.new("RGBA", (128, 128), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+            d.line([(40, 118), (40, 60), (100, 60)], fill=(255, 255, 255, 255), width=18)
+            d.polygon([(92, 30), (124, 60), (92, 90)], fill=(255, 255, 255, 255))
+            o = io.BytesIO(); im.save(o, "PNG"); icon = o.getvalue()
+        except ImportError:
+            icon = b""
+        time.sleep(1)
+        s.sendall(frame("nav", icon, active=True, app="Mapy Google", pkg="com.google.android.apps.maps", dist="300 m",
+                        text="Skręć w prawo w ul. Marszałkowską", eta="18:42 przyjazd · 12 min · 5,4 km", icon=1, actions=["Zakończ"]))
     if "call" in sc:
         time.sleep(1); s.sendall(frame("call", state="active", number="+48 600 000 001", name="Kasia Nowak", since=83000))
     if "ring" in sc:

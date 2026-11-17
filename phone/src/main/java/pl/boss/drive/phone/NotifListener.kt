@@ -34,7 +34,9 @@ class NotifListener : NotificationListenerService() {
     override fun onListenerDisconnected() { if (instance === this) instance = null }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
-        if (!CarLink.running || !CarLink.prefs.getBoolean("forwardMessages", true)) return
+        if (!CarLink.running) return
+        if (NavBridge.isNav(sbn)) { if (CarLink.prefs.getBoolean("forwardNav", true)) NavBridge.onPosted(this, sbn); return }
+        if (!CarLink.prefs.getBoolean("forwardMessages", true)) return
         val m = parse(sbn) ?: return
         synchronized(recent) {
             val prev = recent[m.key]
@@ -44,6 +46,8 @@ class NotifListener : NotificationListenerService() {
         }
         send(m, silent = false)
     }
+
+    override fun onNotificationRemoved(sbn: StatusBarNotification) { NavBridge.onRemoved(sbn) }
 
     data class Msg(val key: String, val pkg: String, val app: String, val title: String, val text: String, val time: Long,
                    val reply: Notification.Action?, val markRead: Notification.Action?)
@@ -93,6 +97,13 @@ class NotifListener : NotificationListenerService() {
         private fun send(m: Msg, silent: Boolean) {
             CarLink.send(pkt(Proto.MESSAGE, "key" to m.key, "pkg" to m.pkg, "app" to m.app, "title" to m.title, "text" to m.text,
                 "time" to m.time, "canReply" to (m.reply != null), "silent" to silent))
+        }
+
+        /** Navigation already running when the car connects. */
+        fun pushNav() {
+            NavBridge.push()
+            val l = instance ?: return
+            try { l.activeNotifications?.firstOrNull { NavBridge.isNav(it) }?.let { NavBridge.onPosted(l, it) } } catch (_: Throwable) {}
         }
 
         fun pushRecent() {

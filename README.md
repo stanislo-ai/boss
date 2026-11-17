@@ -61,6 +61,25 @@ i łączy się sam. Nic nie trzeba klikać.
 - **parking:** telefon zapamiętuje, gdzie zostawiłeś auto (po rozłączeniu Bluetooth),
 - ochrona przed obcym telefonem: radio pyta, zanim połączy się z nowym urządzeniem.
 
+## Nawigacja z telefonu na ekranie radia
+
+Wystarczy włączyć trasę w Mapach Google, Waze, Sygic, OsmAnd, HERE lub Mapy.cz na telefonie. Boss Drive czyta
+wskazówki z powiadomienia nawigacji (tak jak smartwatche) i pokazuje je na radiu w stylu CarPlay:
+duża strzałka manewru, odległość, ulica, godzina przyjazdu i przyciski z aplikacji (np. „Zakończ”).
+Ekran nawigacji otwiera się sam po starcie trasy; na innych ekranach następny skręt widać w docku,
+a na Dashboardzie karta nawigacji zastępuje zegar. Działa przez Wi-Fi i Bluetooth, bez internetu po stronie radia.
+Sama mapa nie jest przesyłana (strumień wideo nie zmieści się w Bluetooth i obciążyłby radio z 1 GB RAM).
+
+| Nawigacja | Dashboard w trakcie trasy |
+|---|---|
+| ![](docs/radio_nav.png) | ![](docs/radio_home_nav.png) |
+
+## OpenTune i inne aplikacje muzyczne
+
+Boss Drive niczego nie pobiera — steruje aplikacją, która gra na telefonie (OpenTune, Spotify, YouTube Music, Tidal…)
+przez standardową sesję multimediów Androida: okładka, tytuł, wykonawca, kolejka, play/pauza, przewijanie.
+OpenTune jest na górze listy źródeł. Okładki i tytuły płyną z telefonu do radia lokalnie (hotspot/Bluetooth).
+
 ## Sklep z dodatkami (opcjonalne)
 
 Przycisk Home w docku przełącza Dashboard ↔ ekran aplikacji (jak w CarPlay). Tam jest **Sklep**.

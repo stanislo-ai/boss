@@ -47,11 +47,12 @@ import pl.boss.drive.radio.ui.PhoneScreen
 import pl.boss.drive.radio.ui.Screen
 import pl.boss.drive.radio.ui.SettingsScreen
 import pl.boss.drive.radio.ui.Wallpaper
+import pl.boss.drive.radio.ui.maneuver
 import java.lang.ref.WeakReference
 import kotlin.math.max
 import kotlin.math.min
 
-enum class Tab { HOME, APPS, STORE, MUSIC, PHONE, MESSAGES, SETTINGS }
+enum class Tab { HOME, APPS, STORE, NAV, MUSIC, PHONE, MESSAGES, SETTINGS }
 
 /**
  * CarPlay-style shell: dock on the left, one navigation stack per app, overlays for calls,
@@ -73,6 +74,9 @@ class MainActivity : Activity() {
     private lateinit var net: TextView
     private lateinit var linkGlyph: android.widget.ImageView
     private lateinit var badge: TextView
+    private lateinit var navMini: LinearLayout
+    private lateinit var navArrow: android.widget.ImageView
+    private lateinit var navDist: TextView
     private var call: CallOverlay? = null
     private val unsubs = ArrayList<() -> Unit>()
     private var themeDark = true
@@ -132,6 +136,17 @@ class MainActivity : Activity() {
         d.addView(st, lp(MATCH, WRAP).apply { topMargin = dpi(6f) })
         linkGlyph = glyph(CR.drawable.ic_iphone, pal.gray)
         d.addView(linkGlyph, lp(dpi(16f), dpi(16f)).apply { topMargin = dpi(5f) })
+        // next turn from the phone's navigation, always visible in the dock
+        navMini = vstack(Gravity.CENTER_HORIZONTAL).apply {
+            background = RoundDrawable(0xFF1F7A4D.toInt(), dp(14f), 0xFF2A9160.toInt(), 0xFF176B42.toInt())
+            pad(4f, 8f, 4f, 7f); visibility = View.GONE
+            navArrow = android.widget.ImageView(this@MainActivity)
+            addView(navArrow, lp(dpi(40f), dpi(40f)))
+            navDist = text("", 13f, W.BOLD, Color.WHITE, gravity = Gravity.CENTER)
+            addView(navDist, lp(MATCH, WRAP).apply { topMargin = dpi(2f) })
+            onTap(Press.SCALE) { select(Tab.NAV) }
+        }
+        d.addView(navMini, lp(dpi(72f), WRAP).apply { topMargin = dpi(12f) })
 
         d.addView(View(this), lp(1, 0, 1f))
         dockApp(d, Tab.MUSIC, CR.drawable.ic_music, 0xFFFA2D48.toInt())
@@ -173,6 +188,12 @@ class MainActivity : Activity() {
         return f
     }
 
+    private fun refreshNav() {
+        val n = Store.nav
+        navMini.visibility = if (n.active && tab != Tab.NAV) View.VISIBLE else View.GONE
+        if (n.active) { navArrow.maneuver(); navDist.text = n.distance }
+    }
+
     private fun refreshDock() {
         clock.text = android.text.format.DateFormat.format("H:mm", System.currentTimeMillis())
         val s = Store.status
@@ -197,6 +218,7 @@ class MainActivity : Activity() {
             NavStack(this, rootFor(t)).also { content.addView(it, FrameLayout.LayoutParams(MATCH, MATCH)); it.visibility = View.GONE }
         }
         if (t == Tab.MESSAGES) { Store.unread = 0; refreshDock() }
+        tab = t; if (::navMini.isInitialized) refreshNav()
         for ((k, m) in dockMarks) if (k != Tab.HOME && k != Tab.APPS) m.animate().alpha(if (k == t) 1f else 0f).setDuration(200).start()
         if (old === st && st.visibility == View.VISIBLE) return
         tab = t
@@ -216,6 +238,7 @@ class MainActivity : Activity() {
         Tab.HOME -> HomeScreen(this)
         Tab.APPS -> pl.boss.drive.radio.ui.AppsScreen(this)
         Tab.STORE -> pl.boss.drive.radio.ui.StoreScreen(this)
+        Tab.NAV -> pl.boss.drive.radio.ui.NavScreen(this)
         Tab.MUSIC -> NowPlayingScreen(this)
         Tab.PHONE -> PhoneScreen(this)
         Tab.MESSAGES -> MessagesScreen(this)
@@ -300,8 +323,9 @@ class MainActivity : Activity() {
         unsubs += Store.on(Topic.MESSAGES) { refreshDock() }
         unsubs += Store.on(Topic.CALL) { syncCall() }
         unsubs += Store.on(Topic.PAIRING) { syncPairing() }
+        unsubs += Store.on(Topic.NAV) { refreshNav() }
         unsubs += Store.on(Topic.THEME) { if (Theme.isDark() != themeDark) recreate() }
-        refreshDock(); syncCall(); syncPairing()
+        refreshDock(); syncCall(); syncPairing(); refreshNav()
         stacks[tab]?.setActive(true)
     }
 
@@ -344,6 +368,9 @@ class MainActivity : Activity() {
             if (Hub.prefs.getBoolean("banners", true)) Banner.show(a, m)
             if (Hub.prefs.getBoolean("autoRead", false)) Hub.message(m.key, "read")
         }
+
+        /** Navigation just started on the phone: bring the guidance screen up. */
+        fun openNav() = Bg.ui { current?.get()?.takeIf { visible && !Store.call.active }?.select(Tab.NAV) }
 
         fun toast(s: String) = Bg.ui { current?.get()?.takeIf { visible }?.hud(s, CR.drawable.ic_info) }
     }

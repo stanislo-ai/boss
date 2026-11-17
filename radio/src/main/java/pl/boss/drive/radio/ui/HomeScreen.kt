@@ -60,6 +60,12 @@ class HomeScreen(a: MainActivity) : Screen(a) {
     private lateinit var wPlace: TextView
     private lateinit var wDesc: TextView
     private lateinit var weatherRow: View
+    private lateinit var clockView: View
+    private lateinit var navView: View
+    private lateinit var navArrow: ImageView
+    private lateinit var navDist: TextView
+    private lateinit var navText: TextView
+    private lateinit var navEta: TextView
     // favourites
     private lateinit var favBox: FrameLayout
     private lateinit var xferBar: View
@@ -190,7 +196,30 @@ class HomeScreen(a: MainActivity) : Screen(a) {
         weatherRow = w
         v.addView(w, a.lp(MATCH, WRAP))
         c.addView(v, FrameLayout.LayoutParams(MATCH, MATCH))
+        clockView = v
+        // during navigation this card shows the next turn instead of the clock
+        val nv = a.hstack()
+        nv.background = GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(0xFF1F7A4D.toInt(), 0xFF0F5434.toInt()))
+        nv.pad(22f, 16f, 20f, 16f)
+        navArrow = ImageView(a)
+        nv.addView(navArrow, a.lp(a.dpi(104f), a.dpi(104f)))
+        val nc = a.vstack()
+        navDist = a.text("", 44f, W.BOLD, Color.WHITE)
+        navText = a.text("", 19f, W.SEMIBOLD, 0xE6FFFFFF.toInt(), lines = 2)
+        navEta = a.text("", 15f, W.MEDIUM, 0xB3FFFFFF.toInt())
+        nc.addView(navDist); nc.addView(navText, a.lp(MATCH, WRAP).apply { topMargin = a.dpi(2f) }); nc.addView(navEta, a.lp(MATCH, WRAP).apply { topMargin = a.dpi(6f) })
+        nv.addView(nc, a.lp(0, WRAP, 1f).apply { marginStart = a.dpi(18f) })
+        nv.onTap(Press.NONE) { a.select(Tab.NAV) }
+        navView = nv
+        c.addView(nv, FrameLayout.LayoutParams(MATCH, MATCH))
         return c
+    }
+
+    private fun bindNav() {
+        val n = Store.nav
+        navView.visibility = if (n.active) View.VISIBLE else View.GONE
+        clockView.visibility = if (n.active) View.INVISIBLE else View.VISIBLE
+        if (n.active) { navArrow.maneuver(); navDist.text = n.distance; navText.text = n.instruction; navEta.text = n.eta }
     }
 
     private fun bindClock() {
@@ -312,7 +341,8 @@ class HomeScreen(a: MainActivity) : Screen(a) {
     }
 
     override fun onShow() {
-        bindNp(); lastArtKey = null; bindArt(); bindClock(); bindFavs(); bindTransfer()
+        bindNp(); lastArtKey = null; bindArt(); bindClock(); bindNav(); bindFavs(); bindTransfer()
+        on(Topic.NAV) { bindNav() }
         on(Topic.NP, Topic.STATUS) { bindNp() }
         on(Topic.ART) { bindArt() }
         on(Topic.WEATHER) { bindClock() }

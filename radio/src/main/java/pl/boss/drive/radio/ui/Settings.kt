@@ -126,6 +126,7 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         s3.addRows(p, listOf(
             Row(a, p, "Otwieraj po uruchomieniu auta", icon = CR.drawable.ic_power, iconColor = p.orange, accessory = toggle("openOnBoot", true)),
             Row(a, p, "Otwieraj po połączeniu telefonu", icon = CR.drawable.ic_iphone, iconColor = p.green, accessory = toggle("openOnConnect", false)),
+            Row(a, p, "Pokazuj nawigację po starcie trasy", "Wskazówki z Map Google, Waze i innych na pełnym ekranie", icon = CR.drawable.ic_location, iconColor = 0xFF1F7A4D.toInt(), accessory = toggle("navAuto", true)),
             Row(a, p, "Banery wiadomości", icon = CR.drawable.ic_message, iconColor = 0xFF2FD158.toInt(), accessory = toggle("banners", true)),
             Row(a, p, "Czytaj wiadomości na głos", "Telefon przeczyta każdą nową wiadomość", icon = CR.drawable.ic_speaker, iconColor = p.pink, accessory = toggle("autoRead", false)),
         ))

@@ -188,9 +188,11 @@ class MediaBridge(private val ctx: Context) {
         } catch (_: Throwable) {}
         out.remove(ctx.packageName)
         // keep the list short and relevant for the car
-        val preferred = listOf("com.spotify.music", "com.google.android.apps.youtube.music", "com.aspiro.tidal", "deezer.android.app",
+        val preferred = listOf("com.arturo254.opentune", "com.zionhuang.music", "com.metrolist.music", "it.fast4x.rimusic", "com.spotify.music", "com.google.android.apps.youtube.music", "com.aspiro.tidal", "deezer.android.app",
             "com.apple.android.music", "com.amazon.mp3", "com.soundcloud.android", "pl.rmf.fm", "com.audioteka", "com.storytel")
-        return out.sortedBy { val i = preferred.indexOf(it); if (i < 0) 99 else i }.take(8)
+        // OpenTune and friends first (also matched by name in case of a fork with another package id)
+        fun rank(pkg: String): Int { val i = preferred.indexOf(pkg); if (i >= 0) return i; return if (appLabel(pkg).contains("Tune", true)) 0 else 99 }
+        return out.sortedBy { rank(it) }.take(8)
     }
 
     private fun sendIcon(pkg: String) {

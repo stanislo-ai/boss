@@ -7,7 +7,7 @@ import android.os.SystemClock
 import android.util.LruCache
 import java.util.EnumMap
 
-enum class Topic { LINK, NP, ART, SOURCES, QUEUE, LIBRARY, CALL, CONTACTS, RECENTS, STATUS, WEATHER, MESSAGES, TRANSFER, OFFLINE, THEME, PAIRING, STORE }
+enum class Topic { LINK, NP, ART, SOURCES, QUEUE, LIBRARY, CALL, CONTACTS, RECENTS, STATUS, WEATHER, MESSAGES, TRANSFER, OFFLINE, THEME, PAIRING, STORE, NAV }
 
 data class NowPlaying(
     val title: String = "", val artist: String = "", val album: String = "",
@@ -38,6 +38,8 @@ data class PhoneStatus(val battery: Int = -1, val charging: Boolean = false, val
                        /** false = phone audio is NOT going to the car over Bluetooth (plays on the phone speaker). */
                        val a2dp: Boolean = true, val a2dpName: String = "")
 data class Weather(val temp: Int, val code: Int, val hi: Int, val lo: Int, val place: String, val isDay: Boolean, val lat: Double, val lon: Double)
+data class NavState(val active: Boolean = false, val app: String = "", val pkg: String = "", val distance: String = "",
+                    val instruction: String = "", val eta: String = "", val iconKey: Int = 0, val actions: List<String> = emptyList())
 data class Transfer(val id: String, val title: String, val artist: String, val size: Long, val done: Long, val queued: Int)
 
 /**
@@ -97,6 +99,10 @@ object Store {
     @Volatile var weather: Weather? = null
     val messages = ArrayList<Message>()
     @Volatile var unread = 0
+
+    // ---- navigation (mirrored from the phone's navigation app) ----
+    @Volatile var nav = NavState()
+    @Volatile var navIcon: Bitmap? = null
 
     // ---- transfers ----
     @Volatile var transfer: Transfer? = null

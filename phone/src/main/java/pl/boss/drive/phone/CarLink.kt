@@ -227,6 +227,7 @@ object CarLink : Link.Listener {
             Proto.LIB_PLAY -> { lastRadioCmdAt = SystemClock.elapsedRealtime(); handler.post { library.play(p.s("req"), p.i("index")) } }
             Proto.CALL_CMD -> calls.command(p.s("a"), p.s("num"), p.s("text"))
             Proto.MSG_CMD -> NotifListener.command(ctx, p.s("key"), p.s("a"), p.s("text"))
+            Proto.NAV_CMD -> NavBridge.command(p.i("i", -1))
             Proto.LOCAL_PLAYING -> if (p.b("on")) media.pauseAll()
             Proto.X_ACK, Proto.X_DONE, Proto.X_FAIL -> transfers.onRadio(p)
             Proto.R_LIB -> { transfers.onRadioLibrary(p); Events.emit(Ev.RADIO_LIB) }
@@ -240,6 +241,7 @@ object CarLink : Link.Listener {
         calls.pushAll()
         status.pushAll()
         NotifListener.pushRecent()
+        NotifListener.pushNav()
         transfers.kick()
     }
 }
