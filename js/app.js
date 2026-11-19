@@ -5,7 +5,7 @@ const C = Casino, { $, $$, h, GEM, fmt, fmtM } = C;
 const CATS = { originals: ['Originals', '🎯'], slots: ['Sloty', '🎰'], table: ['Stołowe', '🃏'] };
 const S = C.S;
 
-const tile = g => `<a class="tile" href="#/g/${g.id}" style="--c1:${g.c[0]};--c2:${g.c[1]}">
+const tile = g => `<a class="tile" href="#g-${g.id}" style="--c1:${g.c[0]};--c2:${g.c[1]}">
   <span class="prov">${g.provider}</span>${g.hot ? '<span class="hot">HOT</span>' : ''}
   <div class="art">${g.art[0]}<small>${g.art[1] || ''}</small><small>${g.art[2] || ''}</small></div><div class="tn">${g.name}</div></a>`;
 const byCat = c => C.games.filter(g => g.cat === c);
@@ -13,8 +13,8 @@ const byCat = c => C.games.filter(g => g.cat === c);
 /* nawigacja */
 function buildNav() {
   const link = (href, ic, t, key) => `<a href="${href}" data-k="${key}"><span class="ic">${ic}</span>${t}</a>`;
-  $('#nav').innerHTML = `<div class="sec">Menu</div>${link('#/', '🏠', 'Lobby', 'home')}${Object.entries(CATS).map(([k, [t, ic]]) => link('#/c/' + k, ic, t, 'c:' + k)).join('')}${link('#/stats', '📊', 'Statystyki', 'stats')}
-    <div class="sec">Wszystkie gry</div>${C.games.map(g => link('#/g/' + g.id, g.art[0], g.name, 'g:' + g.id)).join('')}`;
+  $('#nav').innerHTML = `<div class="sec">Menu</div>${link('#', '🏠', 'Lobby', 'home')}${Object.entries(CATS).map(([k, [t, ic]]) => link('#c-' + k, ic, t, 'c:' + k)).join('')}${link('#stats', '📊', 'Statystyki', 'stats')}
+    <div class="sec">Wszystkie gry</div>${C.games.map(g => link('#g-' + g.id, g.art[0], g.name, 'g:' + g.id)).join('')}`;
 }
 const setNav = key => $$('#nav a').forEach(a => a.classList.toggle('on', a.dataset.k === key));
 
@@ -22,11 +22,11 @@ const setNav = key => $$('#nav a').forEach(a => a.classList.toggle('on', a.datas
 function lobby(v) {
   const bonusReady = Date.now() - S().lastDaily > 864e5;
   v.innerHTML = `<div class="hero">
-      <div class="promo a"><span class="big">💎</span><h2>10 000 gemów na start</h2><p>Graj w ${C.games.length} gier za wirtualne gemy. Zero prawdziwych pieniędzy, 100% zabawy.</p><div><a class="btn primary" href="#/g/mines">Zagraj w Mines</a></div></div>
+      <div class="promo a"><span class="big">💎</span><h2>10 000 gemów na start</h2><p>Graj w ${C.games.length} gier za wirtualne gemy. Zero prawdziwych pieniędzy, 100% zabawy.</p><div><a class="btn primary" href="#g-mines">Zagraj w Mines</a></div></div>
       <div class="promo b"><span class="big">🎁</span><h2>Bonus dzienny</h2><p>+1 000 💎 co 24 godziny.</p><div><button class="btn" id="bn">${bonusReady ? 'Odbierz teraz' : 'Odebrany'}</button></div></div>
-      <div class="promo c"><span class="big">🚀</span><h2>Crash &amp; Plinko</h2><p>Najgorętsze gry tygodnia.</p><div><a class="btn" href="#/g/crash">Zobacz</a></div></div></div>
+      <div class="promo c"><span class="big">🚀</span><h2>Crash &amp; Plinko</h2><p>Najgorętsze gry tygodnia.</p><div><a class="btn" href="#g-crash">Zobacz</a></div></div></div>
     <div class="sec-h" style="margin-top:0"><h3>🔥 Popularne</h3></div><div class="row">${C.games.filter(g => g.hot).map(tile).join('')}</div>
-    ${Object.entries(CATS).map(([k, [t, ic]]) => `<div class="sec-h"><h3>${ic} ${t}</h3><a href="#/c/${k}">Zobacz wszystkie →</a></div><div class="row">${byCat(k).map(tile).join('')}</div>`).join('')}
+    ${Object.entries(CATS).map(([k, [t, ic]]) => `<div class="sec-h"><h3>${ic} ${t}</h3><a href="#c-${k}">Zobacz wszystkie →</a></div><div class="row">${byCat(k).map(tile).join('')}</div>`).join('')}
     <div class="sec-h"><h3>⚡ Zakłady na żywo</h3></div><div id="lf"></div>`;
   $('#lf', v).replaceWith(C.feedEl());
   $('#bn', v).onclick = e => { if (C.claimDaily()) e.target.textContent = 'Odebrany'; };
@@ -44,7 +44,7 @@ function searchPage(v, q) {
 function gamePage(v, id) {
   const g = C.games.find(x => x.id === id); if (!g) { v.innerHTML = '<div class="empty">Nie ma takiej gry.</div>'; return; }
   document.title = `${g.name} — GEMBET`;
-  v.innerHTML = `<div class="crumb"><a href="#/">Lobby</a> › <a href="#/c/${g.cat}">${CATS[g.cat][0]}</a> › <b style="color:#fff">${g.name}</b></div><div id="gm"></div>
+  v.innerHTML = `<div class="crumb"><a href="#">Lobby</a> › <a href="#c-${g.cat}">${CATS[g.cat][0]}</a> › <b style="color:#fff">${g.name}</b></div><div id="gm"></div>
     <div class="sec-h"><h3>Więcej gier</h3></div><div class="row">${C.games.filter(x => x.id !== id).sort(() => Math.random() - .5).slice(0, 10).map(tile).join('')}</div>`;
   g.mount($('#gm', v));
 }
@@ -60,7 +60,7 @@ function stats(v) {
     <div class="s"><small>Zysk / strata</small><b class="${s.profit >= 0 ? 'grn' : 'red'}">${s.profit >= 0 ? '+' : ''}${fmt(s.profit)}</b></div>
     <div class="s"><small>Najlepsza wygrana</small><b class="gold">${fmt(s.bestWin)}</b></div><div class="s"><small>Najwyższy mnożnik</small><b>${fmtM(s.bestMult)}×</b></div></div>
     <div class="panel"><h4>Historia salda</h4><svg class="svgchart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="#9d6bff" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg></div>
-    <div class="panel"><h4>Gry</h4>${rows.length ? `<table><tr><th>Gra</th><th>Zakłady</th><th>Obrót</th><th>Wynik</th></tr>${rows.map(([g, x]) => `<tr><td><a href="#/g/${g.id}">${g.art[0]} ${g.name}</a></td><td>${x.bets}</td><td>${fmt(x.wagered, 0)}</td><td class="${x.profit >= 0 ? 'grn' : 'red'}">${x.profit >= 0 ? '+' : ''}${fmt(x.profit)}</td></tr>`).join('')}</table>` : '<div class="empty">Zagraj w coś, aby zobaczyć statystyki.</div>'}</div>
+    <div class="panel"><h4>Gry</h4>${rows.length ? `<table><tr><th>Gra</th><th>Zakłady</th><th>Obrót</th><th>Wynik</th></tr>${rows.map(([g, x]) => `<tr><td><a href="#g-${g.id}">${g.art[0]} ${g.name}</a></td><td>${x.bets}</td><td>${fmt(x.wagered, 0)}</td><td class="${x.profit >= 0 ? 'grn' : 'red'}">${x.profit >= 0 ? '+' : ''}${fmt(x.profit)}</td></tr>`).join('')}</table>` : '<div class="empty">Zagraj w coś, aby zobaczyć statystyki.</div>'}</div>
     <button class="btn" id="rs">Zeruj statystyki</button>`;
   $('#rs', v).onclick = () => { if (confirm('Wyzerować statystyki i saldo do 10 000 gemów?')) { C.resetAll(); stats(v); } };
 }
@@ -85,12 +85,11 @@ let q = '';
 function route() {
   C.runLeave(); document.body.classList.remove('menu'); document.title = 'GEMBET — fake kasyno na gemy';
   const v = $('#view'); v.innerHTML = ''; window.scrollTo(0, 0);
-  const [, a, b] = (location.hash.slice(1) || '/').split('/');
+  const hs = location.hash.slice(1), i = hs.indexOf('-'), a = i < 0 ? hs : hs.slice(0, i), b = i < 0 ? '' : hs.slice(i + 1);
   if (a === 'g') { setNav('g:' + b); gamePage(v, b); }
   else if (a === 'c' && CATS[b]) { setNav('c:' + b); catPage(v, b); }
   else if (a === 'stats') { setNav('stats'); stats(v); }
-  else if (a === 's') { setNav(''); searchPage(v, decodeURIComponent(b || '')); }
-  else { setNav('home'); lobby(v); }
+    else { setNav('home'); lobby(v); }
 }
 
 /* init */
@@ -100,7 +99,7 @@ $('#walletBtn').onclick = wallet; $('#balbox').onclick = wallet;
 $('#burger').onclick = () => document.body.classList.toggle('menu'); $('#scrim').onclick = () => document.body.classList.remove('menu');
 const mute = $('#muteBtn'); mute.textContent = S().mute ? '🔇' : '🔊';
 mute.onclick = () => { S().mute = !S().mute; C.save(); mute.textContent = S().mute ? '🔇' : '🔊'; };
-$('#q').oninput = e => { q = e.target.value.trim(); location.hash = q ? '#/s/' + encodeURIComponent(q) : '#/'; };
+$('#q').oninput = e => { q = e.target.value.trim(); if (!q) return route(); C.runLeave(); setNav(''); searchPage($('#view'), q); };
 let warned = false;
 C.onBalance(() => { if (S().balance < C.MIN_BET && !warned) { warned = true; setTimeout(() => { C.toast('Skończyły Ci się gemy! Odbierz bonus lub zresetuj saldo.', 'err'); wallet(); }, 900); } if (S().balance >= C.MIN_BET) warned = false; });
 window.addEventListener('hashchange', route); route();
